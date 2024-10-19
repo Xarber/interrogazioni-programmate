@@ -683,6 +683,7 @@ class AdminDashboard {
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
             let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):');
             if (dayName && availability) {
+                if (availability.length < 1) availability = "3";
                 availability = `${availability}/${availability}`;
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};

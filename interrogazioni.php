@@ -202,11 +202,13 @@ if ($_GET["scope"] === "getAllData") {
             const messageArr = [];
             var listaPrenotazioni = {};
 
-            logger.group("Messaggi Link Prenotazione Materia");
-            for (var e in utenti) messageArr.push("Ciao "+utenti[e].name.split(" ")[utenti[e].name.split(" ").length - 1]+"! Ti mando la pagina per prenotarsi per le interrogazioni, questo è il tuo link:\n"+location.href.split('?')[0]+"?UID="+e+"\nNON MANDARLO A NESSUNO, ALTRIMENTI POTRANNO PRENOTARE AL POSTO TUO!!\nSbrigati a scegliere il giorno altrimenti poi non ci saranno più posti :P")
-            messageArr.sort(function(a, b){return 0.5 - Math.random()});
-            messageArr.forEach((e)=>logger.log(e));
-            logger.groupEnd();
+            /*
+                logger.group("Messaggi Link Prenotazione Materia");
+                for (var e in utenti) messageArr.push("Ciao "+utenti[e].name.split(" ")[utenti[e].name.split(" ").length - 1]+"! Ti mando la pagina per prenotarsi per le interrogazioni, questo è il tuo link:\n"+location.href.split('?')[0]+"?UID="+e+"\nNON MANDARLO A NESSUNO, ALTRIMENTI POTRANNO PRENOTARE AL POSTO TUO!!\nSbrigati a scegliere il giorno altrimenti poi non ci saranno più posti :P")
+                messageArr.sort(function(a, b){return 0.5 - Math.random()});
+                messageArr.forEach((e)=>logger.log(e));
+                logger.groupEnd();
+            */
 
             for (var data in datiMateria.days ?? []) {
                 listaPrenotazioni[data] ??= {
