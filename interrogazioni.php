@@ -1,7 +1,7 @@
 <?php
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
-if (!file_exists("./JSON") || !is_dir("./JSON")) mkdir("./JSON");
+if (!file_exists("./JSON") || !is_dir("./JSON")) mkdir("JSON");
 $subjectJSONs = array_diff(scandir("./JSON/"), array('.', '..'));
 $userID = $_GET["UID"] ?? NULL;
 $userList = file_exists("./JSON/users.json") ? file_get_contents("./JSON/users.json") : "";
@@ -77,20 +77,30 @@ if ($_GET["scope"] === "getAllData") {
         <?php
             if (count($userList) === 0) {
                 ?>
-                    <h1>Benvenuto! Devi creare un account admin, siccome non ce ne sono salvati.</h1>
+                    <h1>Benvenuto, crea il primo account admin per continuare!</h1>
                     <p>Inserisci il tuo nome per iniziare!</p>
-                    <input type="text" name="name" id="name">
+                    <input type="text" name="name" id="name" placeholder="Nome Utente">
+                    <p>Il tuo UserID / Chiave di accesso (clicca per copiare):</p>
+                    <input type="text" name="uid" id="uid" style="cursor: pointer;" readonly onclick="navigator.clipboard.writeText(this.value);alert('UserID Copiato!');">
                     <button onclick="
-                    const uid = ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                        return v.toString(16);
-                    }));
-                    const body = {};
-                    body[uid] = {name: this.parentNode.querySelector('input[name=\'name\']').value, admin: true, answers: {}};
-                    fetch('?scope=updateSettings&type=users', {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json()).then(r=>{
-                        if (!r.status) return alert('Impossibile completare l\'azione!');
-                        location.href = '?UID='+uid;
-                    })">Accedi</button>
+                        const body = {};
+                        body[this.parentNode.querySelector('input[name=\'uid\']').value] = {
+                            name: this.parentNode.querySelector('input[name=\'name\']').value,
+                            admin: true,
+                            answers: {}
+                        };
+                        fetch('?scope=updateSettings&type=users', {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json()).then(r=>{
+                            if (!r.status) return alert('Impossibile completare l\'azione!');
+                            location.href = '?UID='+this.parentNode.querySelector('input[name=\'uid\']').value;
+                        })
+                    ">Accedi</button>
+                    <script>
+                        const uid = ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                            return v.toString(16);
+                        }));
+                        document.querySelector('input[name=\'uid\']').value = uid;
+                    </script>
                 <?php
                 exit;
             } else if (!$userData) {
