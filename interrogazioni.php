@@ -61,6 +61,13 @@ if ($_GET["scope"] === "getAllData") {
     header('Content-Type: application/json');
     die(json_encode(array("status" => $okay)));
 }
+$eligibleSubjectCount = 0;
+foreach ($subjectJSONs as $subjectNameTMP) {
+    if ($subjectNameTMP === "users.json") continue;
+    $subjectDataTMP = json_decode(file_get_contents("./JSON/".$subjectNameTMP), true);
+    if (($subjectDataTMP["hide"] ?? true) === true) continue;
+    $eligibleSubjectCount = $eligibleSubjectCount + 1;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -138,7 +145,9 @@ if ($_GET["scope"] === "getAllData") {
                     ?>
                         <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
                         <p>Sarai interrogato in data: <?php echo $subjectData["answers"][$userID]["date"]; ?></p>
-                        <button onclick="location.href = '?UID=<?php echo $userID; ?>'">Cambia Materia</button>
+                        <?php if ($eligibleSubjectCount > 1) { ?>
+                            <button onclick="location.href = '?UID=<?php echo $userID; ?>'">Cambia Materia</button>
+                        <?php } ?>
                     <?php
                 } else if (isset($_GET["day"])) {
                     if (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0) {
@@ -151,10 +160,10 @@ if ($_GET["scope"] === "getAllData") {
                         $userList[$userID]["answers"][$subjectName] ??= array();
                         array_push($userList[$userID]["answers"][$subjectName], $_GET["day"]);
                         $success = file_put_contents("./JSON/".$subject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON/users.json", json_encode($userList, JSON_PRETTY_PRINT));
-                        echo $success ? "<h1>Ti sei prenotato!</h1><p>Ti sei prenotato a ".$subjectName." per il ".$_GET["day"]."!</p><button onclick=\"location.href = '?UID=$userID'\">Cambia Materia</button>" : "<h1>Whoops! :(</h1><p>C'è stato un problema mentre provavi a prenotarti, per favore riprova o cambia giorno.</p><button onclick='location.reload();'>Cambia giorno</button>";
+                        echo ($success ? "<h1>Ti sei prenotato!</h1><p>Ti sei prenotato a ".$subjectName." per il ".$_GET["day"]."!</p>".($eligibleSubjectCount > 1 ? "<button onclick=\"location.href = '?UID=$userID'\">Cambia Materia</button>" : "") : "<h1>Whoops! :(</h1><p>C'è stato un problema mentre provavi a prenotarti, per favore riprova o cambia giorno.</p><button onclick='location.reload();'>Cambia giorno</button>");
                     }
                 } else if (count($subjectData["days"]) === 0 || $subjectData["lock"] === true) {
-                    echo "<h1>Questa materia ".($subjectData["lock"] === true ? "è bloccata" : "non ha interrogazioni")."!</h1><button onclick=\"location.href = '?UID=$userID'\">Cambia Materia</button>";
+                    echo "<h1>Questa materia ".($subjectData["lock"] === true ? "è bloccata" : "non ha interrogazioni")."!</h1>".($eligibleSubjectCount > 1 ? "<button onclick=\"location.href = '?UID=$userID'\">Cambia Materia</button>" : "");
                 } else {
                     ?>
                         <h1>Che giorno vuoi farti interrogare, <?php echo $userData["name"]; ?>?</h1>
@@ -167,7 +176,9 @@ if ($_GET["scope"] === "getAllData") {
                             ?>
                         </select>
                         <div class="inline">
-                            <button onclick="location.href = '?UID=<?php echo $userID; ?>'">Cambia Materia</button>
+                            <?php if ($eligibleSubjectCount > 1) { ?>
+                                <button onclick="location.href = '?UID=<?php echo $userID; ?>'">Cambia Materia</button>
+                            <?php } ?>
                             <button onclick="fetch('?UID=<?php echo $userID; ?>&subject=<?php echo $subjectName; ?>&day='+document.getElementById('day').value).then(r=>r.text()).then((r)=>document.write(r))">Conferma</button>
                         </div>
                     <?php

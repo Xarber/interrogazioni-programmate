@@ -85,8 +85,8 @@ div:not(.inline) > button {
 }
 div.inline > button:first-child {
     margin-left: auto;
-    margin-right: 15px;
 }
+div.inline > button:first-child:not(:only-child) {margin-right: 15px;}
 @media (max-width: 680px) {
     .mainDiv {
         width: calc(90% - 50px);
