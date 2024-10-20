@@ -303,6 +303,41 @@ class AdminDashboard {
         this.appended = true;
         this.updateDashboard();
     }
+
+    sortSubjectDates(daysObject) {
+        return Object.keys(daysObject).sort((a, b) => {
+            const [dayA, monthA, yearA] = a.split('-').map(Number);
+            const [dayB, monthB, yearB] = b.split('-').map(Number);
+            
+            // Compare years
+            if (yearA !== yearB) return yearA - yearB;
+            
+            // If years are the same, compare months
+            if (monthA !== monthB) return monthA - monthB;
+            
+            // If months are the same, compare days
+            return dayA - dayB;
+        }).reduce((sortedObj, key) => {
+            sortedObj[key] = daysObject[key];
+            return sortedObj;
+        }, {});
+    }
+
+    sortUserDates(dates) {
+        return dates.sort((a, b) => {
+            const [dayA, monthA, yearA] = a.split('-').map(Number);
+            const [dayB, monthB, yearB] = b.split('-').map(Number);
+            
+            // Compare years
+            if (yearA !== yearB) return yearA - yearB;
+            
+            // If years are the same, compare months
+            if (monthA !== monthB) return monthA - monthB;
+            
+            // If months are the same, compare days
+            return dayA - dayB;
+        });
+    }
   
     updateDashboard() {
         const currentFile = this.currentFileIndex > -1 ? this.jsonFiles[this.currentFileIndex] : this.userData;
@@ -952,8 +987,15 @@ class AdminDashboard {
         if (customData.data && customData.data.days) {
             if (Array.isArray(customData.data.days) && customData.data.days.length === 0) customData.data.days = {};
             if (Array.isArray(customData.data.answers) && customData.data.answers.length === 0) customData.data.answers = {};
+            customData.data.days = this.sortSubjectDates(customData.data.days);
+        } else {
+            for (var usr in customData) {
+                for (var subj in customData[usr].answers) {
+                    customData[usr].answers[subj] = this.sortUserDates(customData[usr].answers[subj]);
+                }
+            }
         }
-            
+        
         this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData);
         // For demonstration purposes, we're just logging the updated JSON
         // In a real application, you'd want to save this data to your backend
