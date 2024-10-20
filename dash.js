@@ -348,7 +348,7 @@ class AdminDashboard {
                 <span>${date} (${dayData.dayName})</span>
                 <span class="admin-availability">Posti liberi: ${dayData.availability}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn" style="display:none" data-date="${date}">
+                    <button class="admin-edit-day-btn" data-date="${date}">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>
                     </button>
                     ${dayData.availability.split('/')[0] < dayData.availability.split('/')[1] ? `<button class="admin-clear-day-btn" data-date="${date}">
@@ -740,6 +740,7 @@ class AdminDashboard {
   
     deleteDay(date) {
         if (confirm(`Sicuro di voler cancellare ${date}?`)) {
+            this.clearDayAnswers(date, true);
             if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
             delete this.jsonFiles[this.currentFileIndex].data.days[date];
             this.updateJSON();
@@ -851,19 +852,19 @@ class AdminDashboard {
             let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):');
             if (dayName && availability) {
                 if (availability.length < 1) availability = "3";
-                var oldFreeSpots = this.jsonFiles[this.currentFileIndex].data.days[oldDate].avilability.split("/")[1] - this.jsonFiles[this.currentFileIndex].data.days[oldDate].avilability.split("/")[0];
+                var oldUsedSpots = this.jsonFiles[this.currentFileIndex].data.days[oldDate].availability.split("/")[1] - this.jsonFiles[this.currentFileIndex].data.days[oldDate].availability.split("/")[0];
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
-                if (availability < oldFreeSpots && !confirm(`La disponibilità scelta (${availability}) è più bassa di quella precedente (${oldFreeSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
-                else if (availability < oldFreeSpots) {
+                if (availability < oldUsedSpots && !confirm(`La disponibilità scelta (${availability}) è più bassa dei posti occupati (${oldUsedSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
+                else if (availability < oldUsedSpots) {
                     this.clearDayAnswers(oldDate, true);
                     availability = `${availability}/${availability}`;
                 } else {
-                    availability = `${availability - oldFreeSpots}/${availability}`;
+                    availability = `${availability - oldUsedSpots}/${availability}`;
                 }
                 for (var answer in this.jsonFiles[this.currentFileIndex].data.answers) {
-                    if (this.jsonFiles[this.currentFileIndex].data.answers[answer].day == oldDate) {
-                        this.jsonFiles[this.currentFileIndex].data.answers[answer].day = date;
+                    if (this.jsonFiles[this.currentFileIndex].data.answers[answer].date == oldDate) {
+                        this.jsonFiles[this.currentFileIndex].data.answers[answer].date = date;
                     }
                 }
                 for (var user in this.userData) {
