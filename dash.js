@@ -377,10 +377,15 @@ class AdminDashboard {
         const objEntries = Object.entries(currentFile);
         objEntries.forEach(([userUUID, userData]) => {
             const userElement = document.createElement('div');
+            var userAnswerNumber = Array.isArray(userData.answers) ? userData.answers.length : ((answers)=>{
+                var returnNumber = 0;
+                for (var subject in answers) if (answers[subject].length > 0) returnNumber++;
+                return returnNumber;
+            })(userData.answers);
             userElement.className = 'admin-day-item';
             userElement.innerHTML = `
                 <span title="Clicca per copiare il link d'accesso dell'utente" onclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}');alert('Il link per ${userData.name} è stato copiato!')}">${userData.admin ? '[A] ' : ''}${userData.name}</span>
-                <span class="admin-availability">Risposte: ${Array.isArray(userData.answers) ? userData.answers.length : Object.keys(userData.answers).length}</span>
+                <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-invite-btn" data-user="${userUUID}">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M168-192q-29.7 0-50.85-21.16Q96-234.32 96-264.04v-432.24Q96-726 117.15-747T168-768h624q29.7 0 50.85 21.16Q864-725.68 864-695.96v432.24Q864-234 842.85-213T792-192H168Zm312-240L168-611v347h624v-347L480-432Zm0-85 312-179H168l312 179Zm-312-94v-85 432-347Z"/></svg>
