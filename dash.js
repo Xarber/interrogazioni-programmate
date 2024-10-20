@@ -785,15 +785,13 @@ class AdminDashboard {
 
         const currentSubject = this.jsonFiles[this.currentFileIndex].fileName;
         const availableUsers = Object.keys(this.userData).filter(uuid => 
-            !this.userData[uuid].answers[currentSubject] || 
-            this.userData[uuid].answers[currentSubject].length === 0
+            !this.jsonFiles[this.currentFileIndex].data.answers[uuid]
         );
     
         for (let day in this.jsonFiles[this.currentFileIndex].data.days) {
             let [current, max] = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/").map(Number);
-            let spotsToFill = max - current;
     
-            while (spotsToFill > 0 && availableUsers.length > 0) {
+            while (current > 0 && availableUsers.length > 0) {
                 const randomIndex = Math.floor(Math.random() * availableUsers.length);
                 const userUUID = availableUsers[randomIndex];
     
@@ -801,7 +799,8 @@ class AdminDashboard {
                 if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) {
                     this.jsonFiles[this.currentFileIndex].data.answers[userUUID] = {};
                 }
-                this.jsonFiles[this.currentFileIndex].data.answers[userUUID].day = day;
+                this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = day;
+                this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = "F";
     
                 // Update user's answers
                 if (!this.userData[userUUID].answers[currentSubject]) {
@@ -810,8 +809,7 @@ class AdminDashboard {
                 this.userData[userUUID].answers[currentSubject].push(day);
     
                 // Update counters
-                spotsToFill--;
-                current++;
+                current--;
                 this.jsonFiles[this.currentFileIndex].data.answerCount++;
     
                 // Remove user from available list
