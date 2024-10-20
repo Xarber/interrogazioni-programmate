@@ -1,5 +1,10 @@
 class UserDashboard {
-    constructor(userData, containerDiv = null) {
+    /**
+     * UserDashboard constructor.
+     * @param {HTMLElement} [containerDiv=document.documentElement] - The container div where the dashboard will be rendered
+     * @param {Object} userData - The user data containing name, answers, and admin status
+     */
+    constructor(containerDiv = null, userData) {
         this.userData = userData;
         this.container = containerDiv || document.documentElement;
         this.dashboard = null;
@@ -7,7 +12,7 @@ class UserDashboard {
     }
   
     render() {
-        this.dashboard = document.createElement('div');
+        this.dashboard = this.dashboard || document.createElement('div');
         this.dashboard.className = 'user-dashboard';
         this.dashboard.innerHTML = `
             <div class="user-dashboard-content">
@@ -25,7 +30,8 @@ class UserDashboard {
 
         this.applyStyles();
         this.attachEventListeners();
-        this.container.appendChild(this.dashboard);
+        if (!this.appended) this.container.appendChild(this.dashboard);
+        this.appended = true;
         if (this.dashboard.querySelector("button#dash-admin-view-btn")) this.dashboard.querySelector("button#dash-admin-view-btn").onclick = this.userData.onOpenAdminDash;
         this.closed = false;
     }
@@ -182,20 +188,29 @@ class UserDashboard {
         this.container.removeChild(this.dashboard);
         this.closed = true;
     }
+
+    update(userData) {
+        this.userData = userData;
+        this.closed = false;
+        this.render();
+    }
 }
 
-// Usage example:
-// const dashboard = new UserDashboard({
-//     "name": "Leandro Enrico",
-//     "answers": {
-//         "Biologia": ["15-10-2024", "14-12-2024"],
-//         "Geostoria": ["23-10-2024"]
-//     }
-// });
-
-
 class AdminDashboard {
-    constructor(jsonFiles, update, userData, dataAnalysis, containerDiv = null) {
+    /**
+     * Create a new AdminDashboard instance.
+     * @param {HTMLElement} [containerDiv=document.documentElement] - The container to render the dashboard in.
+     * @param {Object} options - Options for the dashboard.
+     * @param {Array.<Object>} [options.subjects] - An array of subjects to display. Each subject must have a "fileName", "data" and "cleared" property.
+     * @param {function} [options.updateCallback] - A callback to call when a subject's json file is updated. The callback takes two arguments: the full data and the file data.
+     * @param {Object} [options.users] - An object containing user data.
+     * @param {function} [options.analysisFunction] - A callback to call when the user wants to analyze the data. The callback takes one argument: an object with properties subject, users, data, log, clipboard and copy.
+     */
+    constructor(containerDiv = null, options) {
+        var jsonFiles = options.subjects;
+        var update = options.updateCallback;
+        var userData = options.users;
+        var dataAnalysis = options.analysisFunction;
         this.jsonFiles = jsonFiles;
         this.userData = userData;
         this.onJsonUpdate = update ?? ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
@@ -254,6 +269,9 @@ class AdminDashboard {
                                     ${typeof this.dataAnalysis === "function" ? `<button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M360-240q-29.7 0-50.85-21.15Q288-282.3 288-312v-480q0-29.7 21.15-50.85Q330.3-864 360-864h384q29.7 0 50.85 21.15Q816-821.7 816-792v480q0 29.7-21.15 50.85Q773.7-240 744-240H360Zm0-72h384v-480H360v480ZM216-96q-29.7 0-50.85-21.15Q144-138.3 144-168v-552h72v552h456v72H216Zm144-216v-480 480Z"/></svg>
                                     </button>` : ""}
+                                    <button id="filloutAnswersBtn" style="background-color: red;" class="admin-action-button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e8eaed"><path d="M570.67-160v-66.67h114.66L527-384.33 574-432l159.33 158v-114.67H800V-160H570.67Zm-364 0L160-207.33l526.67-526h-116V-800H800v228.67h-66.67V-686L206.67-160Zm179-367.67L160-752.67 207.33-800 433-575l-47.33 47.33Z"/></svg>
+                                    </button>
                                     <button id="clearAnswersBtn" style="background-color: red;" class="admin-action-button">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m675-144-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Zm-195 0q-140 0-238-98t-98-238h72q0 109 77.5 186.5T480-216q19 0 37-2.5t35-7.5v74q-17 4-35 6t-37 2ZM144-576v-240h72v130q46-60 114.5-95T480-816q140 0 238 98t98 238h-72q0-109-77.5-186.5T480-744q-62 0-114.5 25.5T277-648h107v72H144Zm409 205L444-480v-192h72v162l74 75-37 64Z"/></svg>
                                     </button>
@@ -329,6 +347,9 @@ class AdminDashboard {
             dayElement.innerHTML = `
                 <span>${date} (${dayData.dayName})</span>
                 <span class="admin-availability">Posti liberi: ${dayData.availability}</span>
+                <button class="admin-edit-day-btn" style="display:none" data-date="${date}">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e8eaed"><path d="M186.67-186.67H235L680-631l-48.33-48.33-445 444.33v48.33ZM120-120v-142l559.33-558.33q9.34-9 21.5-14 12.17-5 25.5-5 12.67 0 25 5 12.34 5 22 14.33L821-772q10 9.67 14.5 22t4.5 24.67q0 12.66-4.83 25.16-4.84 12.5-14.17 21.84L262-120H120Zm652.67-606-46-46 46 46Zm-117 71-24-24.33L680-631l-24.33-24Z"/></svg>
+                </button>
                 <button class="admin-delete-day-btn" data-date="${date}">
                     <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
                 </button>
@@ -508,7 +529,7 @@ class AdminDashboard {
                 margin-left: auto;
                 gap: 5px;
             }
-            .admin-delete-day-btn, .admin-admin-btn, .admin-invite-btn {
+            .admin-delete-day-btn, .admin-edit-day-btn, .admin-admin-btn, .admin-invite-btn {
                 padding: 5px 10px;
                 background-color: #f44336;
                 color: white;
@@ -518,6 +539,9 @@ class AdminDashboard {
                 cursor: pointer;
             }
             .admin-admin-btn {
+                background-color: dodgerblue;
+            }
+            .admin-edit-day-btn {
                 background-color: dodgerblue;
             }
             .admin-invite-btn {
@@ -594,17 +618,12 @@ class AdminDashboard {
     
         const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
         clearAnswersBtn.addEventListener('click', () => {
-            if (!confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}?`)) return;
-            this.jsonFiles[this.currentFileIndex].data.answers = {};
-            this.jsonFiles[this.currentFileIndex].data.answerCount = 0;
-            for (var day in this.jsonFiles[this.currentFileIndex].data.days) {
-                var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
-                this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
-            }
-            this.jsonFiles[this.currentFileIndex].cleared = true;
-            this.updateJSON();
-            delete this.jsonFiles[this.currentFileIndex].cleared;
-            this.render();
+            this.clearSubjectAnswers();
+        });
+
+        const filloutAnswersBtn = this.dashboard.querySelector('#filloutAnswersBtn');
+        filloutAnswersBtn.addEventListener('click', () => {
+            this.filloutAnswers();
         });
 
         if (typeof this.dataAnalysis === "function") {
@@ -632,6 +651,9 @@ class AdminDashboard {
         daysList.addEventListener('click', (e) => {
             if (e.target.classList.contains('admin-delete-day-btn')) {
                 this.deleteDay(e.target.dataset.date);
+            }
+            if (e.target.classList.contains('admin-edit-day-btn')) {
+                this.editDay(e.target.dataset.date);
             }
         });
 
@@ -679,6 +701,10 @@ class AdminDashboard {
     addDay() {
         const date = prompt('Inserisci la data (DD-MM-YYYY):');
         if (date) {
+            if (this.jsonFiles[this.currentFileIndex].data.days[date]) {
+                alert(`Questa data è già esistente!`);
+                return this.addDay();
+            }
             let dayName = new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
             let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):');
@@ -709,6 +735,146 @@ class AdminDashboard {
             delete this.jsonFiles[this.currentFileIndex].data.days[date];
             this.updateJSON();
             this.renderDays();
+        }
+    }
+    
+    clearSubjectAnswers() {
+        if (!confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}?`)) return;
+        this.jsonFiles[this.currentFileIndex].data.answers = {};
+        this.jsonFiles[this.currentFileIndex].data.answerCount = 0;
+        for (var day in this.jsonFiles[this.currentFileIndex].data.days) {
+            var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
+            this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
+        }
+        this.jsonFiles[this.currentFileIndex].cleared = true;
+        this.updateJSON();
+        delete this.jsonFiles[this.currentFileIndex].cleared;
+        this.render();
+    }
+
+    clearDayAnswers(day, force) {
+        if (!force && !confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}: ${day}?`)) return;
+        for (var answer in this.jsonFiles[this.currentFileIndex].data.answers) {
+            if (this.jsonFiles[this.currentFileIndex].data.answers[answer].day == day) {
+                delete this.jsonFiles[this.currentFileIndex].data.answers[answer];
+                this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
+                var count = 0;
+                for (var user in this.userData) {
+                    if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+                        var index = this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
+                        if (index != -1) this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
+                        ++count;
+                    }
+                }
+                if (count > 0) {
+                    var tmpIndex = this.currentFileIndex;
+                    this.currentFileIndex = -1;
+                    this.updateJSON();
+                    this.currentFileIndex = tmpIndex;
+                }
+            }
+        }
+        var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
+        this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
+        this.updateJSON();
+        this.render();
+    }
+    
+    filloutAnswers() {
+        if (!confirm(`Sei sicuro di voler riempire i posti rimanenti con utenti casuali?`)) return;
+
+        const currentSubject = this.jsonFiles[this.currentFileIndex].fileName;
+        const availableUsers = Object.keys(this.userData).filter(uuid => 
+            !this.userData[uuid].answers[currentSubject] || 
+            this.userData[uuid].answers[currentSubject].length === 0
+        );
+    
+        for (let day in this.jsonFiles[this.currentFileIndex].data.days) {
+            let [current, max] = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/").map(Number);
+            let spotsToFill = max - current;
+    
+            while (spotsToFill > 0 && availableUsers.length > 0) {
+                const randomIndex = Math.floor(Math.random() * availableUsers.length);
+                const userUUID = availableUsers[randomIndex];
+    
+                // Add answer for this user
+                if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) {
+                    this.jsonFiles[this.currentFileIndex].data.answers[userUUID] = {};
+                }
+                this.jsonFiles[this.currentFileIndex].data.answers[userUUID].day = day;
+    
+                // Update user's answers
+                if (!this.userData[userUUID].answers[currentSubject]) {
+                    this.userData[userUUID].answers[currentSubject] = [];
+                }
+                this.userData[userUUID].answers[currentSubject].push(day);
+    
+                // Update counters
+                spotsToFill--;
+                current++;
+                this.jsonFiles[this.currentFileIndex].data.answerCount++;
+    
+                // Remove user from available list
+                availableUsers.splice(randomIndex, 1);
+            }
+    
+            // Update availability
+            this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${current}/${max}`;
+        }
+
+        var tmpIndex = this.currentFileIndex;
+        this.currentFileIndex = -1;
+        this.updateJSON();
+        this.currentFileIndex = tmpIndex;
+
+        this.updateJSON();
+        this.render();
+    }
+
+    editDay(oldDate) {
+        const date = prompt('Inserisci la data (DD-MM-YYYY):');
+        if (date) {
+            if (this.jsonFiles[this.currentFileIndex].data.days[date] && oldDate != date) {
+                alert(`Questa data è già esistente!`);
+                return this.editDay(oldDate);
+            }
+            let dayName = new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"});
+            dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
+            let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):');
+            if (dayName && availability) {
+                if (availability.length < 1) availability = "3";
+                var oldFreeSpots = this.jsonFiles[this.currentFileIndex].data.days[oldDate].avilability.split("/")[1] - this.jsonFiles[this.currentFileIndex].data.days[oldDate].avilability.split("/")[0];
+                if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
+                if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
+                if (availability < oldFreeSpots && !confirm(`La disponibilità scelta (${availability}) è più bassa di quella precedente (${oldFreeSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
+                else if (availability < oldFreeSpots) {
+                    this.clearDayAnswers(oldDate, true);
+                    availability = `${availability}/${availability}`;
+                } else {
+                    availability = `${availability - oldFreeSpots}/${availability}`;
+                }
+                for (var answer in this.jsonFiles[this.currentFileIndex].data.answers) {
+                    if (this.jsonFiles[this.currentFileIndex].data.answers[answer].day == oldDate) {
+                        this.jsonFiles[this.currentFileIndex].data.answers[answer].day = date;
+                    }
+                }
+                for (var user in this.userData) {
+                    if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+                        var index = this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==oldDate);
+                        if (index != -1) this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName][index] = date;
+                    }
+                }
+                this.jsonFiles[this.currentFileIndex].data.days[date] = { dayName, availability };
+                delete this.jsonFiles[this.currentFileIndex].data.days[oldDate];
+                this.updateJSON();
+
+                var tmpIndex = this.currentFileIndex;
+                this.currentFileIndex = -1;
+                this.updateJSON();
+                this.currentFileIndex = tmpIndex;
+
+                this.renderDays();
+            }
         }
     }
 
@@ -784,10 +950,17 @@ class AdminDashboard {
     getData() {
         return this.jsonFiles;
     }
-}
 
-// Usage example:
-// const adminDashboard = new AdminDashboard([
-//     {fileName: "Geostoria", data: {...}},
-//     {fileName: "Blahblahblah", data: {...}}
-// ]);
+    update(options) {
+        var jsonFiles = options.subjects;
+        var update = options.updateCallback;
+        var userData = options.users;
+        var dataAnalysis = options.analysisFunction;
+        this.jsonFiles = jsonFiles;
+        this.userData = userData;
+        this.onJsonUpdate = update ?? ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
+        this.currentFileIndex = -1;
+        this.dataAnalysis = dataAnalysis;
+        this.render();
+    }
+}

@@ -291,16 +291,21 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             btn.onclick = ()=>{
                 window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard({admin: isAdmin, onOpenAdminDash: ()=>{
                     fetch("?UID=<?php echo $userID; ?>&scope=getAllData").then(r=>r.json()).then(r=>{
-                        window.adminDash = new AdminDashboard(r, (type, fullData, fileData)=>{
-                            console.log(fullData, fileData);
-                            fetch("?UID=<?php echo $userID; ?>&scope=updateSettings&type="+type, {
-                                method: "POST",
-                                body: JSON.stringify([fileData])
-                            }).then(r=>r.json()).then(r=>{
-                                console.log(r);
-                                if (r.status != true) alert("Impossibile completare l'azione!");
-                            });
-                        }, window.users, analizzaDati);
+                        window.adminDash = new AdminDashboard({
+                            subjects: r,
+                            updateCallback: (type, fullData, fileData)=>{
+                                console.log(fullData, fileData);
+                                fetch("?UID=<?php echo $userID; ?>&scope=updateSettings&type="+type, {
+                                    method: "POST",
+                                    body: JSON.stringify([fileData])
+                                }).then(r=>r.json()).then(r=>{
+                                    console.log(r);
+                                    if (r.status != true) alert("Impossibile completare l'azione!");
+                                });
+                            },
+                            users: window.users,
+                            analysisFunction: analizzaDati
+                        });
                     });
                 }, ...window.userData}) : window.dash;
             }
