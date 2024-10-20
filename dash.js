@@ -659,7 +659,8 @@ class AdminDashboard {
     
         const daysList = this.dashboard.querySelector('#daysList');
         daysList.addEventListener('click', (e) => {
-            const target = e.target.dataset.date ? e.target : e.target.parentNode;
+            let target = e.target.dataset.date ? e.target : e.target.parentNode;
+            target = target.dataset.date ? target : target.parentNode;
             if (target.classList.contains('admin-delete-day-btn')) {
                 this.deleteDay(target.dataset.date);
             }
@@ -673,7 +674,8 @@ class AdminDashboard {
 
         const userList = this.dashboard.querySelector('#userList');
         userList.addEventListener('click', (e) => {
-            const target = e.target.dataset.user ? e.target : e.target.parentNode;
+            let target = e.target.dataset.user ? e.target : e.target.parentNode;
+            target = target.dataset.user ? target : target.parentNode;
             if (target.classList.contains('admin-delete-day-btn')) {
                 this.deleteUser(target.dataset.user);
             }
