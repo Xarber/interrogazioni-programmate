@@ -289,9 +289,9 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         let btn = document.createElement("button");
             btn.innerHTML = "Dati utente";
             btn.onclick = ()=>{
-                window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard({admin: isAdmin, onOpenAdminDash: ()=>{
+                window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard(null, {admin: isAdmin, onOpenAdminDash: ()=>{
                     fetch("?UID=<?php echo $userID; ?>&scope=getAllData").then(r=>r.json()).then(r=>{
-                        window.adminDash = new AdminDashboard({
+                        window.adminDash = new AdminDashboard(null, {
                             subjects: r,
                             updateCallback: (type, fullData, fileData)=>{
                                 console.log(fullData, fileData);
