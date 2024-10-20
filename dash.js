@@ -288,10 +288,10 @@ class AdminDashboard {
                 </div>
                 <div class="admin-dashboard-user-section">
                     <div class="admin-days-container">
-                            <div id="userList"></div>
-                            <button id="addUserBtn" class="admin-action-button">
-                                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
-                            </button>
+                        <div id="userList"></div>
+                        <button id="addUserBtn" class="admin-action-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -347,12 +347,17 @@ class AdminDashboard {
             dayElement.innerHTML = `
                 <span>${date} (${dayData.dayName})</span>
                 <span class="admin-availability">Posti liberi: ${dayData.availability}</span>
-                <button class="admin-edit-day-btn" style="display:none" data-date="${date}">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e8eaed"><path d="M186.67-186.67H235L680-631l-48.33-48.33-445 444.33v48.33ZM120-120v-142l559.33-558.33q9.34-9 21.5-14 12.17-5 25.5-5 12.67 0 25 5 12.34 5 22 14.33L821-772q10 9.67 14.5 22t4.5 24.67q0 12.66-4.83 25.16-4.84 12.5-14.17 21.84L262-120H120Zm652.67-606-46-46 46 46Zm-117 71-24-24.33L680-631l-24.33-24Z"/></svg>
-                </button>
-                <button class="admin-delete-day-btn" data-date="${date}">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
-                </button>
+                <div class="admin-inline admin-user-actions">
+                    <button class="admin-edit-day-btn" style="display:none" data-date="${date}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e8eaed"><path d="M186.67-186.67H235L680-631l-48.33-48.33-445 444.33v48.33ZM120-120v-142l559.33-558.33q9.34-9 21.5-14 12.17-5 25.5-5 12.67 0 25 5 12.34 5 22 14.33L821-772q10 9.67 14.5 22t4.5 24.67q0 12.66-4.83 25.16-4.84 12.5-14.17 21.84L262-120H120Zm652.67-606-46-46 46 46Zm-117 71-24-24.33L680-631l-24.33-24Z"/></svg>
+                    </button>
+                    ${dayData.availability.split('/')[0] < dayData.availability.split('/')[1] ? `<button class="admin-clear-day-btn" data-date="${date}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m675-144-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Zm-195 0q-140 0-238-98t-98-238h72q0 109 77.5 186.5T480-216q19 0 37-2.5t35-7.5v74q-17 4-35 6t-37 2ZM144-576v-240h72v130q46-60 114.5-95T480-816q140 0 238 98t98 238h-72q0-109-77.5-186.5T480-744q-62 0-114.5 25.5T277-648h107v72H144Zm409 205L444-480v-192h72v162l74 75-37 64Z"/></svg>
+                    </button>` : ""}
+                    <button class="admin-delete-day-btn" data-date="${date}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
+                    </button>
+                </div>
             `;
             daysList.appendChild(dayElement);
         });
@@ -529,7 +534,7 @@ class AdminDashboard {
                 margin-left: auto;
                 gap: 5px;
             }
-            .admin-delete-day-btn, .admin-edit-day-btn, .admin-admin-btn, .admin-invite-btn {
+            .admin-delete-day-btn, .admin-clear-day-btn, .admin-edit-day-btn, .admin-admin-btn, .admin-invite-btn {
                 padding: 5px 10px;
                 background-color: #f44336;
                 color: white;
@@ -649,11 +654,15 @@ class AdminDashboard {
     
         const daysList = this.dashboard.querySelector('#daysList');
         daysList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('admin-delete-day-btn')) {
-                this.deleteDay(e.target.dataset.date);
+            const target = e.target.dataset.date ? e.target : e.target.parentNode;
+            if (target.classList.contains('admin-delete-day-btn')) {
+                this.deleteDay(target.dataset.date);
             }
-            if (e.target.classList.contains('admin-edit-day-btn')) {
-                this.editDay(e.target.dataset.date);
+            if (target.classList.contains('admin-clear-day-btn')) {
+                this.clearDayAnswers(target.dataset.date);
+            }
+            if (target.classList.contains('admin-edit-day-btn')) {
+                this.editDay(target.dataset.date);
             }
         });
 
@@ -754,25 +763,26 @@ class AdminDashboard {
 
     clearDayAnswers(day, force) {
         if (!force && !confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}: ${day}?`)) return;
+        var count = 0;
         for (var answer in this.jsonFiles[this.currentFileIndex].data.answers) {
-            if (this.jsonFiles[this.currentFileIndex].data.answers[answer].day == day) {
+            if (this.jsonFiles[this.currentFileIndex].data.answers[answer].date == day) {
                 delete this.jsonFiles[this.currentFileIndex].data.answers[answer];
                 this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
-                var count = 0;
+
                 for (var user in this.userData) {
                     if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
                         var index = this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
                         if (index != -1) this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
-                        ++count;
+                        count = count + 1;
                     }
                 }
-                if (count > 0) {
-                    var tmpIndex = this.currentFileIndex;
-                    this.currentFileIndex = -1;
-                    this.updateJSON();
-                    this.currentFileIndex = tmpIndex;
-                }
             }
+        }
+        if (count > 0) {
+            var tmpIndex = this.currentFileIndex;
+            this.currentFileIndex = -1;
+            this.updateJSON();
+            this.currentFileIndex = tmpIndex;
         }
         var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
         this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
