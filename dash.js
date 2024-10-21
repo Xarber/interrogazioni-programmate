@@ -766,6 +766,7 @@ class AdminDashboard {
             }
             let dayName = new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
+            alert("Data: " + dayName + " " + date);
             let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):');
             if (dayName && availability) {
                 if (availability.length < 1) availability = "3";
