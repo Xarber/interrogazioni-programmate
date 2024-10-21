@@ -651,7 +651,7 @@ class AdminDashboard {
     
         const dashHeader = this.dashboard.querySelector('h2#admin-dashboard-header-title');
         dashHeader.addEventListener('click', ()=>{
-
+            this.editSubject();
         });
 
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
