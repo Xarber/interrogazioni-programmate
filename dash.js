@@ -972,7 +972,7 @@ class AdminDashboard {
 
                 this.jsonFiles[this.currentFileIndex].data.days[date] = { dayName, availability };
                 if (oldDate != date) delete this.jsonFiles[this.currentFileIndex].data.days[oldDate];
-                await this.updateJSON(undefined, false, true);
+                await this.updateJSON();
 
                 this.renderDays();
             }
