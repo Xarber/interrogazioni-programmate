@@ -348,7 +348,7 @@ class AdminDashboard {
     async mergeUserEdits() {
         var mergeList = (typeof this.refreshUsers === "function") ? (await this.refreshUsers()) : {};
         for (var elUUID in mergeList) {
-            if (this.userEditList.contains(elUUID)) continue;
+            if (this.userEditList.includes(elUUID)) continue;
             this.userData[elUUID] = mergeList[elUUID];
         }
         this.userEditList = [];
@@ -964,7 +964,7 @@ class AdminDashboard {
         const newName = prompt(`Come vuoi rinominare ${this.userData[uuid].name}?`);
         if (newName) {
             this.userData[uuid].name = newName;
-            if (!this.userEditList.contains(uuid)) this.userEditList.push(uuid);
+            if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
             this.updateJSON();
             this.render();
         }
@@ -986,7 +986,7 @@ class AdminDashboard {
     deleteUser(uuid) {
         if (confirm(`Sicuro di voler cancellare ${this.userData[uuid].name}?`)) {
             delete this.userData[uuid];
-            if (!this.userEditList.contains(uuid)) this.userEditList.push(uuid);
+            if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
             this.updateJSON();
             this.renderUsers();
         }
@@ -995,7 +995,7 @@ class AdminDashboard {
     toggleAdminUser(uuid) {
         if (confirm(this.userData[uuid].admin ? `Sicuro di voler togliere i permessi di admin da ${this.userData[uuid].name}?` : `Sicuro di voler rendere ${this.userData[uuid].name} admin?`)) {
             this.userData[uuid].admin = !this.userData[uuid].admin;
-            if (!this.userEditList.contains(uuid)) this.userEditList.push(uuid);
+            if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
             this.updateJSON();
             this.renderUsers();
         }
