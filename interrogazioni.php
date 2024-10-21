@@ -312,6 +312,13 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                                 }).then(r=>r.json()).then(r=>{
                                     console.log(r);
                                     if (r.status != true) alert("Impossibile completare l'azione!");
+                                    else {
+                                        alert("Dati aggiornati con successo!");
+                                        window.adminDash && window.adminDash.update({
+                                            subjects: r.newData.subjects,
+                                            users: r.newData.users
+                                        });
+                                    }
                                 });
                             },
                             users: window.users,
