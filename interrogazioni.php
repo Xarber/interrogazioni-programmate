@@ -171,7 +171,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         <select name="day" id="day">
                             <?php
                                 foreach ($subjectData["days"] as $key => $value) {
-                                    echo "<option value='$key'".(explode("/", $value["availability"])[0] === 0 ? " disabled" : "").">({$value["availability"]} Liberi) {$value["dayName"]} {$key}</option>";
+                                    echo "<option value='$key'".(explode("/", $value["availability"], 2)[0] == "0" ? " disabled" : "").">({$value["availability"]} Liberi) {$value["dayName"]} {$key}</option>";
                                 }
                             ?>
                         </select>
