@@ -1075,7 +1075,7 @@ class AdminDashboard {
         customData ??= this.currentFileIndex > -1 ? this.jsonFiles[this.currentFileIndex] : this.userData;
         while (!!this.updating) {
             await new Promise((resolve, reject)=>{
-                setTimeout(resolve, 1000);
+                setTimeout(resolve, 100);
             })
         }
         this.updating = true;
