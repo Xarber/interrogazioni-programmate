@@ -649,8 +649,9 @@ class AdminDashboard {
         const closeBtn = this.dashboard.querySelector('.admin-close-btn');
         closeBtn.addEventListener('click', () => this.close());
     
-        const dashHeader = this.dashboard.querySelector('h2#admin-dashboard-header-title');
+        const dashHeader = this.dashboard.querySelector(`h2#admin-dashboard-header-title`);
         dashHeader.addEventListener('click', ()=>{
+            alert("Clicked")
             this.editSubject();
         });
 
