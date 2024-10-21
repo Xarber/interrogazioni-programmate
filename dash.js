@@ -868,7 +868,7 @@ class AdminDashboard {
         if (count > 0) {
             var tmpIndex = this.currentFileIndex;
             this.currentFileIndex = -1;
-            await this.updateJSON();
+            await this.updateJSON(undefined, false, true);
             this.currentFileIndex = tmpIndex;
         }
         var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
@@ -920,7 +920,7 @@ class AdminDashboard {
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
-        await this.updateJSON();
+        await this.updateJSON(undefined, false, true);
         this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
@@ -965,7 +965,7 @@ class AdminDashboard {
                 }
                 this.jsonFiles[this.currentFileIndex].data.days[date] = { dayName, availability };
                 delete this.jsonFiles[this.currentFileIndex].data.days[oldDate];
-                await this.updateJSON();
+                await this.updateJSON(undefined, false, true);
 
                 var tmpIndex = this.currentFileIndex;
                 this.currentFileIndex = -1;
@@ -1009,7 +1009,7 @@ class AdminDashboard {
             if (userEditCount > 0) {
                 var tmpIndex = this.currentFileIndex;
                 this.currentFileIndex = -1;
-                await this.updateJSON()
+                await this.updateJSON(undefined, false, true);
                 this.render();
                 this.currentFileIndex = tmpIndex;
             }
@@ -1075,7 +1075,7 @@ class AdminDashboard {
         }
     }
   
-    async updateJSON(customData) {
+    async updateJSON(customData, skipUpdateFunction = false, forceSkipUpdateRefresh = false) {
         customData ??= this.currentFileIndex > -1 ? this.jsonFiles[this.currentFileIndex] : this.userData;
         while (!!this.updating) {
             await new Promise((resolve, reject)=>{
@@ -1098,8 +1098,10 @@ class AdminDashboard {
             }
         }
         
-        this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData);
+        if (!skipUpdateFunction) this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData, forceSkipUpdateRefresh);
         this.updating = false;
+
+        return [(this.currentFileIndex > -1 ? "subject" : "users"), this.jsonFiles, customData];
     }
   
     close() {

@@ -308,7 +308,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                     fetch("?UID=<?php echo $userID; ?>&scope=getAllData").then(r=>r.json()).then(r=>{
                         window.adminDash = new AdminDashboard(null, {
                             subjects: r,
-                            updateCallback: (type, fullData, fileData)=>{
+                            updateCallback: (type, fullData, fileData, forceBlockRefresh = false)=>{
                                 console.log(fullData, fileData);
                                 fetch("?UID=<?php echo $userID; ?>&scope=updateSettings&type="+type, {
                                     method: "POST",
@@ -318,7 +318,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                                     if (r.status != true) alert("Impossibile completare l'azione!");
                                     else {
                                         // alert("Dati aggiornati con successo!");
-                                        window.adminDash && window.adminDash.update({
+                                        !forceBlockRefresh && window.adminDash && window.adminDash.update({
                                             subjects: r.newData.subjects,
                                             users: r.newData.users
                                         });
