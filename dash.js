@@ -954,7 +954,7 @@ class AdminDashboard {
         const newName = prompt(`Come vuoi rinominare ${this.jsonFiles[customIndex].fileName}?`);
         if (newName) {
             this.addFile(newName, this.jsonFiles[customIndex].data);
-            this.removeFile(customIndex);
+            this.removeFile(customIndex, true);
         }
     }
 
