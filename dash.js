@@ -1072,7 +1072,11 @@ class AdminDashboard {
   
     async updateJSON(customData) {
         customData ??= this.currentFileIndex > -1 ? this.jsonFiles[this.currentFileIndex] : this.userData;
-        if (!!this.updating) return alert(`Una richiesta di aggiornamento è già in corso. Attendi un paio di secondi e riprova.`);
+        while (!!this.updating) {
+            await new Promise((resolve, reject)=>{
+                setTimeout(resolve, 200);
+            })
+        }
         this.updating = true;
 
         // Here you would typically send the updated JSON to the server
