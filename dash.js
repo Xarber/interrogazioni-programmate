@@ -674,15 +674,15 @@ class AdminDashboard {
         });
 
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
-        lockSwitch.addEventListener('change', (e) => {
+        lockSwitch.addEventListener('change', async (e) => {
             this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
-            this.updateJSON();
+            await this.updateJSON();
         });
     
         const hideSwitch = this.dashboard.querySelector('#hideSwitch');
-        hideSwitch.addEventListener('change', (e) => {
+        hideSwitch.addEventListener('change', async (e) => {
             this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
-            this.updateJSON();
+            await this.updateJSON();
         });
     
         const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
@@ -783,12 +783,12 @@ class AdminDashboard {
         return true;
     }
   
-    addDay() {
+    async addDay() {
         const date = prompt('Inserisci la data (DD-MM-YYYY):');
         if (date) {
             if (this.jsonFiles[this.currentFileIndex].data.days[date]) {
                 alert(`Questa data è già esistente!`);
-                return this.addDay();
+                return await this.addDay();
             }
             const formattedDate = `${date.split("-")[1]}/${date.split("-")[0]}/${date.split("-")[2]}`;
             let dayName = (new Date(formattedDate)).toLocaleString("it-IT", {weekday: "long"});
@@ -800,34 +800,34 @@ class AdminDashboard {
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
                 this.jsonFiles[this.currentFileIndex].data.days[date] = { dayName, availability };
-                this.updateJSON();
+                await this.updateJSON();
                 this.renderDays();
             }
         }
     }
 
-    addUser() {
+    async addUser() {
         const name = prompt('Enter user name:');
         if (name) {
             const newUUID = this.generateUUID();
             this.userData[newUUID] = { name, admin: false, answers: {} };
             this.userEditList.push(newUUID);
-            this.updateJSON();
+            await this.updateJSON();
             this.renderUsers();
         }
     }
   
-    deleteDay(date) {
+    async deleteDay(date) {
         if (confirm(`Sicuro di voler cancellare ${date}?`)) {
-            this.clearDayAnswers(date, true);
+            await this.clearDayAnswers(date, true);
             if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
             delete this.jsonFiles[this.currentFileIndex].data.days[date];
-            this.updateJSON();
+            await this.updateJSON();
             this.renderDays();
         }
     }
     
-    clearSubjectAnswers() {
+    async clearSubjectAnswers() {
         if (!confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}?`)) return;
         this.jsonFiles[this.currentFileIndex].data.answers = {};
         this.jsonFiles[this.currentFileIndex].data.answerCount = 0;
@@ -836,12 +836,12 @@ class AdminDashboard {
             this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
         }
         this.jsonFiles[this.currentFileIndex].cleared = true;
-        this.updateJSON();
+        await this.updateJSON();
         delete this.jsonFiles[this.currentFileIndex].cleared;
         this.render();
     }
 
-    clearDayAnswers(day, force) {
+    async clearDayAnswers(day, force) {
         if (!force && !confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}: ${day}?`)) return;
         var count = 0;
         for (var answer in this.jsonFiles[this.currentFileIndex].data.answers) {
@@ -864,16 +864,16 @@ class AdminDashboard {
         if (count > 0) {
             var tmpIndex = this.currentFileIndex;
             this.currentFileIndex = -1;
-            this.updateJSON();
+            await this.updateJSON();
             this.currentFileIndex = tmpIndex;
         }
         var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
         this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
-        this.updateJSON();
+        await this.updateJSON();
         this.render();
     }
     
-    filloutAnswers() {
+    async filloutAnswers() {
         if (!confirm(`Sei sicuro di voler riempire i posti rimanenti con utenti casuali?`)) return;
 
         const currentSubject = this.jsonFiles[this.currentFileIndex].fileName;
@@ -916,19 +916,19 @@ class AdminDashboard {
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
-        this.updateJSON();
+        await this.updateJSON();
         this.currentFileIndex = tmpIndex;
 
-        this.updateJSON();
+        await this.updateJSON();
         this.render();
     }
 
-    editDay(oldDate) {
+    async editDay(oldDate) {
         const date = prompt('Inserisci la data (DD-MM-YYYY):');
         if (date) {
             if (this.jsonFiles[this.currentFileIndex].data.days[date] && oldDate != date) {
                 alert(`Questa data è già esistente!`);
-                return this.editDay(oldDate);
+                return await this.editDay(oldDate);
             }
             let dayName = new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
@@ -940,7 +940,7 @@ class AdminDashboard {
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
                 if (availability < oldUsedSpots && !confirm(`La disponibilità scelta (${availability}) è più bassa dei posti occupati (${oldUsedSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
                 else if (availability < oldUsedSpots) {
-                    this.clearDayAnswers(oldDate, true);
+                    await this.clearDayAnswers(oldDate, true);
                     availability = `${availability}/${availability}`;
                 } else {
                     availability = `${availability - oldUsedSpots}/${availability}`;
@@ -961,11 +961,11 @@ class AdminDashboard {
                 }
                 this.jsonFiles[this.currentFileIndex].data.days[date] = { dayName, availability };
                 delete this.jsonFiles[this.currentFileIndex].data.days[oldDate];
-                this.updateJSON();
+                await this.updateJSON();
 
                 var tmpIndex = this.currentFileIndex;
                 this.currentFileIndex = -1;
-                this.updateJSON();
+                await this.updateJSON();
                 this.currentFileIndex = tmpIndex;
 
                 this.renderDays();
@@ -973,26 +973,26 @@ class AdminDashboard {
         }
     }
 
-    editUser(uuid) {
+    async editUser(uuid) {
         const newName = prompt(`Come vuoi rinominare ${this.userData[uuid].name}?`);
         if (newName) {
             this.userData[uuid].name = newName;
             if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
-            this.updateJSON();
+            await this.updateJSON();
             this.render();
         }
     }
 
-    editSubject(customIndex = this.currentFileIndex) {
+    async editSubject(customIndex = this.currentFileIndex) {
         if (customIndex < 0) return;
         const oldName = this.jsonFiles[customIndex].fileName;
         const newName = prompt(`Come vuoi rinominare ${oldName}?`);
         if (newName) {
             if (!this.isSubjectNameAvailable(newName)) {
                 alert(`Questo nome è già in utilizzo!`);
-                return this.editSubject(customIndex);
+                return await this.editSubject(customIndex);
             }
-            this.addFile(newName, this.jsonFiles[customIndex].data);
+            await this.addFile(newName, this.jsonFiles[customIndex].data);
             let userEditCount = 0;
             for (var userUUID in this.userData) {
                 if (!!this.userData[userUUID].answers[oldName]) {
@@ -1005,37 +1005,38 @@ class AdminDashboard {
             if (userEditCount > 0) {
                 var tmpIndex = this.currentFileIndex;
                 this.currentFileIndex = -1;
-                this.updateJSON().then(()=>this.render());
+                await this.updateJSON()
+                this.render();
                 this.currentFileIndex = tmpIndex;
             }
-            this.removeFile(customIndex, true);
+            await this.removeFile(customIndex, true);
         }
     }
 
-    deleteUser(uuid) {
+    async deleteUser(uuid) {
         if (confirm(`Sicuro di voler cancellare ${this.userData[uuid].name}?`)) {
             delete this.userData[uuid];
             if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
-            this.updateJSON();
+            await this.updateJSON();
             this.renderUsers();
         }
     }
 
-    toggleAdminUser(uuid) {
+    async toggleAdminUser(uuid) {
         if (confirm(this.userData[uuid].admin ? `Sicuro di voler togliere i permessi di admin da ${this.userData[uuid].name}?` : `Sicuro di voler rendere ${this.userData[uuid].name} admin?`)) {
             this.userData[uuid].admin = !this.userData[uuid].admin;
             if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
-            this.updateJSON();
+            await this.updateJSON();
             this.renderUsers();
         }
     }
   
-    addFile(fileN = prompt('Inserisci il nome della materia:'), customData) {
+    async addFile(fileN = prompt('Inserisci il nome della materia:'), customData) {
         const fileName = fileN;
         if (fileName) {
             if (!this.isSubjectNameAvailable(fileName)) {
                 alert(`Questo nome è già in utilizzo!`);
-                return this.addFile(undefined, customData);
+                return await this.addFile(undefined, customData);
             }
             const newFile = {
                 fileName: fileName,
@@ -1049,17 +1050,17 @@ class AdminDashboard {
             };
             this.jsonFiles.push(newFile);
             this.currentFileIndex = this.jsonFiles.length - 1;
-            this.updateJSON(newFile);
+            await this.updateJSON(newFile);
             this.render();
         }
     }
   
-    removeFile(customIndex = this.currentFileIndex, force) {
+    async removeFile(customIndex = this.currentFileIndex, force) {
         if (this.jsonFiles.length > 1 || true) { // Allow deleting all files.
             if (customIndex < 0) return alert("Non puoi cancellare questa sezione!");
             if (!force && !confirm(`Sicuro di voler cancellare ${this.jsonFiles[customIndex] ? this.jsonFiles[customIndex].fileName : "questa sezione"}?`)) return;
 
-            this.updateJSON({fileName: this.jsonFiles[customIndex] && this.jsonFiles[customIndex].fileName, data: "removed"});
+            await this.updateJSON({fileName: this.jsonFiles[customIndex] && this.jsonFiles[customIndex].fileName, data: "removed"});
             if (customIndex > -1) {
                 this.jsonFiles.splice(customIndex, 1);
                 this.currentFileIndex = Math.max(0, customIndex - 1);
