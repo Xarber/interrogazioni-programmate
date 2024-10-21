@@ -922,10 +922,10 @@ class AdminDashboard {
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
-        //await this.updateJSON(undefined, false, true);
+        await this.updateJSON(undefined, false, true);
         this.currentFileIndex = tmpIndex;
 
-        //await this.updateJSON();
+        await this.updateJSON();
         this.render();
     }
 
