@@ -419,7 +419,7 @@ class AdminDashboard {
             })(userData.answers);
             userElement.className = 'admin-day-item';
             userElement.innerHTML = `
-                <span title="Clicca per copiare il link d'accesso dell'utente" onclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}');alert('Il link per ${userData.name} è stato copiato!')}">${userData.admin ? '[A] ' : ''}${userData.name}</span>
+                <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}');alert('Il link per ${userData.name} è stato copiato!')}">${userData.admin ? '[A] ' : ''}${userData.name}</span>
                 <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-invite-btn" data-user="${userUUID}">
@@ -711,6 +711,9 @@ class AdminDashboard {
         userList.addEventListener('click', (e) => {
             let target = e.target.dataset.user ? e.target : e.target.parentNode;
             target = target.dataset.user ? target : target.parentNode;
+            if (target.tagName.toLowerCase() == "span") {
+                this.editUser(target.dataset.user);
+            }
             if (target.classList.contains('admin-delete-day-btn')) {
                 this.deleteUser(target.dataset.user);
             }
@@ -926,6 +929,15 @@ class AdminDashboard {
 
                 this.renderDays();
             }
+        }
+    }
+
+    editUser(uuid) {
+        const newName = prompt(`Come vuoi rinominare ${this.userData[uuid].name}?`);
+        if (newName) {
+            this.userData[uuid].name = newName;
+            this.updateJSON();
+            this.render();
         }
     }
 
