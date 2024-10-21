@@ -852,7 +852,10 @@ class AdminDashboard {
                 for (var user in this.userData) {
                     if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
                         var index = this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
-                        if (index != -1) this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
+                        if (index != -1) {
+                            this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
+                            if (!this.userEditList.includes(user)) this.userEditList.push(user);
+                        }
                         count = count + 1;
                     }
                 }
@@ -897,6 +900,7 @@ class AdminDashboard {
                     this.userData[userUUID].answers[currentSubject] = [];
                 }
                 this.userData[userUUID].answers[currentSubject].push(day);
+                if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
     
                 // Update counters
                 current--;
@@ -949,7 +953,10 @@ class AdminDashboard {
                 for (var user in this.userData) {
                     if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
                         var index = this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==oldDate);
-                        if (index != -1) this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName][index] = date;
+                        if (index != -1) {
+                            this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName][index] = date;
+                            if (!this.userEditList.includes(user)) this.userEditList.push(user);
+                        }
                     }
                 }
                 this.jsonFiles[this.currentFileIndex].data.days[date] = { dayName, availability };
@@ -978,7 +985,8 @@ class AdminDashboard {
 
     editSubject(customIndex = this.currentFileIndex) {
         if (customIndex < 0) return;
-        const newName = prompt(`Come vuoi rinominare ${this.jsonFiles[customIndex].fileName}?`);
+        const oldName = this.jsonFiles[customIndex].fileName;
+        const newName = prompt(`Come vuoi rinominare ${oldName}?`);
         if (newName) {
             if (!this.isSubjectNameAvailable(newName)) {
                 alert(`Questo nome è già in utilizzo!`);
@@ -986,6 +994,21 @@ class AdminDashboard {
             }
             this.addFile(newName, this.jsonFiles[customIndex].data);
             this.removeFile(customIndex, true);
+            let userEditCount = 0;
+            for (var userUUID in this.userData) {
+                if (!!this.userData[userUUID].answers[oldName]) {
+                    userEditCount = userEditCount + 1;
+                    if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
+                    this.userData[userUUID].answers[newName] = this.userData[userUUID].answers[oldName];
+                    delete this.userData[userUUID].answers[oldName];
+                }
+            }
+            if (count > 0) {
+                var tmpIndex = this.currentFileIndex;
+                this.currentFileIndex = -1;
+                this.updateJSON();
+                this.currentFileIndex = tmpIndex;
+            }
         }
     }
 
