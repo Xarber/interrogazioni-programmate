@@ -884,6 +884,8 @@ class AdminDashboard {
         const availableUsers = Object.keys(this.userData).filter(uuid => 
             !this.jsonFiles[this.currentFileIndex].data.answers[uuid]
         );
+        if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
+        if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
     
         for (let day in this.jsonFiles[this.currentFileIndex].data.days) {
             let [current, max] = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/").map(Number);
