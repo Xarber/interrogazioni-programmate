@@ -756,6 +756,13 @@ class AdminDashboard {
             return v.toString(16);
         });
     }
+
+    isSubjectNameAvailable(name) {
+        for (var subj of this.jsonFiles) {
+            if (subj.fileName === name) return false;
+        }
+        return true;
+    }
   
     addDay() {
         const date = prompt('Inserisci la data (DD-MM-YYYY):');
@@ -951,6 +958,10 @@ class AdminDashboard {
         if (customIndex < 0) return;
         const newName = prompt(`Come vuoi rinominare ${this.jsonFiles[customIndex].fileName}?`);
         if (newName) {
+            if (!this.isSubjectNameAvailable(newName)) {
+                alert(`Questo nome è già in utilizzo!`);
+                return this.editSubject(customIndex);
+            }
             this.addFile(newName, this.jsonFiles[customIndex].data);
             this.removeFile(customIndex, true);
         }
@@ -975,6 +986,10 @@ class AdminDashboard {
     addFile(fileN = prompt('Inserisci il nome della materia:'), customData) {
         const fileName = fileN;
         if (fileName) {
+            if (!this.isSubjectNameAvailable(fileName)) {
+                alert(`Questo nome è già in utilizzo!`);
+                return this.addFile(fileN, customData);
+            }
             const newFile = {
                 fileName: fileName,
                 data: customData ?? {
