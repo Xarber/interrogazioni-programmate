@@ -993,7 +993,6 @@ class AdminDashboard {
                 return this.editSubject(customIndex);
             }
             this.addFile(newName, this.jsonFiles[customIndex].data);
-            this.removeFile(customIndex, true);
             let userEditCount = 0;
             for (var userUUID in this.userData) {
                 if (!!this.userData[userUUID].answers[oldName]) {
@@ -1009,6 +1008,7 @@ class AdminDashboard {
                 this.updateJSON();
                 this.currentFileIndex = tmpIndex;
             }
+            this.removeFile(customIndex, true);
         }
     }
 
