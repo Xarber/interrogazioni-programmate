@@ -245,8 +245,8 @@ class AdminDashboard {
             </div>
             <div class="admin-dashboard-content">
                 <div class="admin-dashboard-header">
-                        <h2 id="admin-dashboard-header-title">Dashboard</h2>
-                        <button class="admin-close-btn">&times;</button>
+                    <h2 id="admin-dashboard-header-title" title="Clicca per rinominare la sezione." style="cursor: pointer;">Dashboard</h2>
+                    <button class="admin-close-btn">&times;</button>
                 </div>
                 <div class="admin-dashboard-subject-section">
                         <div class="admin-dashboard-controls">
@@ -649,6 +649,11 @@ class AdminDashboard {
         const closeBtn = this.dashboard.querySelector('.admin-close-btn');
         closeBtn.addEventListener('click', () => this.close());
     
+        const dashHeader = this.dashboard.querySelector('h2#admin-dashboard-header-title');
+        dashHeader.addEventListener('click', ()=>{
+
+        });
+
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
         lockSwitch.addEventListener('change', (e) => {
             this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
@@ -941,6 +946,16 @@ class AdminDashboard {
         }
     }
 
+    editSubject() {
+        if (this.currentFileIndex < 0) return;
+        const newName = prompt(`Come vuoi rinominare ${this.jsonFiles[this.currentFile].fileName}?`);
+        if (newName) {
+            const fileIndex = this.currentFileIndex;
+            this.addFile(newName, this.jsonFiles[this.currentFileIndex].data);
+            this.removeFile(fileIndex);
+        }
+    }
+
     deleteUser(uuid) {
         if (confirm(`Sicuro di voler cancellare ${this.userData[uuid].name}?`)) {
             delete this.userData[uuid];
@@ -957,12 +972,12 @@ class AdminDashboard {
         }
     }
   
-    addFile() {
-        const fileName = prompt('Inserisci il nome della materia:');
+    addFile(fileN = prompt('Inserisci il nome della materia:'), customData) {
+        const fileName = fileN;
         if (fileName) {
             const newFile = {
                 fileName: fileName,
-                data: {
+                data: customData ?? {
                     lock: false,
                     hide: false,
                     answerCount: 0,
@@ -977,14 +992,14 @@ class AdminDashboard {
         }
     }
   
-    removeFile() {
+    removeFile(customIndex = this.currentFileIndex, force) {
         if (this.jsonFiles.length > 1 || true) { // Allow deleting all files.
-            if (this.currentFileIndex < 0) return alert("Non puoi cancellare questa sezione!");
-            if (confirm(`Sicuro di voler cancellare ${this.jsonFiles[this.currentFileIndex] ? this.jsonFiles[this.currentFileIndex].fileName : "questa sezione"}?`)) {
-                this.updateJSON({fileName: this.jsonFiles[this.currentFileIndex] && this.jsonFiles[this.currentFileIndex].fileName, data: "removed"});
-                if (this.currentFileIndex > -1) {
-                    this.jsonFiles.splice(this.currentFileIndex, 1);
-                    this.currentFileIndex = Math.max(0, this.currentFileIndex - 1);
+            if (customIndex < 0) return alert("Non puoi cancellare questa sezione!");
+            if (!!force || confirm(`Sicuro di voler cancellare ${this.jsonFiles[customIndex] ? this.jsonFiles[customIndex].fileName : "questa sezione"}?`)) {
+                this.updateJSON({fileName: this.jsonFiles[customIndex] && this.jsonFiles[customIndex].fileName, data: "removed"});
+                if (customIndex > -1) {
+                    this.jsonFiles.splice(customIndex, 1);
+                    this.currentFileIndex = Math.max(0, customIndex - 1);
                 }
                 this.render();
             }
