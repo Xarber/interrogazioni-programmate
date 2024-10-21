@@ -809,7 +809,9 @@ class AdminDashboard {
     addUser() {
         const name = prompt('Enter user name:');
         if (name) {
-            this.userData[this.generateUUID()] = { name, admin: false, answers: {} };
+            const newUUID = this.generateUUID();
+            this.userData[newUUID] = { name, admin: false, answers: {} };
+            this.userEditList.push(newUUID);
             this.updateJSON();
             this.renderUsers();
         }
