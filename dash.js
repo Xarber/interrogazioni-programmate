@@ -351,6 +351,10 @@ class AdminDashboard {
             if (this.userEditList.includes(elUUID)) continue;
             this.userData[elUUID] = mergeList[elUUID];
         }
+        for (var usUUID in this.userData) {
+            if (this.userEditList.includes(usUUID)) continue;
+            if (!mergeList[usUUID]) delete this.userData[usUUID];
+        }
         this.userEditList = [];
     }
   
