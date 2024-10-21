@@ -669,34 +669,36 @@ class AdminDashboard {
         closeBtn.addEventListener('click', () => this.close());
     
         const dashHeader = this.dashboard.querySelector(`h2#admin-dashboard-header-title`);
-        dashHeader.addEventListener('click', ()=>{
-            this.editSubject();
+        dashHeader.addEventListener('click', async ()=>{
+            await this.editSubject();
         });
 
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
-        lockSwitch.addEventListener('change', (e) => {
-            setTimeout(async () => {
+        lockSwitch.addEventListener('change', async (e) => {
+            await new Promise((resolve) => setTimeout(async () => {
                 this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
                 await this.updateJSON();
-            }, 500)
+                resolve();
+            }, 500));
         });
     
         const hideSwitch = this.dashboard.querySelector('#hideSwitch');
-        hideSwitch.addEventListener('change', (e) => {
-            setTimeout(async () => {
+        hideSwitch.addEventListener('change', async (e) => {
+            await new Promise((resolve) => setTimeout(async () => {
                 this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
                 await this.updateJSON();
-            }, 500);
+                resolve();
+            }, 500));
         });
     
         const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
-        clearAnswersBtn.addEventListener('click', () => {
-            this.clearSubjectAnswers();
+        clearAnswersBtn.addEventListener('click', async () => {
+            await this.clearSubjectAnswers();
         });
 
         const filloutAnswersBtn = this.dashboard.querySelector('#filloutAnswersBtn');
-        filloutAnswersBtn.addEventListener('click', () => {
-            this.filloutAnswers();
+        filloutAnswersBtn.addEventListener('click', async () => {
+            await this.filloutAnswers();
         });
 
         if (typeof this.dataAnalysis === "function") {
@@ -715,38 +717,38 @@ class AdminDashboard {
         }
     
         const addUserBtn = this.dashboard.querySelector('#addUserBtn');
-        addUserBtn.addEventListener('click', () => this.addUser());
+        addUserBtn.addEventListener('click', async () => await this.addUser());
 
         const addDayBtn = this.dashboard.querySelector('#addDayBtn');
-        addDayBtn.addEventListener('click', () => this.addDay());
+        addDayBtn.addEventListener('click', async () => await this.addDay());
     
         const daysList = this.dashboard.querySelector('#daysList');
-        daysList.addEventListener('click', (e) => {
+        daysList.addEventListener('click', async (e) => {
             let target = e.target.dataset.date ? e.target : e.target.parentNode;
             target = target.dataset.date ? target : target.parentNode;
             if (target.classList.contains('admin-delete-day-btn')) {
-                this.deleteDay(target.dataset.date);
+                await this.deleteDay(target.dataset.date);
             }
             if (target.classList.contains('admin-clear-day-btn')) {
-                this.clearDayAnswers(target.dataset.date);
+                await this.clearDayAnswers(target.dataset.date);
             }
             if (target.classList.contains('admin-edit-day-btn')) {
-                this.editDay(target.dataset.date);
+                await this.editDay(target.dataset.date);
             }
         });
 
         const userList = this.dashboard.querySelector('#userList');
-        userList.addEventListener('click', (e) => {
+        userList.addEventListener('click', async (e) => {
             let target = e.target.dataset.user ? e.target : e.target.parentNode;
             target = target.dataset.user ? target : target.parentNode;
             if (target.tagName.toLowerCase() == "span") {
-                this.editUser(target.dataset.user);
+                await this.editUser(target.dataset.user);
             }
             if (target.classList.contains('admin-delete-day-btn')) {
-                this.deleteUser(target.dataset.user);
+                await this.deleteUser(target.dataset.user);
             }
             if (target.classList.contains('admin-admin-btn')) {
-                this.toggleAdminUser(target.dataset.user);
+                await this.toggleAdminUser(target.dataset.user);
             }
             if (target.classList.contains('admin-invite-btn')) {
                 const name = this.userData[target.dataset.user].name.split(' ');
@@ -767,10 +769,10 @@ class AdminDashboard {
         });
     
         const addFileBtn = this.dashboard.querySelector('#addFileBtn');
-        addFileBtn.addEventListener('click', () => this.addFile());
+        addFileBtn.addEventListener('click', async () => await this.addFile());
     
         const removeFileBtn = this.dashboard.querySelector('#removeFileBtn');
-        removeFileBtn.addEventListener('click', () => this.removeFile());
+        removeFileBtn.addEventListener('click', async () => await this.removeFile());
     }
 
     generateUUID() {
