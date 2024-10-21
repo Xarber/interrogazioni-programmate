@@ -675,14 +675,18 @@ class AdminDashboard {
 
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
         lockSwitch.addEventListener('change', (e) => {
-            this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
-            this.updateJSON();
+            setTimeout(async () => {
+                this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
+                await this.updateJSON();
+            }, 500)
         });
     
         const hideSwitch = this.dashboard.querySelector('#hideSwitch');
         hideSwitch.addEventListener('change', (e) => {
-            this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
-            this.updateJSON();
+            setTimeout(async () => {
+                this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
+                await this.updateJSON();
+            }, 500);
         });
     
         const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
