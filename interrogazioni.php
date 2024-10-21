@@ -169,6 +169,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         <h1>Che giorno vuoi farti interrogare, <?php echo $userData["name"]; ?>?</h1>
                         <p>Non potrai cambiare la tua scelta.</p>
                         <select name="day" id="day">
+                            <option value="" selected disabled>Scegli un giorno</option>
                             <?php
                                 foreach ($subjectData["days"] as $key => $value) {
                                     echo "<option value='$key'".(explode("/", $value["availability"], 2)[0] == "0" ? " disabled" : "").">({$value["availability"]} Liberi) {$value["dayName"]} {$key}</option>";
