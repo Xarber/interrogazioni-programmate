@@ -69,7 +69,7 @@ if ($_GET["scope"] === "getAllData") {
         }
     }
     header('Content-Type: application/json');
-    die(json_encode(array("status" => $okay, "newData" => getAllData())));
+    die(json_encode(array("status" => $okay, "newData" => array("subjects" => getAllData(), "users" => $userList))));
 }
 $eligibleSubjectCount = 0;
 foreach ($subjectJSONs as $subjectNameTMP) {
