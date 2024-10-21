@@ -674,15 +674,15 @@ class AdminDashboard {
         });
 
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
-        lockSwitch.addEventListener('change', async (e) => {
+        lockSwitch.addEventListener('change', (e) => {
             this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
-            await this.updateJSON();
+            this.updateJSON();
         });
     
         const hideSwitch = this.dashboard.querySelector('#hideSwitch');
-        hideSwitch.addEventListener('change', async (e) => {
+        hideSwitch.addEventListener('change', (e) => {
             this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
-            await this.updateJSON();
+            this.updateJSON();
         });
     
         const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
