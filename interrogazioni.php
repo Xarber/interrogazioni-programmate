@@ -39,6 +39,7 @@ if ($_GET["scope"] === "getAllData") {
     foreach($body as $updateSubject) {
         if ($_GET["type"] === "users") {
             if (($updateSubject["data"] ?? false) && $updateSubject["data"] === "removed") die(json_encode(array("status" => false)));
+            $userList = $updateSubject;
             $okay = $okay && file_put_contents("./JSON/users.json", json_encode($updateSubject, JSON_PRETTY_PRINT));
         } else if ($_GET["type"] === "subject" || !isset($_GET["type"])) {
             $originalFileName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $updateSubject["fileName"]);
