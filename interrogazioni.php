@@ -15,8 +15,8 @@ function getAllData() {
     global $userData;
     if (!($userData["admin"] ?? false)) return false;
     $allSubjectsData = array();
-    global $subjectJSONs;
 
+    $subjectJSONs = array_diff(scandir("./JSON/"), array('.', '..'));
     foreach ($subjectJSONs as $tmpsubject) {
         if ($tmpsubject === "users.json") continue;
         $subjectNameTMP = str_replace(".json", "", $tmpsubject);
