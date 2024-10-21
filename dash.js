@@ -967,12 +967,12 @@ class AdminDashboard {
 
                 var tmpIndex = this.currentFileIndex;
                 this.currentFileIndex = -1;
-                await this.updateJSON(undefined, false, true);
+                //await this.updateJSON(undefined, false, true);
                 this.currentFileIndex = tmpIndex;
 
                 this.jsonFiles[this.currentFileIndex].data.days[date] = { dayName, availability };
                 delete this.jsonFiles[this.currentFileIndex].data.days[oldDate];
-                await this.updateJSON(undefined, false, true);
+                //await this.updateJSON(undefined, false, true);
 
                 this.renderDays();
             }
