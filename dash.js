@@ -902,6 +902,12 @@ class AdminDashboard {
                 }
                 this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = day;
                 this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = "F";
+
+                // Update counters
+                current--;
+                this.jsonFiles[this.currentFileIndex].data.answerCount++;
+                this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${current}/${max}`;
+                await this.updateJSON(undefined, false, true);
     
                 // Update user's answers
                 if (!this.userData[userUUID].answers[currentSubject]) {
@@ -909,25 +915,16 @@ class AdminDashboard {
                 }
                 this.userData[userUUID].answers[currentSubject].push(day);
                 if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
-    
-                // Update counters
-                current--;
-                this.jsonFiles[this.currentFileIndex].data.answerCount++;
+                var tmpIndex = this.currentFileIndex;
+                this.currentFileIndex = -1;
+                await this.updateJSON(undefined, false, true);
+                this.currentFileIndex = tmpIndex;
     
                 // Remove user from available list
                 availableUsers.splice(randomIndex, 1);
             }
-    
-            // Update availability
-            this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${current}/${max}`;
         }
-
-        var tmpIndex = this.currentFileIndex;
-        this.currentFileIndex = -1;
-        await this.updateJSON(undefined, false, true);
-        this.currentFileIndex = tmpIndex;
-
-        await this.updateJSON();
+        
         this.render();
     }
 
