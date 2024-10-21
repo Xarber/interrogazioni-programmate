@@ -31,6 +31,10 @@ if ($_GET["scope"] === "getAllData") {
     $allSubjectsData = getAllData();
     header('Content-Type: application/json');
     die(json_encode($allSubjectsData));
+} else if ($_GET["scope"] === "getAllUsers") {
+    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
+    header('Content-Type: application/json');
+    die(json_encode($userList));
 } else if ($_GET["scope"] === "updateSettings") {
     if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
     $allSubjectsData = array();
@@ -322,7 +326,11 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                                 });
                             },
                             users: window.users,
-                            analysisFunction: analizzaDati
+                            analysisFunction: analizzaDati,
+                            refreshUsers: async ()=>{
+                                const res = await fetch("?UID=<?php echo $userID; ?>&scope=getAllUsers").then(r=>r.json());
+                                return (res.status === false) ? {} : res;
+                            }
                         });
                     });
                 }, ...window.userData}) : window.dash;

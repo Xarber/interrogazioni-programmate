@@ -207,18 +207,22 @@ class AdminDashboard {
      * @param {function} [options.updateCallback] - A callback to call when a subject's json file is updated. The callback takes two arguments: the full data and the file data.
      * @param {Object} [options.users] - An object containing user data.
      * @param {function} [options.analysisFunction] - A callback to call when the user wants to analyze the data. The callback takes one argument: an object with properties subject, users, data, log, clipboard and copy.
-     */
+     * @param {function} [options.refreshUsers] - A callback to refresh users when syncing settings.
+    */
     constructor(containerDiv = null, options) {
         var jsonFiles = options.subjects;
         var update = options.updateCallback;
         var userData = options.users;
         var dataAnalysis = options.analysisFunction;
+        var refreshUsers = options.refreshUsers;
         this.jsonFiles = jsonFiles;
         this.userData = userData;
         this.onJsonUpdate = update ?? ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
         this.currentFileIndex = -1;
+        this.userEditList = [];
         this.container = containerDiv || document.documentElement;
         this.dataAnalysis = dataAnalysis;
+        this.refreshUsers = refreshUsers;
         this.dashboard = null;
         this.render();
     }
@@ -339,6 +343,15 @@ class AdminDashboard {
             // If months are the same, compare days
             return dayA - dayB;
         });
+    }
+
+    async mergeUserEdits() {
+        var mergeList = (typeof this.refreshUsers === "function") ? (await this.refreshUsers()) : {};
+        for (var elUUID in mergeList) {
+            if (this.userEditList.contains(elUUID)) continue;
+            this.userData[elUUID] = mergeList[elUUID];
+        }
+        this.userEditList = [];
     }
   
     updateDashboard() {
@@ -951,6 +964,7 @@ class AdminDashboard {
         const newName = prompt(`Come vuoi rinominare ${this.userData[uuid].name}?`);
         if (newName) {
             this.userData[uuid].name = newName;
+            if (!this.userEditList.contains(uuid)) this.userEditList.push(uuid);
             this.updateJSON();
             this.render();
         }
@@ -972,6 +986,7 @@ class AdminDashboard {
     deleteUser(uuid) {
         if (confirm(`Sicuro di voler cancellare ${this.userData[uuid].name}?`)) {
             delete this.userData[uuid];
+            if (!this.userEditList.contains(uuid)) this.userEditList.push(uuid);
             this.updateJSON();
             this.renderUsers();
         }
@@ -980,6 +995,7 @@ class AdminDashboard {
     toggleAdminUser(uuid) {
         if (confirm(this.userData[uuid].admin ? `Sicuro di voler togliere i permessi di admin da ${this.userData[uuid].name}?` : `Sicuro di voler rendere ${this.userData[uuid].name} admin?`)) {
             this.userData[uuid].admin = !this.userData[uuid].admin;
+            if (!this.userEditList.contains(uuid)) this.userEditList.push(uuid);
             this.updateJSON();
             this.renderUsers();
         }
@@ -1025,14 +1041,18 @@ class AdminDashboard {
         }
     }
   
-    updateJSON(customData) {
+    async updateJSON(customData) {
         customData ??= this.currentFileIndex > -1 ? this.jsonFiles[this.currentFileIndex] : this.userData;
+        if (!!this.updating) return alert(`Una richiesta di aggiornamento è già in corso. Attendi un paio di secondi e riprova.`);
+        this.updating = true;
+
         // Here you would typically send the updated JSON to the server
         if (customData.data && customData.data.days) {
             if (Array.isArray(customData.data.days) && customData.data.days.length === 0) customData.data.days = {};
             if (Array.isArray(customData.data.answers) && customData.data.answers.length === 0) customData.data.answers = {};
             customData.data.days = this.sortSubjectDates(customData.data.days);
         } else {
+            await this.mergeUserEdits();
             for (var usr in customData) {
                 for (var subj in customData[usr].answers) {
                     customData[usr].answers[subj] = this.sortUserDates(customData[usr].answers[subj]);
@@ -1041,8 +1061,7 @@ class AdminDashboard {
         }
         
         this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData);
-        // For demonstration purposes, we're just logging the updated JSON
-        // In a real application, you'd want to save this data to your backend
+        this.updating = false;
     }
   
     close() {
@@ -1058,10 +1077,12 @@ class AdminDashboard {
         var userData = options.users;
         var update = options.updateCallback;
         var dataAnalysis = options.analysisFunction;
+        var refreshUsers = options.refreshUsers;
         this.jsonFiles = jsonFiles || this.jsonFiles;
         this.userData = userData || this.userData;
         this.onJsonUpdate = update || this.onJsonUpdate || ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
         this.dataAnalysis = dataAnalysis || this.dataAnalysis;
+        this.refreshUsers = refreshUsers || this.refreshUsers;
         if (this.currentFileIndex > this.jsonFiles.length - 1) this.currentFileIndex = -1;
         // this.dashboard.remove();
         // this.dashboard = null;
