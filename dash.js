@@ -898,6 +898,7 @@ class AdminDashboard {
                 }
                 this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = day;
                 this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = "F";
+                console.log(this.jsonFiles[this.currentFileIndex].data);
     
                 // Update user's answers
                 if (!this.userData[userUUID].answers[currentSubject]) {
@@ -917,7 +918,6 @@ class AdminDashboard {
             // Update availability
             this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${current}/${max}`;
         }
-        console.log(this.jsonFiles[this.currentFileIndex].data);
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
