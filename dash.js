@@ -190,8 +190,10 @@ class UserDashboard {
     }
 
     update(userData) {
-        this.userData = userData;
+        this.userData = userData || this.userData;
         this.closed = false;
+        this.dashboard.remove();
+        this.dashboard = null;
         this.render();
     }
 }
@@ -1053,14 +1055,16 @@ class AdminDashboard {
 
     update(options) {
         var jsonFiles = options.subjects;
-        var update = options.updateCallback;
         var userData = options.users;
+        var update = options.updateCallback;
         var dataAnalysis = options.analysisFunction;
-        this.jsonFiles = jsonFiles;
-        this.userData = userData;
-        this.onJsonUpdate = update ?? ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
-        this.currentFileIndex = -1;
-        this.dataAnalysis = dataAnalysis;
+        this.jsonFiles = jsonFiles || this.jsonFiles;
+        this.userData = userData || this.userData;
+        this.onJsonUpdate = update || this.onJsonUpdate || ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
+        this.dataAnalysis = dataAnalysis || this.dataAnalysis;
+        if (this.currentFileIndex > this.jsonFiles.length - 1) this.currentFileIndex = -1;
+        this.dashboard.remove();
+        this.dashboard = null;
         this.render();
     }
 }
