@@ -1005,7 +1005,7 @@ class AdminDashboard {
             if (userEditCount > 0) {
                 var tmpIndex = this.currentFileIndex;
                 this.currentFileIndex = -1;
-                this.updateJSON();
+                this.updateJSON().then(()=>this.render());
                 this.currentFileIndex = tmpIndex;
             }
             this.removeFile(customIndex, true);
