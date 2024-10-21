@@ -875,7 +875,7 @@ class AdminDashboard {
         }
         var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
         this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
-        await this.updateJSON();
+        await this.updateJSON(undefined, false, !!force);
         this.render();
     }
     
@@ -924,7 +924,7 @@ class AdminDashboard {
                 availableUsers.splice(randomIndex, 1);
             }
         }
-        
+
         this.render();
     }
 
