@@ -651,7 +651,6 @@ class AdminDashboard {
     
         const dashHeader = this.dashboard.querySelector(`h2#admin-dashboard-header-title`);
         dashHeader.addEventListener('click', ()=>{
-            alert("Clicked")
             this.editSubject();
         });
 
@@ -949,13 +948,13 @@ class AdminDashboard {
         }
     }
 
-    editSubject() {
-        if (this.currentFileIndex < 0) return;
-        const newName = prompt(`Come vuoi rinominare ${this.jsonFiles[this.currentFile].fileName}?`);
+    editSubject(customIndex = this.currentFileIndex) {
+        alert("WO");
+        if (customIndex < 0) return;
+        const newName = prompt(`Come vuoi rinominare ${this.jsonFiles[customIndex].fileName}?`);
         if (newName) {
-            const fileIndex = this.currentFileIndex;
-            this.addFile(newName, this.jsonFiles[this.currentFileIndex].data);
-            this.removeFile(fileIndex);
+            this.addFile(newName, this.jsonFiles[customIndex].data);
+            this.removeFile(customIndex);
         }
     }
 
