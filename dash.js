@@ -988,7 +988,7 @@ class AdminDashboard {
         if (fileName) {
             if (!this.isSubjectNameAvailable(fileName)) {
                 alert(`Questo nome è già in utilizzo!`);
-                return this.addFile(fileN, customData);
+                return this.addFile(undefined, customData);
             }
             const newFile = {
                 fileName: fileName,
