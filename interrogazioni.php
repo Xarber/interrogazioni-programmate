@@ -10,15 +10,25 @@ $subjectName = $_GET["subject"];
 $subject = $subjectName.".json";
 $userData = $userList[$userID] ?? NULL;
 $subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON/".$subject), true) : null;
-if ($_GET["scope"] === "getAllData") {
-    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
+
+function getAllData() {
+    global $userData;
+    if (!($userData["admin"] ?? false)) return false;
     $allSubjectsData = array();
+    global $subjectJSONs;
+
     foreach ($subjectJSONs as $tmpsubject) {
         if ($tmpsubject === "users.json") continue;
         $subjectNameTMP = str_replace(".json", "", $tmpsubject);
         $subjectDataTMP = json_decode(file_get_contents("./JSON/".$tmpsubject), true);
         array_push($allSubjectsData, array("fileName" => $subjectNameTMP, "data" => $subjectDataTMP));
     }
+    return $allSubjectsData;
+}
+
+if ($_GET["scope"] === "getAllData") {
+    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
+    $allSubjectsData = getAllData();
     header('Content-Type: application/json');
     die(json_encode($allSubjectsData));
 } else if ($_GET["scope"] === "updateSettings") {
@@ -59,7 +69,7 @@ if ($_GET["scope"] === "getAllData") {
         }
     }
     header('Content-Type: application/json');
-    die(json_encode(array("status" => $okay)));
+    die(json_encode(array("status" => $okay, "newData" => getAllData())));
 }
 $eligibleSubjectCount = 0;
 foreach ($subjectJSONs as $subjectNameTMP) {
