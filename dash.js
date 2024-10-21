@@ -949,7 +949,6 @@ class AdminDashboard {
     }
 
     editSubject(customIndex = this.currentFileIndex) {
-        alert("WO");
         if (customIndex < 0) return;
         const newName = prompt(`Come vuoi rinominare ${this.jsonFiles[customIndex].fileName}?`);
         if (newName) {
@@ -997,14 +996,14 @@ class AdminDashboard {
     removeFile(customIndex = this.currentFileIndex, force) {
         if (this.jsonFiles.length > 1 || true) { // Allow deleting all files.
             if (customIndex < 0) return alert("Non puoi cancellare questa sezione!");
-            if (!!force || confirm(`Sicuro di voler cancellare ${this.jsonFiles[customIndex] ? this.jsonFiles[customIndex].fileName : "questa sezione"}?`)) {
-                this.updateJSON({fileName: this.jsonFiles[customIndex] && this.jsonFiles[customIndex].fileName, data: "removed"});
-                if (customIndex > -1) {
-                    this.jsonFiles.splice(customIndex, 1);
-                    this.currentFileIndex = Math.max(0, customIndex - 1);
-                }
-                this.render();
+            if (!force && !confirm(`Sicuro di voler cancellare ${this.jsonFiles[customIndex] ? this.jsonFiles[customIndex].fileName : "questa sezione"}?`)) return;
+
+            this.updateJSON({fileName: this.jsonFiles[customIndex] && this.jsonFiles[customIndex].fileName, data: "removed"});
+            if (customIndex > -1) {
+                this.jsonFiles.splice(customIndex, 1);
+                this.currentFileIndex = Math.max(0, customIndex - 1);
             }
+            this.render();
         } else {
             alert('Non puoi cancellare l\'ultimo file.');
         }
