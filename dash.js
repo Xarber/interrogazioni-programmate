@@ -1002,7 +1002,7 @@ class AdminDashboard {
                     delete this.userData[userUUID].answers[oldName];
                 }
             }
-            if (count > 0) {
+            if (userEditCount > 0) {
                 var tmpIndex = this.currentFileIndex;
                 this.currentFileIndex = -1;
                 this.updateJSON();
