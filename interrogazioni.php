@@ -151,7 +151,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                     <?php
                 } else if (isset($_GET["day"])) {
                     if (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0) {
-                        echo "<h1>Non puoi prenotarti per questo giorno!</h1>".(strlen($_GET["day"] ?? "") < 0 ? "Devi scegliere un giorno!" : ((strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0) ? "<p>Non ci sono più posti liberi!</p>" : ""))."<button onclick='location.reload();'>Cambia giorno</button>";
+                        echo "<h1>Non puoi prenotarti per questo giorno!</h1>".(strlen($_GET["day"] ?? "") < 1 ? "Devi scegliere un giorno!" : ((strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0) ? "<p>Non ci sono più posti liberi!</p>" : ""))."<button onclick='location.reload();'>Cambia giorno</button>";
                     } else {
                         $availability = explode("/", $subjectData["days"][$_GET["day"]]["availability"], 2);
                         $subjectData["days"][$_GET["day"]]["availability"] = ($availability[0] - 1) . "/" . $availability[1];
