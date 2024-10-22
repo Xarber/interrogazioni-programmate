@@ -241,7 +241,7 @@ class AdminDashboard {
                 <h3>Dashboard</h3>
                 <ul class="admin-json-file-list">
                     ${this.isCustomProfile ? `
-                        <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&'+(location.href.split('?').slice(1))[0]??'')">&lt; Esci dal profilo</li>
+                        <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&'+((location.href.split('?').slice(1)[0]??'').replaceAll('profile=', 'oldWindowProfile='))">&lt; Esci dal profilo</li>
                     ` : ""}
                     <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
                     ${this.profiles.length > 0 ? `
