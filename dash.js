@@ -313,7 +313,7 @@ class AdminDashboard {
                     </div>
                 </div>
                 <div class="admin-dashboard-profile-section">
-                    <p>Per cambiare ad un profilo, clicca il suo nome.</p>
+                    <p>Per entrare in un profilo, clicca il suo nome.</p>
                     <div class="admin-days-container">
                         <div id="profileList"></div>
                         <button id="addProfileBtn" class="admin-action-button">
