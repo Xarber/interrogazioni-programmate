@@ -240,9 +240,9 @@ class AdminDashboard {
             <div class="admin-dashboard-sidebar">
                 <h3>Dashboard</h3>
                 <ul class="admin-json-file-list">
-                    ${this.isCustomProfile ? `
-                        <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&'+((location.href.split('?').slice(1)[0]??'').replaceAll('profile=', 'oldWindowProfile='))">&lt; Esci dal profilo</li>
-                    ` : ""}
+                    ${!this.isCustomProfile ? "": `
+                        <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&UID='+(new URLSearchParams(location.search).get("UID"))">&lt; Esci dal profilo</li>
+                    `}
                     <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
                     ${this.profiles.length > 0 ? `
                         <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Profili</li>
@@ -471,7 +471,7 @@ class AdminDashboard {
             })(userData.answers);
             userElement.className = 'admin-day-item';
             userElement.innerHTML = `
-                <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userData.admin ? '[A] ' : ''}${userData.name}</span>
+                <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userData.admin ? '[A] ' : ''}${userData.name}</span>
                 <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-invite-btn" data-user="${userUUID}">
@@ -505,7 +505,7 @@ class AdminDashboard {
             const profileElement = document.createElement('div');
             profileElement.className = 'admin-day-item';
             profileElement.innerHTML = `
-                <span onclick="if (confirm('Sei sicuro di voler cambiare il profilo su ${e}?')) location.href = location.href.split('?')[0]+'?profile=${e}&'+((location.href.split('?').slice(1)[0] ?? '').replaceAll('profile=', 'oldWindowProfile='));">${e}</span>
+                <span onclick="if (confirm('Sei sicuro di voler cambiare il profilo su ${e}?')) location.href = location.href.split('?')[0]+'?profile=${e}&UID'+(new URLSearchParams(location.search).get("UID"));">${e}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-edit-day-btn" data-profile="${e}">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>
@@ -818,6 +818,8 @@ class AdminDashboard {
             if (target.classList.contains('admin-invite-btn')) {
                 const name = this.userData[target.dataset.user].name.split(' ');
                 if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
+                navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}${!this.isCustomProfile ? '' : `&profile=${new URLSearchParams(location.search).get("profile")}`}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
+                alert(`Il testo con il link d'accesso di ${name.join(" ")} è stato copiato!`);
             }
         });
 
@@ -905,7 +907,7 @@ class AdminDashboard {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            const r = await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+            const r = await fetch('?scope=profileMGMT&UID='+(new URLSearchParams(location.search).get("UID")), {
                 method: "POST",
                 body: JSON.stringify({
                     action: "newprofile",
@@ -923,7 +925,7 @@ class AdminDashboard {
     async deleteProfile(profile, force = false) {
         if (profile === "default" || profile === "" || !this.profiles.includes(profile)) return alert("Non puoi cancellare questo profilo!");
         if (!force && !confirm(`Sicuro di voler eliminare il profilo ${profile}?`)) return;
-        const r = await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+        const r = await fetch('?scope=profileMGMT&UID='+new URLSearchParams(location.search).get("UID"), {
             method: "POST",
             body: JSON.stringify({
                 action: "deleteprofile",
@@ -1139,7 +1141,7 @@ class AdminDashboard {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            const r = await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+            const r = await fetch('?scope=profileMGMT&UID='+(new URLSearchParams(location.search).get("UID")), {
                 method: "POST",
                 body: JSON.stringify({
                     action: "renameprofile",
