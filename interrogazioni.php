@@ -1,26 +1,69 @@
 <?php
+session_start();
+$_SESSION["profile"] ??= "";
+$_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
-if (!file_exists("./JSON") || !is_dir("./JSON")) mkdir("JSON");
-$subjectJSONs = array_diff(scandir("./JSON/"), array('.', '..'));
+if (!!$_GET["profile"]) $_SESSION["profile"] = $_GET["profile"];
+if ($_GET["profile"] === "default") $_SESSION["profile"] = "";
+$_SESSION["profile"] = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $_SESSION["profile"]);
+$PROFILE = $_SESSION["profile"] === "" ? "" : ("-".$_SESSION["profile"]);
+if (!file_exists("./JSON{$PROFILE}") || !is_dir("./JSON{$PROFILE}")) {
+    if ($PROFILE != "") {
+        header('Content-Type: application/json');
+        die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
+    }
+    mkdir("./JSON{$PROFILE}");
+}
+
+function copyFolder($src, $dst) {
+    $dir = opendir($src);
+    @mkdir($dst);
+
+    while (($file = readdir($dir)) !== false) {
+        if ($file != '.' && $file != '..') {
+            if (is_dir("$src/$file")) {
+                copyFolder("$src/$file", "$dst/$file");
+            } else {
+                copy("$src/$file", "$dst/$file");
+            }
+        }
+    }
+    closedir($dir);
+}
+function deleteFolder($dir) {
+    if (!is_dir($dir)) return;
+
+    $items = new \RecursiveIteratorIterator(
+        new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+        \RecursiveIteratorIterator::CHILD_FIRST
+    );
+
+    foreach ($items as $item) {
+        $item->isDir() ? rmdir($item) : unlink($item);
+    }
+    rmdir($dir);
+}
+
+$subjectJSONs = array_diff(scandir("./JSON{$PROFILE}/"), array('.', '..'));
 $userID = $_GET["UID"] ?? NULL;
-$userList = file_exists("./JSON/users.json") ? file_get_contents("./JSON/users.json") : "";
+$userList = file_exists("./JSON{$PROFILE}/users.json") ? file_get_contents("./JSON{$PROFILE}/users.json") : "";
 $userList = strlen($userList) > 1 ? json_decode($userList, true) : array();
 $subjectName = $_GET["subject"];
 $subject = $subjectName.".json";
 $userData = $userList[$userID] ?? NULL;
-$subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON/".$subject), true) : null;
+$subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true) : null;
 
 function getAllData() {
-    global $userData;
+    global $userData, $PROFILE;
     if (!($userData["admin"] ?? false)) return false;
     $allSubjectsData = array();
 
-    $subjectJSONs = array_diff(scandir("./JSON/"), array('.', '..'));
+    $subjectJSONs = array_diff(scandir("./JSON{$PROFILE}/"), array('.', '..'));
     foreach ($subjectJSONs as $tmpsubject) {
         if ($tmpsubject === "users.json") continue;
         $subjectNameTMP = str_replace(".json", "", $tmpsubject);
-        $subjectDataTMP = json_decode(file_get_contents("./JSON/".$tmpsubject), true);
+        $subjectDataTMP = json_decode(file_get_contents("./JSON{$PROFILE}/".$tmpsubject), true);
         array_push($allSubjectsData, array("fileName" => $subjectNameTMP, "data" => $subjectDataTMP));
     }
     return $allSubjectsData;
@@ -43,19 +86,19 @@ if ($_GET["scope"] === "getAllData") {
     foreach($body as $updateSubject) {
         if ($_GET["type"] === "users") {
             if (($updateSubject["data"] ?? false) && $updateSubject["data"] === "removed") die(json_encode(array("status" => false)));
-            $okay = $okay && file_put_contents("./JSON/users.json", json_encode($updateSubject, JSON_PRETTY_PRINT));
+            $okay = $okay && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($updateSubject, JSON_PRETTY_PRINT));
         } else if ($_GET["type"] === "subject" || !isset($_GET["type"])) {
             $originalFileName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $updateSubject["fileName"]);
             $updateSubject["fileName"] = $originalFileName.'.json';
             if ($updateSubject["fileName"] === "users.json") continue;
             $updateSubject["cleared"] ??= false;
             if ($updateSubject["data"] === "removed") {
-                $okay = $okay && unlink("./JSON/".$updateSubject["fileName"]);
+                $okay = $okay && unlink("./JSON{$PROFILE}/".$updateSubject["fileName"]);
                 foreach ($userList as $userListID => $userListData) {
                     if (isset($userList[$userListID]["answers"][$originalFileName]))
                     unset($userList[$userListID]["answers"][$originalFileName]);
                 }
-                $okay = $okay && file_put_contents("./JSON/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+                $okay = $okay && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
                 continue;
             }
             if ($updateSubject["cleared"] === true) {
@@ -67,18 +110,47 @@ if ($_GET["scope"] === "getAllData") {
                     $availability = explode("/", $dayData["availability"], 2);
                     $updateSubject["data"]["days"][$day]["availability"] = ($availability[1]) . "/" . $availability[1];
                 }
-                $okay = $okay && file_put_contents("./JSON/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+                $okay = $okay && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
             }
-            $okay = $okay && file_put_contents("./JSON/".$updateSubject["fileName"], json_encode($updateSubject["data"], JSON_PRETTY_PRINT));
+            $okay = $okay && file_put_contents("./JSON{$PROFILE}/".$updateSubject["fileName"], json_encode($updateSubject["data"], JSON_PRETTY_PRINT));
         }
     }
     header('Content-Type: application/json');
-    die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON/users.json"), true)) : false))));
+    die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true)) : false))));
+} else if ($_GET["scope"] === "profileMGMT") {
+    if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
+    header('Content-Type: application/json');
+    $body = json_decode(file_get_contents("php://input"), true);
+    $target = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $body["profile"]);
+    if ($target === "default" || $target === "") die(json_encode(array("status" => false, "message" => "You can't change this profile!")));
+    if ($body["action"] === "newprofile") {
+        if (file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile already exists!")));
+        if ($body["method"] === "import") {
+            copyFolder("./JSON{$PROFILE}", "./JSON-{$target}");
+            die(json_encode(array("status" => true)));
+        } else {
+            $okay = mkdir("./JSON-{$target}");
+            $okay = $okay && file_put_contents("./JSON-{$target}/users.json", json_encode(array($userID => $userList[$userID]), JSON_PRETTY_PRINT));
+            die(json_encode(array("status" => $okay)));
+        }
+    } else {
+        if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
+        if ($body["action"] === "renameprofile") {
+            if (!$body["newName"]) die(json_encode(array("status" => false, "message" => "You must specify a new name!")));
+            $newName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $body["newName"]);
+            $okay = rename("./JSON-{$target}", "./JSON-{$newName}");
+            die(json_encode(array("status" => $okay)));
+        } else if ($body["action"] === "deleteprofile") {
+            deleteFolder("./JSON-{$target}");
+            die(json_encode(array("status" => true)));
+        }
+        die(json_encode(array("status" => false, "message" => "Invalid action!")));
+    }
 }
 $eligibleSubjectCount = 0;
 foreach ($subjectJSONs as $subjectNameTMP) {
     if ($subjectNameTMP === "users.json") continue;
-    $subjectDataTMP = json_decode(file_get_contents("./JSON/".$subjectNameTMP), true);
+    $subjectDataTMP = json_decode(file_get_contents("./JSON{$PROFILE}/".$subjectNameTMP), true);
     if (($subjectDataTMP["hide"] ?? true) === true) continue;
     $eligibleSubjectCount = $eligibleSubjectCount + 1;
 }
@@ -141,7 +213,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                             $lastEligibleSubject = "";
                             foreach ($subjectJSONs as $subject) {
                                 if ($subject === "users.json") continue;
-                                $subjectDataTMP = json_decode(file_get_contents("./JSON/".$subject), true);
+                                $subjectDataTMP = json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true);
                                 if (($subjectDataTMP["hide"] ?? true) === true) continue;
                                 $subject = str_replace(".json", "", $subject);
                                 echo "<option value='$subject'>$subject</option>";
@@ -173,7 +245,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         $subjectData["answers"][$userID] = array("date" => $_GET["day"], "answerNumber" => $subjectData["answerCount"]);
                         $userList[$userID]["answers"][$subjectName] ??= array();
                         array_push($userList[$userID]["answers"][$subjectName], $_GET["day"]);
-                        $success = file_put_contents("./JSON/".$subject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+                        $success = file_put_contents("./JSON{$PROFILE}/".$subject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
                         echo ($success ? "<h1>Ti sei prenotato!</h1><p>Ti sei prenotato a ".$subjectName." per il ".$_GET["day"]."!</p>".($eligibleSubjectCount > 1 ? "<button onclick=\"location.href = '?UID=$userID'\">Cambia Materia</button>" : "") : "<h1>Whoops! :(</h1><p>C'è stato un problema mentre provavi a prenotarti, per favore riprova o cambia giorno.</p><button onclick='location.reload();'>Cambia giorno</button>");
                     }
                 } else if (count($subjectData["days"]) === 0 || $subjectData["lock"] === true) {
