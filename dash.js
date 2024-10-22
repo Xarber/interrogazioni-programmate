@@ -796,18 +796,6 @@ class AdminDashboard {
 
         const userList = this.dashboard.querySelector('#userList');
         userList.addEventListener('click', async (e) => {
-            let target = e.target.dataset.profile ? e.target : e.target.parentNode;
-            target = target.dataset.profile ? target : target.parentNode;
-            if (target.classList.contains('admin-edit-day-btn')) {
-                await this.editProfile(target.dataset.profile);
-            }
-            if (target.classList.contains('admin-delete-day-btn')) {
-                await this.deleteProfile(target.dataset.user);
-            }
-        });
-
-        const profileList = this.dashboard.querySelector('#profileList');
-        profileList.addEventListener('click', async (e) => {
             let target = e.target.dataset.user ? e.target : e.target.parentNode;
             target = target.dataset.user ? target : target.parentNode;
             if (target.tagName.toLowerCase() == "span") {
@@ -824,6 +812,19 @@ class AdminDashboard {
                 if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
             }
         });
+
+        const profileList = this.dashboard.querySelector('#profileList');
+        profileList.addEventListener('click', async (e) => {
+            let target = e.target.dataset.profile ? e.target : e.target.parentNode;
+            target = target.dataset.profile ? target : target.parentNode;
+            if (target.classList.contains('admin-edit-day-btn')) {
+                await this.editProfile(target.dataset.profile);
+            }
+            if (target.classList.contains('admin-delete-day-btn')) {
+                await this.deleteProfile(target.dataset.user);
+            }
+        });
+
     
         const fileList = this.dashboard.querySelector('.admin-json-file-list');
         fileList.addEventListener('click', (e) => {
