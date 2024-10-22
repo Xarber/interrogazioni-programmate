@@ -220,10 +220,14 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                 exit;
             } else if (!$userData) {
                 $eligibleProfiles = array();
+                $userName = "";
                 if (!!$_GET["UID"]) {
                     foreach ($profileList as $profile) {
                         $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
-                        if ($profileUserData[$_GET["UID"]] ?? false) array_push($eligibleProfiles, $profile);
+                        if ($profileUserData[$_GET["UID"]] ?? false) {
+                            $userName = $profileUserData[$_GET["UID"]]["name"];
+                            array_push($eligibleProfiles, $profile);
+                        }
                     }
                 }
                 if (count($eligibleProfiles) === 0) {
@@ -235,7 +239,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                     <?php
                 } else {
                     ?>
-                        <h1>Sei nel profilo sbagliato!</h1>
+                        <h1>Sei nel profilo sbagliato, <?php echo explode(" ", $userName)[count(explode(" ", $userName)) - 1] ?>!</h1>
                         <p>Il tuo utente non esiste in questo profilo, ma puoi selezionarne un altro!</p>
                         <select name="profile" id="profile" required>
                             <option value="" selected disabled>Scegli un profilo</option>
