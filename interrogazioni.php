@@ -141,7 +141,7 @@ if ($_GET["scope"] === "getAllData") {
         $profileList = array_map(function($item) {
             return substr($item, 5);
         }, $profileListRAW);
-        die(json_encode(array("status" => true, "profiles" => array_values($profileList))));
+        die(json_encode(array("status" => true, "profiles" => $profileList)));
     } else {
         if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
         if ($body["action"] === "renameprofile") {
