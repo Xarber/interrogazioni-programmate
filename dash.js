@@ -423,6 +423,7 @@ class AdminDashboard {
     }
 
     updateHeader() {
+        const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
         this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = useSubjects ? currentFile.fileName : 
         (this.currentFileIndex === -1 ? `Utenti (${Object.keys(this.userData).length})` : `Profili (${this.profiles.length})`);
     }
