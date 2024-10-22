@@ -303,7 +303,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         window.userData = <?php echo json_encode($userData ?? new stdClass); ?>;
         window.users = <?php echo ($userData["admin"] ?? false) ? json_encode($userList) : "{}" ?>;
         window.profiles = <?php echo (($userData["admin"] ?? false) && $PROFILE === "") ? json_encode($profileList) : "false"; ?>;
-        window.isCustomProfile = <?php echo $PROFILE == "" ? "false" : str_replace("-", "", $PROFILE); ?>
+        window.isCustomProfile = <?php echo $PROFILE == "" ? "false" : ('"'.str_replace("-", "", $PROFILE).'"'); ?>
 
         function analizzaDati(options = {
             clipboard: false,
