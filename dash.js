@@ -1254,6 +1254,7 @@ class AdminDashboard {
         var refreshProfiles = options.refreshProfiles;
         this.jsonFiles = jsonFiles || this.jsonFiles;
         this.userData = userData || this.userData;
+        this.profiles = profiles || this.profiles;
         this.onJsonUpdate = update || this.onJsonUpdate || ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
         this.dataAnalysis = dataAnalysis || this.dataAnalysis;
         this.refreshUsers = refreshUsers || this.refreshUsers;
