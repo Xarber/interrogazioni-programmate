@@ -262,42 +262,42 @@ class AdminDashboard {
                     <button class="admin-close-btn">&times;</button>
                 </div>
                 <div class="admin-dashboard-subject-section">
-                        <div class="admin-dashboard-controls">
-                            <div class="admin-control-row">
-                                <div class="admin-switch-container">
-                                    <label class="admin-switch">
-                                        <input type="checkbox" id="lockSwitch">
-                                        <span class="admin-slider admin-round"></span>
-                                    </label>
-                                    <span>Blocca</span>
-                                </div>
-                                <div class="admin-switch-container">
-                                    <label class="admin-switch">
-                                        <input type="checkbox" id="hideSwitch">
-                                        <span class="admin-slider admin-round"></span>
-                                    </label>
-                                    <span>Nascondi</span>
-                                </div>
-                                <div class="admin-inline admin-user-actions">
-                                    ${typeof this.dataAnalysis === "function" ? `<button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button">
-                                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M360-240q-29.7 0-50.85-21.15Q288-282.3 288-312v-480q0-29.7 21.15-50.85Q330.3-864 360-864h384q29.7 0 50.85 21.15Q816-821.7 816-792v480q0 29.7-21.15 50.85Q773.7-240 744-240H360Zm0-72h384v-480H360v480ZM216-96q-29.7 0-50.85-21.15Q144-138.3 144-168v-552h72v552h456v72H216Zm144-216v-480 480Z"/></svg>
-                                    </button>` : ""}
-                                    <button id="filloutAnswersBtn" style="background-color: red;" class="admin-action-button">
-                                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M576-192v-72h69L531-378l51-51 114 114v-69h72v192H576Zm-333 0-51-51 453-453h-69v-72h192v192h-72v-69L243-192Zm135-339L192-717l51-51 186 186-51 51Z"/></svg>
-                                    </button>
-                                    <button id="clearAnswersBtn" style="background-color: red;" class="admin-action-button">
-                                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m675-144-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Zm-195 0q-140 0-238-98t-98-238h72q0 109 77.5 186.5T480-216q19 0 37-2.5t35-7.5v74q-17 4-35 6t-37 2ZM144-576v-240h72v130q46-60 114.5-95T480-816q140 0 238 98t98 238h-72q0-109-77.5-186.5T480-744q-62 0-114.5 25.5T277-648h107v72H144Zm409 205L444-480v-192h72v162l74 75-37 64Z"/></svg>
-                                    </button>
-                                </div>
+                    <div class="admin-dashboard-controls">
+                        <div class="admin-control-row">
+                            <div class="admin-switch-container">
+                                <label class="admin-switch">
+                                    <input type="checkbox" id="lockSwitch">
+                                    <span class="admin-slider admin-round"></span>
+                                </label>
+                                <span>Blocca</span>
+                            </div>
+                            <div class="admin-switch-container">
+                                <label class="admin-switch">
+                                    <input type="checkbox" id="hideSwitch">
+                                    <span class="admin-slider admin-round"></span>
+                                </label>
+                                <span>Nascondi</span>
+                            </div>
+                            <div class="admin-inline admin-user-actions">
+                                ${typeof this.dataAnalysis === "function" ? `<button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M360-240q-29.7 0-50.85-21.15Q288-282.3 288-312v-480q0-29.7 21.15-50.85Q330.3-864 360-864h384q29.7 0 50.85 21.15Q816-821.7 816-792v480q0 29.7-21.15 50.85Q773.7-240 744-240H360Zm0-72h384v-480H360v480ZM216-96q-29.7 0-50.85-21.15Q144-138.3 144-168v-552h72v552h456v72H216Zm144-216v-480 480Z"/></svg>
+                                </button>` : ""}
+                                <button id="filloutAnswersBtn" style="background-color: red;" class="admin-action-button">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M576-192v-72h69L531-378l51-51 114 114v-69h72v192H576Zm-333 0-51-51 453-453h-69v-72h192v192h-72v-69L243-192Zm135-339L192-717l51-51 186 186-51 51Z"/></svg>
+                                </button>
+                                <button id="clearAnswersBtn" style="background-color: red;" class="admin-action-button">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m675-144-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Zm-195 0q-140 0-238-98t-98-238h72q0 109 77.5 186.5T480-216q19 0 37-2.5t35-7.5v74q-17 4-35 6t-37 2ZM144-576v-240h72v130q46-60 114.5-95T480-816q140 0 238 98t98 238h-72q0-109-77.5-186.5T480-744q-62 0-114.5 25.5T277-648h107v72H144Zm409 205L444-480v-192h72v162l74 75-37 64Z"/></svg>
+                                </button>
                             </div>
                         </div>
-                        <div class="admin-days-container">
-                            <h3>Giorni</h3>
-                            <div id="daysList"></div>
-                            <button id="addDayBtn" class="admin-action-button">
-                                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
-                            </button>
-                        </div>
+                    </div>
+                    <div class="admin-days-container">
+                        <h3>Giorni</h3>
+                        <div id="daysList"></div>
+                        <button id="addDayBtn" class="admin-action-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="admin-dashboard-user-section">
                     <div class="admin-days-container">
@@ -778,6 +778,9 @@ class AdminDashboard {
 
         const addDayBtn = this.dashboard.querySelector('#addDayBtn');
         addDayBtn.addEventListener('click', async () => await this.addDay());
+
+        const addProfileBtn = this.dashboard.querySelector('#addProfileBtn');
+        addProfileBtn.addEventListener('click', async () => await this.addProfile());
     
         const daysList = this.dashboard.querySelector('#daysList');
         daysList.addEventListener('click', async (e) => {
