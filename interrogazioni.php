@@ -122,7 +122,7 @@ if ($_GET["scope"] === "getAllData") {
     header('Content-Type: application/json');
     $body = json_decode(file_get_contents("php://input"), true);
     $target = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $body["profile"]);
-    if ($target === "default" || $target === "") die(json_encode(array("status" => false, "message" => "You can't change this profile!")));
+    if ($body["action"] != "listprofiles" && ($target === "default" || $target === "")) die(json_encode(array("status" => false, "message" => "You can't change this profile!")));
     if ($body["action"] === "newprofile") {
         if (file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile already exists!")));
         if ($body["method"] === "import") {
@@ -133,6 +133,12 @@ if ($_GET["scope"] === "getAllData") {
             $okay = $okay && file_put_contents("./JSON-{$target}/users.json", json_encode(array($userID => $userList[$userID]), JSON_PRETTY_PRINT));
             die(json_encode(array("status" => $okay)));
         }
+    } else if ($body["action"] === "listprofiles") {
+        $profileList = array_diff(scandir("."), array('.', '..'));
+        $profileList = array_filter($profileList, function($item) {
+            return strpos($item, 'JSON-') === 0;
+        });
+        die(json_encode(array("status" => true, "profiles" => $profileList)));
     } else {
         if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
         if ($body["action"] === "renameprofile") {
