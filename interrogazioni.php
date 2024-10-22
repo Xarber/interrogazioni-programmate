@@ -219,12 +219,38 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                 <?php
                 exit;
             } else if (!$userData) {
-                ?>
-                    <h1><?php echo (($_GET["UID"] ?? NULL) ? "Il tuo utente non esiste!" : "Ciao! Accedi per continuare.") ?></h1>
-                    <p>Inserisci un ID oppure usa un link diretto se ne hai uno a disposizione.</p>
-                    <input type="text" name="UID" id="UID">
-                    <button onclick="location.href = '?UID='+document.getElementById('UID').value">Accedi</button>
-                <?php
+                $eligibleProfiles = array();
+                if (!!$_GET["UID"]) {
+                    foreach ($profileList as $profile) {
+                        $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
+                        if ($profileUserData[$_GET["UID"]] ?? false) array_push($eligibleProfiles, $profile);
+                    }
+                }
+                if (count($eligibleProfiles) === 0) {
+                    ?>
+                        <h1><?php echo (($_GET["UID"] ?? NULL) ? "Il tuo utente non esiste!" : "Ciao! Accedi per continuare.") ?></h1>
+                        <p>Inserisci un ID oppure usa un link diretto se ne hai uno a disposizione.</p>
+                        <input type="text" name="UID" id="UID">
+                        <button onclick="location.href = '?UID='+document.getElementById('UID').value">Accedi</button>
+                    <?php
+                } else {
+                    ?>
+                        <h1>Sei nel profilo sbagliato!</h1>
+                        <p>Il tuo utente non esiste in questo profilo, ma puoi selezionarne un altro!</p>
+                        <select name="profile" id="profile" required>
+                            <option value="" selected disabled>Scegli un profilo</option>
+                            <?php
+                                foreach ($eligibleProfiles as $profileName) {
+                                    echo "<option value='$profileName'>$profileName</option>";
+                                }
+                            ?>
+                        </select>
+                        <div class="inline">
+                            <button type="button" onclick="location.href = '?'">Cambia Utente</button>
+                            <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
+                        </div>
+                    <?php
+                }
             } else if (!$subjectData || ($subjectData["hide"] ?? false) === true) {
                 ?>
                     <h1>Ciao, <?php echo $userData["name"]; ?>!</h1>
