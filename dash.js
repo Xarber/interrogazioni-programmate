@@ -316,7 +316,7 @@ class AdminDashboard {
                     <p>Per entrare in un profilo, clicca il suo nome.</p>
                     <div class="admin-days-container">
                         <div id="profileList"></div>
-                        <div class="admin-inline">
+                        <div class="admin-inline inline">
                             <button id="uploadProfileBtn" class="admin-action-button" style="background-color: dodgerblue">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-336v-342L339-573l-51-51 192-192 192 192-51 51-105-105v342h-72ZM263.72-192Q234-192 213-213.15T192-264v-72h72v72h432v-72h72v72q0 29.7-21.16 50.85Q725.68-192 695.96-192H263.72Z"/></svg>
                             </button>
@@ -1255,20 +1255,21 @@ class AdminDashboard {
         form.setAttribute("onsubmit", "return false")
         form.enctype = "multipart/form-data";
 
-        fileInput.addEventListener("change", () => {
+        fileInput.addEventListener("change", async () => {
             if (fileInput.files.length > 0) {
                 const formData = new FormData();
                 formData.append("profileData", fileInput.files[0]);
-                fetch(form.action, {
+                const r = await fetch(form.action, {
                     method: "POST",
                     body: formData
-                }).then(r=>r.json()).then(r=>{
-                    if (!r.status) alert("Impossibile completare l'azione!");
-                    else {
-                        this.renderProfiles();
-                        form.remove();
-                    }
-                });
+                }).then(r=>r.json());
+                if (!r.status) alert("Impossibile completare l'azione!");
+                else {
+                    this.profiles = await this.refreshProfiles();
+                    this.profiles.sort();
+                    this.renderProfiles();
+                    form.remove();
+                }
             }
         });
 

@@ -171,7 +171,7 @@ if ($_GET["scope"] === "getAllData") {
 } else if ($_GET["scope"] === "downloadProfile") {
     //! REQUIREMENTS:
     //! $ apt-get install php-zip
-    
+
     if (!($userData["admin"] ?? false)) {
         header('Content-Type: application/json');
         die(json_encode(array("status" => false)));
@@ -533,8 +533,11 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                                 return (res.status === false) ? {} : res;
                             },
                             refreshProfiles: async()=>{
-                                const res = await fetch("?UID=<?php echo $userID; ?>&scope=listprofiles").then(r=>r.json());
-                                return (res.status === false) ? [] : res;
+                                const res = await fetch("?UID=<?php echo $userID; ?>&scope=profileMGMT", {
+                                    method: "POST",
+                                    body: JSON.stringify({action: "listprofiles"})
+                                }).then(r=>r.json());
+                                return (res.status === false || !res.profiles) ? [] : res.profiles;
                             },
                             isCustomProfile: window.isCustomProfile
                         });
