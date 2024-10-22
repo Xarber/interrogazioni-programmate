@@ -240,13 +240,13 @@ class AdminDashboard {
             <div class="admin-dashboard-sidebar">
                 <h3>Dashboard</h3>
                 <ul class="admin-json-file-list">
-                    ${!this.isCustomProfile ? "": `
+                    ${!this.isCustomProfile ? "" : `
                         <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&UID='+(new URLSearchParams(location.search).get("UID"))">&lt; Esci dal profilo</li>
                     `}
                     <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
-                    ${this.profiles.length > 0 ? `
+                    ${!Array.isArray(this.profiles) ? "" : `
                         <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Profili</li>
-                    ` : ""}
+                    `}
                     ${this.jsonFiles.map((file, index) => `
                         <li data-index="${index}" class="${index === this.currentFileIndex ? 'admin-active' : ''}">${file.fileName}</li>
                     `).join('')}
