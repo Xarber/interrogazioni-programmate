@@ -134,10 +134,13 @@ if ($_GET["scope"] === "getAllData") {
             die(json_encode(array("status" => $okay)));
         }
     } else if ($body["action"] === "listprofiles") {
-        $profileList = array_diff(scandir("."), array('.', '..'));
-        $profileList = array_filter($profileList, function($item) {
+        $profileListRAW = array_diff(scandir("."), array('.', '..'));
+        $profileListRAW = array_filter($profileList, function($item) {
             return strpos($item, 'JSON-') === 0;
         });
+        $profileList = array_map(function($item) {
+            return substr($item, 5);
+        }, $profileListRAW);
         die(json_encode(array("status" => true, "profiles" => array_values($profileList))));
     } else {
         if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
