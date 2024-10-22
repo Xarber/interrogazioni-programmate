@@ -241,7 +241,7 @@ class AdminDashboard {
                 <h3>Dashboard</h3>
                 <ul class="admin-json-file-list">
                     ${this.isCustomProfile ? `
-                        <li onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&'+(location.href.split('?').slice(1))[0]??'')">$lt; Esci dal profilo</li>
+                        <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&'+(location.href.split('?').slice(1))[0]??'')">&lt; Esci dal profilo</li>
                     ` : ""}
                     <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
                     ${this.profiles.length > 0 ? `
@@ -835,7 +835,7 @@ class AdminDashboard {
     
         const fileList = this.dashboard.querySelector('.admin-json-file-list');
         fileList.addEventListener('click', (e) => {
-            if (e.target.tagName === 'LI') {
+            if (e.target.tagName === 'LI' && !e.target.dataset.preventDefault) {
                 this.currentFileIndex = parseInt(e.target.dataset.index);
                 fileList.querySelectorAll('li').forEach(li => li.classList.remove('admin-active'));
                 e.target.classList.add('admin-active');
