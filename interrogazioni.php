@@ -336,6 +336,30 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         </div>
                     <?php
                 }
+            } else if ($_GET["changeProfile"] ?? false) {
+                $eligibleProfiles = array();
+                if ($_GET["UID"] ?? false) {
+                    foreach ($profileList as $profile) {
+                        $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
+                        if ($profileUserData[$_GET["UID"]] ?? false) array_push($eligibleProfiles, array($profile => $profileUserData[$_GET["UID"]]["admin"]));
+                    }
+                }
+                ?>
+                    <h1>Ciao, <?php echo $userData["name"]; ?>!</h1>
+                    <p>Scegli un profilo in cui sei registrato!</p>
+                    <select name="profile" id="profile" required>
+                        <option value="default" selected>Profilo Predefinito</option>
+                        <?php
+                            foreach ($eligibleProfiles as $profileName => $isAdmin) {
+                                echo "<option value='$profileName'>".($isAdmin ? "(Admin) " : "")."$profileName</option>";
+                            }
+                        ?>
+                    </select>
+                    <div class="inline">
+                        <button type="button" onclick="location.href = '?'">Cambia Utente</button>
+                        <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'&UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
+                    </div>
+                <?php
             } else if ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) {
                 $eligibleProfiles = array();
                 if ($_GET["UID"] ?? false) {
@@ -367,30 +391,6 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                     <div class="inline">
                         <?php if (count($eligibleProfiles) > 0) echo "<button onclick=\"location.href = '?UID={$userID}&changeProfile=true'\">Cambia profilo</button>"; ?>
                         <button onclick="location.href = '?UID=<?php echo $userID; ?>&subject='+document.getElementById('subject').value">Conferma</button>
-                    </div>
-                <?php
-            } else if ($_GET["changeProfile"] ?? false) {
-                $eligibleProfiles = array();
-                if ($_GET["UID"] ?? false) {
-                    foreach ($profileList as $profile) {
-                        $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
-                        if ($profileUserData[$_GET["UID"]] ?? false) array_push($eligibleProfiles, array($profile => $profileUserData[$_GET["UID"]]["admin"]));
-                    }
-                }
-                ?>
-                    <h1>Ciao, <?php echo $userData["name"]; ?>!</h1>
-                    <p>Scegli un profilo in cui sei registrato!</p>
-                    <select name="profile" id="profile" required>
-                        <option value="default" selected>Profilo Predefinito</option>
-                        <?php
-                            foreach ($eligibleProfiles as $profileName => $isAdmin) {
-                                echo "<option value='$profileName'>".($isAdmin ? "(Admin) " : "")."$profileName</option>";
-                            }
-                        ?>
-                    </select>
-                    <div class="inline">
-                        <button type="button" onclick="location.href = '?'">Cambia Utente</button>
-                        <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'&UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
                     </div>
                 <?php
             } else {
