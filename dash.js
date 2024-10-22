@@ -359,7 +359,7 @@ class AdminDashboard {
     }
   
     updateDashboard() {
-        const currentFile = this.currentFileIndex > -1 ? this.jsonFiles[this.currentFileIndex] : this.userData;
+        const currentFile = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]) ? this.jsonFiles[this.currentFileIndex] : this.userData;
         this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = this.currentFileIndex > -1 ? currentFile.fileName : `Utenti (${Object.keys(this.userData).length})`;
         this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
