@@ -359,11 +359,12 @@ class AdminDashboard {
     }
   
     updateDashboard() {
-        const currentFile = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]) ? this.jsonFiles[this.currentFileIndex] : this.userData;
-        this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = this.currentFileIndex > -1 ? currentFile.fileName : `Utenti (${Object.keys(this.userData).length})`;
+        const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
+        const currentFile = useSubjects ? this.jsonFiles[this.currentFileIndex] : this.userData;
+        this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = useSubjects ? currentFile.fileName : `Utenti (${Object.keys(this.userData).length})`;
         this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
-        if (this.currentFileIndex > -1) {
+        if (useSubjects) {
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-subject-section").classList.remove("hided");
             const lockSwitch = this.dashboard.querySelector('#lockSwitch');
