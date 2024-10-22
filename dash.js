@@ -316,9 +316,14 @@ class AdminDashboard {
                     <p>Per entrare in un profilo, clicca il suo nome.</p>
                     <div class="admin-days-container">
                         <div id="profileList"></div>
-                        <button id="addProfileBtn" class="admin-action-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
-                        </button>
+                        <div class="admin-inline">
+                            <button id="uploadProfileBtn" class="admin-action-button" style="background-color: dodgerblue">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-336v-342L339-573l-51-51 192-192 192 192-51 51-105-105v342h-72ZM263.72-192Q234-192 213-213.15T192-264v-72h72v72h432v-72h72v72q0 29.7-21.16 50.85Q725.68-192 695.96-192H263.72Z"/></svg>
+                            </button>
+                            <button id="addProfileBtn" class="admin-action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -513,6 +518,9 @@ class AdminDashboard {
             profileElement.innerHTML = `
                 <span onclick="if (confirm('Sei sicuro di voler cambiare il profilo su ${e}?')) location.href = location.href.split('?')[0]+'?profile=${e}&UID='+(new URLSearchParams(location.search).get('UID'));">${e}</span>
                 <div class="admin-inline admin-user-actions">
+                    <button class="admin-download-file-btn" data-profile="${e}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M480-336 288-528l51-51 105 105v-342h72v342l105-105 51 51-192 192ZM263.72-192Q234-192 213-213.15T192-264v-72h72v72h432v-72h72v72q0 29.7-21.16 50.85Q725.68-192 695.96-192H263.72Z"/></svg>
+                    </button>
                     <button class="admin-edit-day-btn" data-profile="${e}">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>
                     </button>
@@ -662,7 +670,7 @@ class AdminDashboard {
                 margin-left: auto;
                 gap: 5px;
             }
-            .admin-delete-day-btn, .admin-clear-day-btn, .admin-edit-day-btn, .admin-admin-btn, .admin-invite-btn {
+            .admin-delete-day-btn, .admin-clear-day-btn, .admin-edit-day-btn, .admin-download-file-btn, .admin-admin-btn, .admin-invite-btn {
                 padding: 5px 10px;
                 background-color: #f44336;
                 color: white;
@@ -674,7 +682,7 @@ class AdminDashboard {
             .admin-admin-btn {
                 background-color: dodgerblue;
             }
-            .admin-edit-day-btn {
+            .admin-edit-day-btn, .admin-download-file-btn {
                 background-color: dodgerblue;
             }
             .admin-invite-btn {
@@ -793,6 +801,9 @@ class AdminDashboard {
 
         const addProfileBtn = this.dashboard.querySelector('#addProfileBtn');
         addProfileBtn.addEventListener('click', async () => await this.addProfile());
+
+        const uploadProfileBtn = this.dashboard.querySelector('#uploadProfileBtn');
+        uploadProfileBtn.addEventListener('click', () => this.uploadProfile());
     
         const daysList = this.dashboard.querySelector('#daysList');
         daysList.addEventListener('click', async (e) => {
@@ -834,6 +845,9 @@ class AdminDashboard {
         profileList.addEventListener('click', async (e) => {
             let target = e.target.dataset.profile ? e.target : e.target.parentNode;
             target = target.dataset.profile ? target : target.parentNode;
+            if (target.classList.contains('admin-download-file-btn')) {
+                this.downloadProfile(target.dataset.profile);
+            }
             if (target.classList.contains('admin-edit-day-btn')) {
                 await this.editProfile(target.dataset.profile);
             }
@@ -1220,6 +1234,45 @@ class AdminDashboard {
         } else {
             alert('Non puoi cancellare l\'ultimo file.');
         }
+    }
+
+    downloadProfile(profileName) {
+        if (!confirm(`Vuoi scaricare il profilo ${profileName}?`)) return;
+        window.open("?scope=downloadProfile&UID="+(new URLSearchParams(location.search).get("UID"))+"&profileName="+profileName, "_blank");
+    }
+    
+    uploadProfile() {
+        const form = document.createElement("form");
+        const fileInput = document.createElement("input");
+
+        fileInput.type = "file";
+        fileInput.name = "profileData";
+        fileInput.accept = ".zip";
+        form.appendChild(fileInput);
+
+        form.action = "?scope=uploadProfile&UID="+(new URLSearchParams(location.search).get("UID"));
+        form.method = "post";
+        form.setAttribute("onsubmit", "return false")
+        form.enctype = "multipart/form-data";
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append("profileData", fileInput.files[0]);
+                fetch(form.action, {
+                    method: "POST",
+                    body: formData
+                }).then(r=>r.json()).then(r=>{
+                    if (!r.status) alert("Impossibile completare l'azione!");
+                    else {
+                        this.renderProfiles();
+                        form.remove();
+                    }
+                });
+            }
+        });
+
+        fileInput.click();
     }
   
     async updateJSON(customData, skipUpdateFunction = false, forceSkipUpdateRefresh = false) {

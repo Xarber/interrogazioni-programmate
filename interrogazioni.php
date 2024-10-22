@@ -169,6 +169,9 @@ if ($_GET["scope"] === "getAllData") {
         die(json_encode(array("status" => false, "message" => "Invalid action!")));
     }
 } else if ($_GET["scope"] === "downloadProfile") {
+    //! REQUIREMENTS:
+    //! $ apt-get install php-zip
+    
     if (!($userData["admin"] ?? false)) {
         header('Content-Type: application/json');
         die(json_encode(array("status" => false)));
@@ -210,6 +213,9 @@ if ($_GET["scope"] === "getAllData") {
     unlink($zipFilename);
     die();
 } else if ($_GET["scope"] === "uploadProfile") {
+    //! REQUIREMENTS:
+    //! $ apt-get install php-zip
+
     header('Content-Type: application/json');
     if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
     if (!isset($_FILES["profileData"])) die(json_encode(array("status" => false, "message" => "No file uploaded.")));
