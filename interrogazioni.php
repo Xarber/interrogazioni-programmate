@@ -360,7 +360,14 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'&UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
                     </div>
                 <?
-            } else if ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) {
+            } else if (true || (!$subjectData) || (($subjectData["hide"] ?? false) === true)) {
+                $eligibleProfiles = array();
+                if ($_GET["UID"] ?? false) {
+                    foreach ($profileList as $profile) {
+                        $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
+                        if ($profileUserData[$_GET["UID"]] ?? false) array_push($eligibleProfiles, array($profile => $profileUserData[$_GET["UID"]]["admin"]));
+                    }
+                }
                 ?>
                     <h1>Ciao, <?php echo $userData["name"]; ?>!</h1>
                     <p><?php echo ($_GET["subject"]) ? "La materia scelta non esiste! " : "" ?>Per quale materia vuoi prenotarti?</p>
