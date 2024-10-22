@@ -894,10 +894,10 @@ class AdminDashboard {
         }
     }
 
-    async addProfile(profile, customName) {
-        const newName = customName ?? prompt(`Inserisci il nome del profilo:`);
-        if (newName) {
-            if (newName === "default" || newName === "" || this.profiles.includes(newName)) {
+    async addProfile(customName) {
+        const profile = customName ?? prompt(`Inserisci il nome del profilo:`);
+        if (profile) {
+            if (profile === "default" || profile === "" || this.profiles.includes(profile)) {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
@@ -909,7 +909,7 @@ class AdminDashboard {
                 })
             }).then(r=>r.json());
             if (!r.status) return alert('Impossibile completare l\'azione!');
-            this.profiles.push(newName);
+            this.profiles.push(profile);
             this.profiles.sort();
             this.renderProfiles();
         }
