@@ -415,7 +415,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         $success = file_put_contents("./JSON{$PROFILE}/".$subject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
                         echo ($success ? "<h1>Ti sei prenotato!</h1><p>Ti sei prenotato a ".$subjectName." per il ".$_GET["day"]."!</p>".($eligibleSubjectCount > 1 ? "<button onclick=\"location.href = '?UID=$userID'\">Cambia Materia</button>" : "") : "<h1>Whoops! :(</h1><p>C'è stato un problema mentre provavi a prenotarti, per favore riprova o cambia giorno.</p><button onclick='location.reload();'>Cambia giorno</button>");
                     }
-                } else if (count($subjectData["days"]) === 0 || $subjectData["lock"] === true) {
+                } else if (count($subjectData["days"] ?? array()) === 0 || $subjectData["lock"] === true) {
                     echo "<h1>Questa materia ".($subjectData["lock"] === true ? "è bloccata" : "non ha interrogazioni")."!</h1>".($eligibleSubjectCount > 1 ? "<button onclick=\"location.href = '?UID=$userID'\">Cambia Materia</button>" : "");
                 } else {
                     ?>
