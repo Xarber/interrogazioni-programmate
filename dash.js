@@ -898,7 +898,7 @@ class AdminDashboard {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+            const r = await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
                 method: "POST",
                 body: JSON.stringify({
                     action: "newprofile",
@@ -915,7 +915,7 @@ class AdminDashboard {
     async deleteProfile(profile, force = false) {
         if (profile === "default" || profile === "" || !this.profiles.includes(profile)) return alert("Non puoi cancellare questo profilo!");
         if (!force && !confirm(`Sicuro di voler eliminare il profilo ${profile}?`)) return;
-        await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+        const r = await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
             method: "POST",
             body: JSON.stringify({
                 action: "deleteprofile",
@@ -1131,7 +1131,7 @@ class AdminDashboard {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+            const r = await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
                 method: "POST",
                 body: JSON.stringify({
                     action: "renameprofile",
