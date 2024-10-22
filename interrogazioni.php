@@ -5,7 +5,7 @@ $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
 $_GET["saveProfile"] ??= "true";
-if ($_GET["saveProfile"] === "false") {
+if ($_GET["saveProfile"] === "false" && !true) { //This is a very beta feature and stuff does break with it. Please don't use it.
     $PROFILE = ($_GET["profile"] == "" || $_GET["profile"] == "default") ? "" : ("-".$_GET["profile"]);
 } else {
     if (!!$_GET["profile"]) $_SESSION["profile"] = $_GET["profile"];
@@ -304,6 +304,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         window.userData = <?php echo json_encode($userData ?? new stdClass); ?>;
         window.users = <?php echo ($userData["admin"] ?? false) ? json_encode($userList) : "{}" ?>;
         window.profiles = <?php echo (($userData["admin"] ?? false) && $PROFILE === "") ? json_encode($profileList) : "[]"; ?>;
+        window.isCustomProfile = <?php echo $PROFILE == "" ? "false" : "true"; ?>
 
         function analizzaDati(options = {
             clipboard: false,
@@ -323,14 +324,6 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             const materia = options.subject ?? `<?php echo $subjectName; ?>`;
             const messageArr = [];
             var listaPrenotazioni = {};
-
-            /*
-                logger.group("Messaggi Link Prenotazione Materia");
-                for (var e in utenti) messageArr.push("Ciao "+utenti[e].name.split(" ")[utenti[e].name.split(" ").length - 1]+"! Ti mando la pagina per prenotarsi per le interrogazioni, questo è il tuo link:\n"+location.href.split('?')[0]+"?UID="+e+"\nNON MANDARLO A NESSUNO, ALTRIMENTI POTRANNO PRENOTARE AL POSTO TUO!!\nSbrigati a scegliere il giorno altrimenti poi non ci saranno più posti :P")
-                messageArr.sort(function(a, b){return 0.5 - Math.random()});
-                messageArr.forEach((e)=>logger.log(e));
-                logger.groupEnd();
-            */
 
             for (var data in datiMateria.days ?? []) {
                 listaPrenotazioni[data] ??= {
@@ -432,7 +425,8 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                             refreshProfiles: async()=>{
                                 const res = await fetch("?UID=<?php echo $userID; ?>&scope=listprofiles").then(r=>r.json());
                                 return (res.status === false) ? [] : res;
-                            }
+                            },
+                            isCustomProfile: window.isCustomProfile
                         });
                     });
                 }, ...window.userData}) : window.dash;
