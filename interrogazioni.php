@@ -73,11 +73,11 @@ if ($_GET["scope"] === "getAllData") {
     if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
     $allSubjectsData = getAllData();
     header('Content-Type: application/json');
-    die(json_encode($allSubjectsData));
+    die(json_encode($allSubjectsData, JSON_PRETTY_PRINT));
 } else if ($_GET["scope"] === "getAllUsers") {
     if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
     header('Content-Type: application/json');
-    die(json_encode($userList));
+    die(json_encode($userList, JSON_PRETTY_PRINT));
 } else if ($_GET["scope"] === "updateSettings") {
     if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
     $allSubjectsData = array();
@@ -138,14 +138,14 @@ if ($_GET["scope"] === "getAllData") {
         $profileList = array_filter($profileList, function($item) {
             return strpos($item, 'JSON-') === 0;
         });
-        die(json_encode(array("status" => true, "profiles" => $profileList)));
+        die(json_encode(array("status" => true, "profiles" => array_values($profileList))));
     } else {
         if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
         if ($body["action"] === "renameprofile") {
             if (!$body["newName"]) die(json_encode(array("status" => false, "message" => "You must specify a new name!")));
             $newName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $body["newName"]);
             $okay = rename("./JSON-{$target}", "./JSON-{$newName}");
-            die(json_encode(array("status" => $okay)));
+            die(json_encode(array("status" => $okay), JSON_PRETTY_PRINT));
         } else if ($body["action"] === "deleteprofile") {
             deleteFolder("./JSON-{$target}");
             die(json_encode(array("status" => true)));
