@@ -341,7 +341,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                 if ($_GET["UID"] ?? false) {
                     foreach ($profileList as $profile) {
                         $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
-                        if ($profileUserData[$_GET["UID"]] ?? false) array_push($eligibleProfiles, array($profile => $profileUserData[$_GET["UID"]]["admin"]));
+                        if ($profileUserData[$_GET["UID"]] ?? false) $eligibleProfiles[$profile] = $profileUserData[$_GET["UID"]]["admin"] ?? false;
                     }
                 }
                 ?>
@@ -365,7 +365,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                 if ($_GET["UID"] ?? false) {
                     foreach ($profileList as $profile) {
                         $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
-                        if ($profileUserData[$_GET["UID"]] ?? false) array_push($eligibleProfiles, array($profile => $profileUserData[$_GET["UID"]]["admin"]));
+                        if ($profileUserData[$_GET["UID"]] ?? false) $eligibleProfiles[$profile] = $profileUserData[$_GET["UID"]]["admin"] ?? false;
                     }
                 }
                 ?>
