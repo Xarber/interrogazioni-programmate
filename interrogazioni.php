@@ -257,6 +257,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
     if (($subjectDataTMP["hide"] ?? true) === true) continue;
     $eligibleSubjectCount = $eligibleSubjectCount + 1;
 }
+echo (!$subjectData) ? "true" : "false";
 ?>
 <!DOCTYPE html>
 <html lang="en">
