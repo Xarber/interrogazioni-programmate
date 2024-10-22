@@ -221,7 +221,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             } else if (!$userData) {
                 $eligibleProfiles = array();
                 $userName = "";
-                if (!!$_GET["UID"]) {
+                if ($_GET["UID"] ?? false) {
                     foreach ($profileList as $profile) {
                         $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
                         if ($profileUserData[$_GET["UID"]] ?? false) {
