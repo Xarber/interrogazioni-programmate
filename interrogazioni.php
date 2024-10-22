@@ -121,7 +121,10 @@ if ($_GET["scope"] === "getAllData") {
     if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
     header('Content-Type: application/json');
     $body = json_decode(file_get_contents("php://input"), true);
-    $target = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $body["profile"]);
+    $target = preg_replace('/[^a-zA-Z0-9_-]+/', '-', ($body["profile"]??""));
+    $body["action"]??="";
+    $body["method"]??="";
+    $body["newName"]??=false;
     if ($body["action"] != "listprofiles" && ($target === "default" || $target === "")) die(json_encode(array("status" => false, "message" => "You can't change this profile!")));
     if ($body["action"] === "newprofile") {
         if (file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile already exists!")));
@@ -135,7 +138,7 @@ if ($_GET["scope"] === "getAllData") {
         }
     } else if ($body["action"] === "listprofiles") {
         $profileListRAW = array_diff(scandir("."), array('.', '..'));
-        $profileListRAW = array_filter($profileList, function($item) {
+        $profileListRAW = array_filter($profileListRAW, function($item) {
             return strpos($item, 'JSON-') === 0;
         });
         $profileList = array_map(function($item) {
