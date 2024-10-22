@@ -827,7 +827,6 @@ class AdminDashboard {
                 await this.deleteProfile(target.dataset.profile);
             }
         });
-
     
         const fileList = this.dashboard.querySelector('.admin-json-file-list');
         fileList.addEventListener('click', (e) => {
