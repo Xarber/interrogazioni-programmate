@@ -308,6 +308,7 @@ class AdminDashboard {
                     </div>
                 </div>
                 <div class="admin-dashboard-profile-section">
+                    <p>Clicca su un profilo per usarlo in una nuova scheda</p>
                     <div class="admin-days-container">
                         <div id="profileList"></div>
                         <button id="addProfileBtn" class="admin-action-button">
@@ -378,7 +379,8 @@ class AdminDashboard {
         if (this.currentFileIndex > -1 && !this.jsonFiles[this.currentFileIndex]) this.currentFileIndex = this.jsonFiles.length - 1;
         if (this.jsonFiles.length < 1) this.currentFileIndex = -1;
         const currentFile = useSubjects ? this.jsonFiles[this.currentFileIndex] : this.userData;
-        this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = useSubjects ? currentFile.fileName : `Utenti (${Object.keys(this.userData).length})`;
+        this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = useSubjects ? currentFile.fileName : 
+        (this.currentFileIndex === -1 ? `Utenti (${Object.keys(this.userData).length})` : `Profili (${this.profiles.length})`);
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
         if (useSubjects) {
@@ -498,7 +500,7 @@ class AdminDashboard {
             const profileElement = document.createElement('div');
             profileElement.className = 'admin-day-item';
             profileElement.innerHTML = `
-                <span>${e}</span>
+                <span onclick="window.open(location.href.split('?')[0]+'?profile=${e}&saveProfile=false&'+(location.href.split('?').slice(1)[0] ?? ''));">${e}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-edit-day-btn" data-profile="${e}">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>
@@ -794,6 +796,18 @@ class AdminDashboard {
 
         const userList = this.dashboard.querySelector('#userList');
         userList.addEventListener('click', async (e) => {
+            let target = e.target.dataset.profile ? e.target : e.target.parentNode;
+            target = target.dataset.profile ? target : target.parentNode;
+            if (target.classList.contains('admin-edit-day-btn')) {
+                await this.editProfile(target.dataset.profile);
+            }
+            if (target.classList.contains('admin-delete-day-btn')) {
+                await this.deleteProfile(target.dataset.user);
+            }
+        });
+
+        const profileList = this.dashboard.querySelector('#profileList');
+        profileList.addEventListener('click', async (e) => {
             let target = e.target.dataset.user ? e.target : e.target.parentNode;
             target = target.dataset.user ? target : target.parentNode;
             if (target.tagName.toLowerCase() == "span") {
@@ -808,8 +822,6 @@ class AdminDashboard {
             if (target.classList.contains('admin-invite-btn')) {
                 const name = this.userData[target.dataset.user].name.split(' ');
                 if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
-                navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
-                alert(`Il testo con il link d'accesso di ${name.join(" ")} è stato copiato!`);
             }
         });
     
@@ -868,7 +880,7 @@ class AdminDashboard {
     }
 
     async addUser() {
-        const name = prompt('Enter user name:');
+        const name = prompt('Inserisci il nome dell\'utente:');
         if (name) {
             const newUUID = this.generateUUID();
             this.userData[newUUID] = { name, admin: false, answers: {} };
@@ -876,6 +888,43 @@ class AdminDashboard {
             await this.updateJSON();
             this.renderUsers();
         }
+    }
+
+    async addProfile(profile, customName) {
+        const newName = customName ?? prompt(`Inserisci il nome del profilo:`);
+        if (newName) {
+            if (newName === "default" || newName === "" || this.profiles.includes(newName)) {
+                alert("Questo nome non è disponibile!");
+                return await this.editProfile(profile);
+            }
+            await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "newprofile",
+                    profile
+                })
+            }).then(r=>r.json());
+            if (!r.status) return alert('Impossibile completare l\'azione!');
+            this.profiles.push(newName);
+            this.profiles.sort();
+            this.renderProfiles();
+        }
+    }
+
+    async deleteProfile(profile, force = false) {
+        if (profile === "default" || profile === "" || !this.profiles.includes(profile)) return alert("Non puoi cancellare questo profilo!");
+        if (!force && !confirm(`Sicuro di voler eliminare il profilo ${profile}?`)) return;
+        await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+            method: "POST",
+            body: JSON.stringify({
+                action: "deleteprofile",
+                profile
+            })
+        }).then(r=>r.json());
+        if (!r.status) return alert('Impossibile completare l\'azione!');
+        this.profiles.splice(this.profiles.indexOf(profile), 1);
+        this.profiles.sort();
+        this.renderProfiles();
     }
   
     async deleteDay(date) {
@@ -1071,6 +1120,29 @@ class AdminDashboard {
                 this.currentFileIndex = tmpIndex;
             }
             await this.removeFile(customIndex, true);
+        }
+    }
+
+    async editProfile(profile, customName) {
+        const newName = customName ?? prompt(`Come vuoi rinominare ${profile}?`);
+        if (newName) {
+            if (newName === "default" || newName === "" || this.profiles.includes(newName)) {
+                alert("Questo nome non è disponibile!");
+                return await this.editProfile(profile);
+            }
+            await fetch('?scope=profileMGMT&'+(location.href.split('?').slice(1)[0] ?? ''), {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "renameprofile",
+                    profile,
+                    newName
+                })
+            }).then(r=>r.json());
+            if (!r.status) return alert('Impossibile completare l\'azione!');
+            this.profiles.splice(this.profiles.indexOf(profile), 1);
+            this.profiles.push(newName);
+            this.profiles.sort();
+            this.renderProfiles();
         }
     }
 

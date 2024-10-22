@@ -4,10 +4,15 @@ $_SESSION["profile"] ??= "";
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
-if (!!$_GET["profile"]) $_SESSION["profile"] = $_GET["profile"];
-if ($_GET["profile"] === "default") $_SESSION["profile"] = "";
-$_SESSION["profile"] = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $_SESSION["profile"]);
-$PROFILE = $_SESSION["profile"] === "" ? "" : ("-".$_SESSION["profile"]);
+$_GET["saveProfile"] ??= "true";
+if ($_GET["saveProfile"] === "false") {
+    $PROFILE = ($_GET["profile"] === "" || $_GET["profile"] === "default") ? "" : ("-".$_GET["profile"]);
+} else {
+    if (!!$_GET["profile"]) $_SESSION["profile"] = $_GET["profile"];
+    if ($_GET["profile"] === "default") $_SESSION["profile"] = "";
+    $_SESSION["profile"] = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $_SESSION["profile"]);
+    $PROFILE = $_SESSION["profile"] === "" ? "" : ("-".$_SESSION["profile"]);
+}
 if (!file_exists("./JSON{$PROFILE}") || !is_dir("./JSON{$PROFILE}")) {
     if ($PROFILE != "") {
         header('Content-Type: application/json');
