@@ -382,7 +382,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         ?>
                     </select>
                     <div class="inline">
-                        <?php if (count($eligibleProfiles) > 0) echo "<button onclick=\"location.href = '?UID=<?php echo $userID; ?>&changeProfile=true'\">Cambia profilo</button>"; ?>
+                        <?php //if (count($eligibleProfiles) > 0) echo "<button onclick=\"location.href = '?UID=<?php echo $userID; ?>&changeProfile=true'\">Cambia profilo</button>"; ?>
                         <button onclick="location.href = '?UID=<?php echo $userID; ?>&subject='+document.getElementById('subject').value">Conferma</button>
                     </div>
                 <?php
