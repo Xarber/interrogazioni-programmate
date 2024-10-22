@@ -247,7 +247,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         </select>
                         <div class="inline">
                             <button type="button" onclick="location.href = '?'">Cambia Utente</button>
-                            <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
+                            <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'&UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
                         </div>
                     <?php
                 }
