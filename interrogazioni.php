@@ -131,7 +131,7 @@ if ($_GET["scope"] === "getAllData") {
     header('Content-Type: application/json');
     die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true), "profiles" => ($PROFILE == "" ? $profileList : false)) : false))));
 } else if ($_GET["scope"] === "profileMGMT") {
-    if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
+    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
     header('Content-Type: application/json');
     $body = json_decode(file_get_contents("php://input"), true);
     $target = preg_replace('/[^a-zA-Z0-9_-]+/', '-', ($body["profile"]??""));
@@ -168,6 +168,81 @@ if ($_GET["scope"] === "getAllData") {
         }
         die(json_encode(array("status" => false, "message" => "Invalid action!")));
     }
+} else if ($_GET["scope"] === "downloadProfile") {
+    if (!($userData["admin"] ?? false)) {
+        header('Content-Type: application/json');
+        die(json_encode(array("status" => false)));
+    }
+
+    $_GET["profileName"] ??= "";
+    $profileName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $_GET["profileName"]);
+    if ($profileName == "" || $profileName == "default") {
+        header('Content-Type: application/json');
+        die(json_encode(array("status" => false, "message" => "You can't download this profile!")));
+    }
+
+    if (!file_exists("./JSON-{$profileName}") || !is_dir("./JSON-{$profileName}")) {
+        header('Content-Type: application/json');
+        die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
+    }
+
+    $zip = new ZipArchive();
+    $zipFilename = tempnam(sys_get_temp_dir(), 'zip');
+    if ($zip->open($zipFilename, ZipArchive::CREATE) !== TRUE) {
+        header('Content-Type: application/json');
+        die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
+    }
+
+    $zip->addFromString('profile.json', json_encode(array("name" => $profileName, "date" => date("d.m.Y"))));
+
+    $zip->addEmptyDir('data');
+    $profileData = array_diff(scandir("./JSON-{$profileName}/"), array('.', '..'));
+    foreach ($profileData as $profileFile) {
+        $zip->addFile("./JSON-{$profileName}/{$profileFile}", "data/{$profileFile}");
+    }
+
+    $zip->close();
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="'.$profileName.'.profile.zip"');
+    header('Content-Length: ' . filesize($zipFilename));
+
+    readfile($zipFilename);
+    unlink($zipFilename);
+    die();
+} else if ($_GET["scope"] === "uploadProfile") {
+    header('Content-Type: application/json');
+    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
+    if (!isset($_FILES["profileData"])) die(json_encode(array("status" => false, "message" => "No file uploaded.")));
+    $file = $_FILES['profileData']['tmp_name'];
+    $tempDir = sys_get_temp_dir() . '/' . uniqid('zip_', true);
+
+    if (!mkdir($tempDir, 0700, true)) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
+    $destination = $tempDir . '/' . $_FILES['profileData']['name'];
+
+    if (!move_uploaded_file($file, $destination)) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
+
+    $zip = new ZipArchive;
+    if ($zip->open($destination) != TRUE) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
+
+    $zip->extractTo($tempDir);
+    $zip->close();
+    
+    if (!file_exists("{$tempDir}/profile.json") || !file_exists("{$tempDir}/data") || !is_dir("{$tempDir}/data")) echo (json_encode(array("status" => false, "message" => "Invalid profile zip!")));
+    else {
+        $profileData = json_decode(file_get_contents("{$tempDir}/profile.json"), true);
+        $profileName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $profileData["name"]);
+        if ($profileName == "" || $profileName == "default") echo json_encode(array("status" => false, "message" => "Invalid profile name!"));
+        else {
+            rename("{$tempDir}/data", "./JSON-{$profileName}");
+            echo json_encode(array("status" => true, "profileName" => $profileName));
+        }
+    }
+    unlink($destination);
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempDir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST) as $file) {
+        $file->isDir() ? rmdir($file) : unlink($file);
+    }
+    rmdir($tempDir);
+    die();
 }
 $eligibleSubjectCount = 0;
 foreach ($subjectJSONs as $subjectNameTMP) {
