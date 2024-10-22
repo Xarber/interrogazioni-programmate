@@ -57,7 +57,7 @@ $userList = strlen($userList) > 1 ? json_decode($userList, true) : array();
 $subjectName = $_GET["subject"];
 $subject = $subjectName.".json";
 $userData = $userList[$userID] ?? NULL;
-$subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true) : null;
+$subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true) : false;
 
 $profileListRAW = array_diff(scandir("."), array('.', '..'));
 $profileListRAW = array_filter($profileListRAW, function($item) {
