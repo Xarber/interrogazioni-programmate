@@ -54,6 +54,14 @@ $subject = $subjectName.".json";
 $userData = $userList[$userID] ?? NULL;
 $subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true) : null;
 
+$profileListRAW = array_diff(scandir("."), array('.', '..'));
+$profileListRAW = array_filter($profileListRAW, function($item) {
+    return strpos($item, 'JSON-') === 0;
+});
+$profileList = array_map(function($item) {
+    return substr($item, 5);
+}, array_values($profileListRAW));
+
 function getAllData() {
     global $userData, $PROFILE;
     if (!($userData["admin"] ?? false)) return false;
@@ -140,13 +148,6 @@ if ($_GET["scope"] === "getAllData") {
         }
     } else if ($body["action"] === "listprofiles") {
         if ($PROFILE != "") die(json_encode(array("status" => false, "message" => "You can only list profiles from the main one!")));
-        $profileListRAW = array_diff(scandir("."), array('.', '..'));
-        $profileListRAW = array_filter($profileListRAW, function($item) {
-            return strpos($item, 'JSON-') === 0;
-        });
-        $profileList = array_map(function($item) {
-            return substr($item, 5);
-        }, array_values($profileListRAW));
         die(json_encode(array("status" => true, "profiles" => $profileList)));
     } else {
         if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
@@ -296,6 +297,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         const isAdmin = <?php echo ($userData["admin"] ?? false) ? "true" : "false" ?>;
         window.userData = <?php echo json_encode($userData ?? new stdClass); ?>;
         window.users = <?php echo ($userData["admin"] ?? false) ? json_encode($userList) : "{}" ?>;
+        window.profiles = <?php echo ($userData["admin"] ?? false) ? json_encode($profileList) : "[]"; ?>;
 
         function analizzaDati(options = {
             clipboard: false,
@@ -414,10 +416,15 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                                 });
                             },
                             users: window.users,
+                            profiles: window.profiles,
                             analysisFunction: analizzaDati,
                             refreshUsers: async ()=>{
                                 const res = await fetch("?UID=<?php echo $userID; ?>&scope=getAllUsers").then(r=>r.json());
                                 return (res.status === false) ? {} : res;
+                            },
+                            refreshProfiles: async()=>{
+                                const res = await fetch("?UID=<?php echo $userID; ?>&scope=listprofiles").then(r=>r.json());
+                                return (res.status === false) ? [] : res;
                             }
                         });
                     });

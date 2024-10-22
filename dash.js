@@ -213,16 +213,20 @@ class AdminDashboard {
         var jsonFiles = options.subjects;
         var update = options.updateCallback;
         var userData = options.users;
+        var profiles = options.profiles;
         var dataAnalysis = options.analysisFunction;
         var refreshUsers = options.refreshUsers;
+        var refreshProfiles = options.refreshProfiles;
         this.jsonFiles = jsonFiles;
-        this.userData = userData;
+        this.userData = userData ?? {};
+        this.profiles = profiles ?? [];
         this.onJsonUpdate = update ?? ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
         this.currentFileIndex = -1;
         this.userEditList = [];
         this.container = containerDiv || document.documentElement;
         this.dataAnalysis = dataAnalysis;
         this.refreshUsers = refreshUsers;
+        this.refreshProfiles = refreshProfiles;
         this.dashboard = null;
         this.render();
     }
@@ -235,6 +239,9 @@ class AdminDashboard {
                 <h3>Dashboard</h3>
                 <ul class="admin-json-file-list">
                     <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
+                    ${this.profiles.length > 0 ? `
+                        <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Profili</li>
+                    ` : ""}
                     ${this.jsonFiles.map((file, index) => `
                         <li data-index="${index}" class="${index === this.currentFileIndex ? 'admin-active' : ''}">${file.fileName}</li>
                     `).join('')}
@@ -296,6 +303,14 @@ class AdminDashboard {
                     <div class="admin-days-container">
                         <div id="userList"></div>
                         <button id="addUserBtn" class="admin-action-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-dashboard-profile-section">
+                    <div class="admin-days-container">
+                        <div id="profileList"></div>
+                        <button id="addProfileBtn" class="admin-action-button">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
                         </button>
                     </div>
@@ -367,6 +382,7 @@ class AdminDashboard {
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
         if (useSubjects) {
+            this.dashboard.querySelector(".admin-dashboard-profile-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-subject-section").classList.remove("hided");
             const lockSwitch = this.dashboard.querySelector('#lockSwitch');
@@ -385,11 +401,18 @@ class AdminDashboard {
             }
         
             this.renderDays();
-        } else {
+        } else if (this.currentFileIndex === -1) {
+            this.dashboard.querySelector(".admin-dashboard-profile-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.remove("hided");
             this.dashboard.querySelector(".admin-dashboard-subject-section").classList.add("hided");
 
             this.renderUsers();
+        } else if (this.currentFileIndex === -2) {
+            this.dashboard.querySelector(".admin-dashboard-profile-section").classList.remove("hided");
+            this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
+            this.dashboard.querySelector(".admin-dashboard-subject-section").classList.add("hided");
+
+            this.renderProfiles();
         }
     }
   
@@ -462,6 +485,35 @@ class AdminDashboard {
             userList.innerHTML = `
                 <div class="admin-day-item">
                     <span>Weird.. No users were found!</span>
+                </div>
+            `;
+        }
+    }
+
+    renderProfiles() {
+        const profileList = this.dashboard.querySelector('#profileList');
+        const currentFile = this.profiles;
+        profileList.innerHTML = '';
+        currentFile.forEach((e) => {
+            const profileElement = document.createElement('div');
+            profileElement.className = 'admin-day-item';
+            profileElement.innerHTML = `
+                <span>${e}</span>
+                <div class="admin-inline admin-user-actions">
+                    <button class="admin-edit-day-btn" data-profile="${e}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>
+                    </button>
+                    <button class="admin-delete-day-btn" data-profile="${e}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
+                    </button>
+                </div>
+            `;
+            profileList.appendChild(profileElement);
+        });
+        if (currentFile.length === 0) {
+            profileList.innerHTML = `
+                <div class="admin-day-item">
+                    <span>Non ci sono profili!</span>
                 </div>
             `;
         }
@@ -1120,14 +1172,17 @@ class AdminDashboard {
     update(options) {
         var jsonFiles = options.subjects;
         var userData = options.users;
+        var profiles = options.profiles;
         var update = options.updateCallback;
         var dataAnalysis = options.analysisFunction;
         var refreshUsers = options.refreshUsers;
+        var refreshProfiles = options.refreshProfiles;
         this.jsonFiles = jsonFiles || this.jsonFiles;
         this.userData = userData || this.userData;
         this.onJsonUpdate = update || this.onJsonUpdate || ((fullData, fileData)=>console.log('Updated JSON:', fullData, fileData));
         this.dataAnalysis = dataAnalysis || this.dataAnalysis;
         this.refreshUsers = refreshUsers || this.refreshUsers;
+        this.refreshProfiles = refreshProfiles || this.refreshProfiles;
         if (this.currentFileIndex > this.jsonFiles.length - 1) this.currentFileIndex = -1;
         // this.dashboard.remove();
         // this.dashboard = null;
