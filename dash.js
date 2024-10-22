@@ -360,9 +360,11 @@ class AdminDashboard {
   
     updateDashboard() {
         const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
+        if (this.currentFileIndex > -1 && !this.jsonFiles[this.currentFileIndex]) this.currentFileIndex = this.jsonFiles.length - 1;
+        if (this.jsonFiles.length < 1) this.currentFileIndex = -1;
         const currentFile = useSubjects ? this.jsonFiles[this.currentFileIndex] : this.userData;
         this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = useSubjects ? currentFile.fileName : `Utenti (${Object.keys(this.userData).length})`;
-        this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
+        if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
         if (useSubjects) {
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
