@@ -336,7 +336,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         </div>
                     <?php
                 }
-            } else if (true || (!$subjectData) || (($subjectData["hide"] ?? false) === true)) {
+            } else if ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) {
                 $eligibleProfiles = array();
                 if ($_GET["UID"] ?? false) {
                     foreach ($profileList as $profile) {
@@ -346,7 +346,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                 }
                 ?>
                     <h1>Ciao, <?php echo $userData["name"]; ?>!</h1>
-                    <p><?php echo ($_GET["subject"]) ? "La materia scelta non esiste! " : "" ?>Per quale materia vuoi prenotarti?</p>
+                    <p><?php echo ($_GET["subject"]) ? "La materia scelta non esiste! " : ""; ?>Per quale materia vuoi prenotarti?</p>
                     <select name="subject" id="subject">
                         <?php
                             $eligibleCount = 0;
@@ -365,7 +365,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                         ?>
                     </select>
                     <div class="inline">
-                        <?php //if (count($eligibleProfiles) > 0) echo "<button onclick=\"location.href = '?UID={$userID}&changeProfile=true'\">Cambia profilo</button>"; ?>
+                        <?php if (count($eligibleProfiles) > 0) echo "<button onclick=\"location.href = '?UID={$userID}&changeProfile=true'\">Cambia profilo</button>"; ?>
                         <button onclick="location.href = '?UID=<?php echo $userID; ?>&subject='+document.getElementById('subject').value">Conferma</button>
                     </div>
                 <?php
