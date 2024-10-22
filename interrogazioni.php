@@ -151,6 +151,7 @@ if ($_GET["scope"] === "getAllData") {
         if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
         if ($body["action"] === "renameprofile") {
             if (!$body["newName"]) die(json_encode(array("status" => false, "message" => "You must specify a new name!")));
+            if ($body["newName"] === "default" || $body["newName"] === "") die(json_encode(array("status" => false, "message" => "This name is forbidden!")));
             $newName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $body["newName"]);
             $okay = rename("./JSON-{$target}", "./JSON-{$newName}");
             die(json_encode(array("status" => $okay), JSON_PRETTY_PRINT));
