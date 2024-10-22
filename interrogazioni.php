@@ -129,7 +129,7 @@ if ($_GET["scope"] === "getAllData") {
         }
     }
     header('Content-Type: application/json');
-    die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true)) : false))));
+    die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true), "profiles" => ($PROFILE === "" ? $profileList : false)) : false))));
 } else if ($_GET["scope"] === "profileMGMT") {
     if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
     header('Content-Type: application/json');
@@ -302,7 +302,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         const isAdmin = <?php echo ($userData["admin"] ?? false) ? "true" : "false" ?>;
         window.userData = <?php echo json_encode($userData ?? new stdClass); ?>;
         window.users = <?php echo ($userData["admin"] ?? false) ? json_encode($userList) : "{}" ?>;
-        window.profiles = <?php echo ($userData["admin"] ?? false && $PROFILE === "") ? json_encode($profileList) : "[]"; ?>;
+        window.profiles = <?php echo (($userData["admin"] ?? false) && $PROFILE === "") ? json_encode($profileList) : "[]"; ?>;
 
         function analizzaDati(options = {
             clipboard: false,
@@ -415,7 +415,8 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                                         // alert("Dati aggiornati con successo!");
                                         !forceBlockRefresh && window.adminDash && window.adminDash.update({
                                             subjects: r.newData.subjects,
-                                            users: r.newData.users
+                                            users: r.newData.users,
+                                            profiles: !!r.newData.profiles ? r.newData.profiles : undefined
                                         });
                                     }
                                 });
