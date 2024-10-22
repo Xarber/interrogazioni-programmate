@@ -257,7 +257,6 @@ foreach ($subjectJSONs as $subjectNameTMP) {
     if (($subjectDataTMP["hide"] ?? true) === true) continue;
     $eligibleSubjectCount = $eligibleSubjectCount + 1;
 }
-echo (!$subjectData) ? "true" : "false";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -272,6 +271,7 @@ echo (!$subjectData) ? "true" : "false";
 <body>
     <div class="mainDiv">
         <?php
+            echo (!$subjectData) ? "true" : "false";
             if (count($userList) === 0) {
                 ?>
                     <h1>Benvenuto, crea il primo account admin per continuare!</h1>
@@ -361,7 +361,7 @@ echo (!$subjectData) ? "true" : "false";
                         <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'&UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
                     </div>
                 <?
-            } else if (!$subjectData || ($subjectData["hide"] ?? false) === true) {
+            } else if ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) {
                 $eligibleProfiles = array();
                 if ($_GET["UID"] ?? false) {
                     foreach ($profileList as $profile) {
