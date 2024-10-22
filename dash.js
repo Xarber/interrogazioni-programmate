@@ -909,6 +909,7 @@ class AdminDashboard {
                 method: "POST",
                 body: JSON.stringify({
                     action: "newprofile",
+                    method: confirm("Vuoi importare i dati da questo profilo? (Annulla = No)") ? "import" : "new",
                     profile
                 })
             }).then(r=>r.json());
