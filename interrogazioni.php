@@ -6,7 +6,7 @@ $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
 $_GET["saveProfile"] ??= "true";
 if ($_GET["saveProfile"] === "false") {
-    $PROFILE = ($_GET["profile"] === "" || $_GET["profile"] === "default") ? "" : ("-".$_GET["profile"]);
+    $PROFILE = ($_GET["profile"] == "" || $_GET["profile"] == "default") ? "" : ("-".$_GET["profile"]);
 } else {
     if (!!$_GET["profile"]) $_SESSION["profile"] = $_GET["profile"];
     if ($_GET["profile"] === "default") $_SESSION["profile"] = "";
@@ -129,8 +129,7 @@ if ($_GET["scope"] === "getAllData") {
         }
     }
     header('Content-Type: application/json');
-    if ($PROFILE != "") $profileList = false;
-    echo $PROFILE."\n".($PROFILE=="");
+    echo (($userData["admin"] ?? false) && $PROFILE === "") ? json_encode($profileList) : "[]";
     die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true), "profiles" => $profileList) : false))));
 } else if ($_GET["scope"] === "profileMGMT") {
     if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
