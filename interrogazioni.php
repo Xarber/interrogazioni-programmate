@@ -139,6 +139,7 @@ if ($_GET["scope"] === "getAllData") {
             die(json_encode(array("status" => $okay)));
         }
     } else if ($body["action"] === "listprofiles") {
+        if ($PROFILE != "") die(json_encode(array("status" => false, "message" => "You can only list profiles from the main one!")));
         $profileListRAW = array_diff(scandir("."), array('.', '..'));
         $profileListRAW = array_filter($profileListRAW, function($item) {
             return strpos($item, 'JSON-') === 0;
