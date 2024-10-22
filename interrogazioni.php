@@ -129,7 +129,7 @@ if ($_GET["scope"] === "getAllData") {
         }
     }
     header('Content-Type: application/json');
-    die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true), "profiles" => $profileList) : false))));
+    die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true), "profiles" => ($PROFILE == "" ? $profileList : false)) : false))));
 } else if ($_GET["scope"] === "profileMGMT") {
     if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
     header('Content-Type: application/json');
