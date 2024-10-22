@@ -133,7 +133,9 @@ if ($_GET["scope"] === "getAllData") {
             die(json_encode(array("status" => true)));
         } else {
             $okay = mkdir("./JSON-{$target}");
-            $okay = $okay && file_put_contents("./JSON-{$target}/users.json", json_encode(array($userID => $userList[$userID]), JSON_PRETTY_PRINT));
+            $newUserData = array($userID => $userList[$userID]);
+            $newUserData[$userID]["answers"] = array();
+            $okay = $okay && file_put_contents("./JSON-{$target}/users.json", json_encode($newUserData, JSON_PRETTY_PRINT));
             die(json_encode(array("status" => $okay)));
         }
     } else if ($body["action"] === "listprofiles") {
