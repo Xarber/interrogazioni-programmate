@@ -754,6 +754,7 @@ class AdminDashboard {
                 }
                 .admin-dashboard-content {
                     height: 70%;
+                    margin-top: 100px;
                 }
                 .admin-day-item {
                     flex-direction: column;
