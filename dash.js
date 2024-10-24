@@ -238,27 +238,34 @@ class AdminDashboard {
         this.dashboard.className = 'admin-dashboard';
         this.dashboard.innerHTML = `
             <div class="admin-dashboard-sidebar">
-                <h3>Dashboard</h3>
-                <ul class="admin-json-file-list">
-                    ${!this.isCustomProfile ? "" : `
-                        <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&UID='+(new URLSearchParams(location.search).get('UID'))">&lt; Esci dal profilo</li>
-                    `}
-                    <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
-                    ${!Array.isArray(this.profiles) ? "" : `
-                        <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Profili</li>
-                    `}
-                    ${this.jsonFiles.map((file, index) => `
-                        <li data-index="${index}" class="${index === this.currentFileIndex ? 'admin-active' : ''}">${file.fileName}</li>
-                    `).join('')}
-                    ${this.jsonFiles.length === 0 ? "<li data-index=\"-1\" class=\"\">Nessuna materia!</li>" : ""}
-                </ul>
-                <div class="inline">
-                    <button id="addFileBtn" class="admin-action-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
+                <div class="admin-inline admin-dashboard-main-header">
+                    <h3>Dashboard</h3>
+                    <button class="admin-dashboardMenuBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
                     </button>
-                    <button id="removeFileBtn" style="background-color: red" class="admin-action-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
-                    </button>
+                </div>
+                <div class="admin-dashboard-sidebar-content">
+                    <ul class="admin-json-file-list">
+                        ${!this.isCustomProfile ? "" : `
+                            <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&UID='+(new URLSearchParams(location.search).get('UID'))">&lt; Esci dal profilo</li>
+                        `}
+                        <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
+                        ${!Array.isArray(this.profiles) ? "" : `
+                            <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Profili</li>
+                        `}
+                        ${this.jsonFiles.map((file, index) => `
+                            <li data-index="${index}" class="${index === this.currentFileIndex ? 'admin-active' : ''}">${file.fileName}</li>
+                        `).join('')}
+                        ${this.jsonFiles.length === 0 ? "<li data-index=\"-1\" class=\"\">Nessuna materia!</li>" : ""}
+                    </ul>
+                    <div class="inline admin-json-file-list-actions">
+                        <button id="addFileBtn" class="admin-action-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
+                        </button>
+                        <button id="removeFileBtn" style="background-color: red" class="admin-action-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="admin-dashboard-content">
@@ -563,6 +570,7 @@ class AdminDashboard {
             .admin-dashboard-sidebar {
                 width: 200px;
                 background-color: rgba(30, 30, 30, 0.8);
+                backdrop-filter: blur(10px);
                 padding: 20px;
                 overflow-y: auto;
             }
@@ -570,6 +578,20 @@ class AdminDashboard {
                 flex-grow: 1;
                 padding: 20px;
                 overflow-y: auto;
+            }
+            .admin-dashboard-main-header h3 {
+                flex: 1;
+            }
+            .admin-dashboard-main-header button {
+                display: none;
+                padding: 10px 15px;
+                background-color: transparent;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-bottom: 0;
+                height: 100%;
             }
             .admin-dashboard-header {
                 display: flex;
@@ -708,12 +730,23 @@ class AdminDashboard {
                     flex-direction: column;
                 }
                 .admin-dashboard-sidebar {
+                    position: fixed;
                     width: calc(100% - 40px);
-                    max-height: 30%;
+                    height: 58px; /*max-height: 30%;*/
+                    overflow-y: hidden;
+                }
+                .admin-dashboard-sidebar.extend {
+                    height: calc(100% - 40px);
+                }
+                .admin-dashboard-sidebar-content {
+                    height: calc(100% - 45px);
+                    display: flex;
+                    flex-direction: column;
                 }
                 .admin-json-file-list {
-                    max-height: calc(100% - 65px - 68px - 20px);
+                    max-height: calc(100% - 65px - 68px - 20px - 20px);
                     overflow-y: auto;
+                    flex: 1;
                 }
                 .admin-dashboard-content {
                     height: 70%;
@@ -748,6 +781,11 @@ class AdminDashboard {
         const dashHeader = this.dashboard.querySelector(`h2#admin-dashboard-header-title`);
         dashHeader.addEventListener('click', async ()=>{
             await this.editSubject();
+        });
+
+        const dashMenuBTN = this.dashboard.querySelector('.admin-dashboardMenuBtn');
+        dashMenuBTN.addEventListener('click', ()=>{
+            this.dashboard.querySelector(".admin-dashboard-sidebar").classList.toggle("extend");
         });
 
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
@@ -862,6 +900,7 @@ class AdminDashboard {
                 this.currentFileIndex = parseInt(e.target.dataset.index);
                 fileList.querySelectorAll('li').forEach(li => li.classList.remove('admin-active'));
                 e.target.classList.add('admin-active');
+                this.dashboard.querySelector(".admin-dashboard-sidebar").classList.remove("extend");
                 this.updateDashboard();
             }
         });
