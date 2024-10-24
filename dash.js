@@ -729,8 +729,12 @@ class AdminDashboard {
                 .admin-dashboard {
                     flex-direction: column;
                 }
+                .admin-dashboard-main-header button {
+                    display: block;
+                }
                 .admin-dashboard-sidebar {
                     position: fixed;
+                    z-index: 15;
                     width: calc(100% - 40px);
                     height: 58px; /*max-height: 30%;*/
                     overflow-y: hidden;
@@ -744,7 +748,7 @@ class AdminDashboard {
                     flex-direction: column;
                 }
                 .admin-json-file-list {
-                    max-height: calc(100% - 65px - 68px - 20px - 20px);
+                    /*max-height: calc(100% - 65px - 68px - 20px - 20px);*/
                     overflow-y: auto;
                     flex: 1;
                 }
