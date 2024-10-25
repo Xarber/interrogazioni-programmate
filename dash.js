@@ -1157,10 +1157,14 @@ class AdminDashboard {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
         if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questa risposta non esiste!`);
         if (!confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
+        
         const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
         delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
+        
         this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
-        if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+        this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0] + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
+        
+        if (this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
             var index = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
             if (index != -1) {
                 this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
