@@ -234,7 +234,7 @@ class AdminDashboard {
     }
   
     render() {
-        let SubjectDataSection = !!this.dashboard ? this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section : "days";
+        let SubjectDataSection = this.oldDashboardSDS ?? "days";
         this.dashboard = this.dashboard || document.createElement('div');
         this.dashboard.className = 'admin-dashboard';
         this.dashboard.innerHTML = `
@@ -1559,6 +1559,7 @@ class AdminDashboard {
     }
 
     update(options) {
+        this.oldDashboardSDS = (this.dashboard.querySelector('.admin-dashboard-subject-section').dataset ?? {}).section;
         var jsonFiles = options.subjects;
         var userData = options.users;
         var profiles = options.profiles;
