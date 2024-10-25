@@ -234,7 +234,7 @@ class AdminDashboard {
     }
   
     render() {
-        let SubjectDataSection = this.oldDashboardSDS ?? "days";
+        let oldDashboardSDS = this.dashboard ? (this.dashboard.querySelector('.admin-dashboard-subject-section').dataset ?? {}).answers : "days";
         this.dashboard = this.dashboard || document.createElement('div');
         this.dashboard.className = 'admin-dashboard';
         this.dashboard.innerHTML = `
@@ -274,7 +274,7 @@ class AdminDashboard {
                     <h2 id="admin-dashboard-header-title" title="Clicca per rinominare la sezione." style="cursor: pointer;">Dashboard</h2>
                     <button class="admin-close-btn" title="Chiudi">&times;</button>
                 </div>
-                <div class="admin-dashboard-subject-section" data-section="${SubjectDataSection}">
+                <div class="admin-dashboard-subject-section" data-section="${oldDashboardSDS}">
                     <div class="admin-dashboard-controls">
                         <div class="admin-control-row">
                             <div class="admin-switch-container">
@@ -352,7 +352,7 @@ class AdminDashboard {
         this.attachEventListeners();
         if (!this.appended) this.container.appendChild(this.dashboard);
         this.appended = true;
-        this.updateDashboard();
+        this.updateDashboard(true);
     }
 
     sortSubjectDates(daysObject) {
@@ -403,7 +403,7 @@ class AdminDashboard {
         this.userEditList = [];
     }
   
-    updateDashboard() {
+    updateDashboard(fromRender = false) {
         const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
         if (this.currentFileIndex > -1 && !this.jsonFiles[this.currentFileIndex]) this.currentFileIndex = this.jsonFiles.length - 1;
         if (this.jsonFiles.length < 1) this.currentFileIndex = -1;
@@ -411,8 +411,7 @@ class AdminDashboard {
         this.updateHeader();
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
-        this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
-        this.oldDashboardSDS = "days";
+        if (!fromRender) this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
         if (useSubjects) {
             this.dashboard.querySelector(".admin-dashboard-profile-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
@@ -936,13 +935,11 @@ class AdminDashboard {
         editAnswersBtn.addEventListener('click', () => {
             this.renderAnswers();
             this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "answers";
-            this.oldDashboardSDS = "answers";
         });
         const editAnswersLeaveBtn = this.dashboard.querySelector('#editAnswersLeaveBtn');
         editAnswersLeaveBtn.addEventListener('click', () => {
             this.renderDays();
             this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
-            this.oldDashboardSDS = "days";
         });
     
         const addUserBtn = this.dashboard.querySelector('#addUserBtn');
