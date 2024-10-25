@@ -573,7 +573,7 @@ class AdminDashboard {
             dayDividedAnswers[answerData.date] ??= [];
             dayDividedAnswers[answerData.date].push({UUID, answerData});
         });
-        const dayEntries = Object.entries(dayDividedAnswers);
+        const dayEntries = Object.entries(sortSubjectDates(dayDividedAnswers));
         dayEntries.forEach(([day, dayData]) => {
             const dayDividerElement = document.createElement('h2');
             dayDividerElement.innerText = day;
