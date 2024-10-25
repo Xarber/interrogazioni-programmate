@@ -1243,8 +1243,11 @@ class AdminDashboard {
         if (!this.userEditList.includes(user2UUID)) this.userEditList.push(user2UUID);
 
         const tmpF = this.jsonFiles[this.currentFileIndex].data.answers[user1UUID];
+        const tmpUserAnswerOrder = [this.jsonFiles[this.currentFileIndex].data.answers[user1UUID].answerNumber, this.jsonFiles[this.currentFileIndex].data.answers[user2UUID].answerNumber];
         this.jsonFiles[this.currentFileIndex].data.answers[user1UUID] = this.jsonFiles[this.currentFileIndex].data.answers[user2UUID];
         this.jsonFiles[this.currentFileIndex].data.answers[user2UUID] = tmpF;
+        this.jsonFiles[this.currentFileIndex].data.answers[user1UUID].answerNumber = tmpUserAnswerOrder[0];
+        this.jsonFiles[this.currentFileIndex].data.answers[user2UUID].answerNumber = tmpUserAnswerOrder[1];
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
