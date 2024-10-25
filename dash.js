@@ -676,6 +676,7 @@ class AdminDashboard {
             .admin-dashboard-subject-section {
                 position: relative;
             }
+            .admin-dashboard-subject-section[data-section]:not([data-section="days"]) {display: none;}
             .admin-dashboard-subject-answers-section {
                 display: none;
                 padding: 10px;
@@ -685,7 +686,10 @@ class AdminDashboard {
                 position: absolute;
                 top: 0;
             }
-            .admin-swapping-user-answer > .admin-day-item > .admin-delete-day-btn {
+            .admin-swapping-user-answer > .admin-day-item {
+                border: 2px;
+            }
+            .admin-swapping-user-answer > .admin-day-item .admin-delete-day-btn {
                 display: none;
             }
             .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover {
