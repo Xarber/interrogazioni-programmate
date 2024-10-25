@@ -1218,7 +1218,9 @@ class AdminDashboard {
 
         await this.updateJSON();
         this.render();
-        this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section = "answers";
+        setTimeout(()=>{
+            this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section = "answers";
+        }, 200);
     }
 
     async swapUserAnswer(user1UUID, user2UUID) {
@@ -1263,7 +1265,9 @@ class AdminDashboard {
 
         await this.updateJSON();
         this.render();
-        this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section = "answers";
+        setTimeout(()=>{
+            this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section = "answers";
+        }, 200);
     }
     
     async filloutAnswers() {
