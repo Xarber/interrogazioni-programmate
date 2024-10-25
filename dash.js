@@ -1162,7 +1162,7 @@ class AdminDashboard {
         delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
         
         this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
-        this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0] + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
+        this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
         
         if (this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
             var index = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
