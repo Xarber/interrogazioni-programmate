@@ -315,7 +315,7 @@ class AdminDashboard {
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
                         </button>
                     </div>
-                    <div class="admin-dashboard-subject-answers-section">
+                    <div class="admin-dashboard-subject-answers-section admin-dashboard-float-section">
                         <span class="admin-dashboard-subject-answers-header clickable-span" id="editAnswersLeaveBtn">&lt; Giorni</span>
                         <div class="admin-days-container">
                             <div id="subjectAnswerList"></div>
@@ -676,7 +676,7 @@ class AdminDashboard {
             .admin-dashboard-subject-section {
                 position: relative;
             }
-            .admin-dashboard-subject-section[data-section]:not([data-section="days"]) {
+            .admin-dashboard-subject-section[data-section]:not([data-section="days"]) > *:not(.admin-dashboard-float-section) {
                 opacity: 0;
             }
             .admin-dashboard-subject-answers-section {
