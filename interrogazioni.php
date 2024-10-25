@@ -551,7 +551,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                                     if (r.status != true) alert("Impossibile completare l'azione!");
                                     else {
                                         // alert("Dati aggiornati con successo!");
-                                        false && !forceBlockRefresh && window.adminDash && window.adminDash.update({
+                                        !forceBlockRefresh && window.adminDash && window.adminDash.update({
                                             subjects: r.newData.subjects,
                                             users: r.newData.users,
                                             profiles: !!r.newData.profiles ? r.newData.profiles : undefined

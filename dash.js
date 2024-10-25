@@ -235,6 +235,7 @@ class AdminDashboard {
   
     render() {
         let SubjectDataSection = this.oldDashboardSDS ?? "days";
+        this.oldDashboardSDS = "days";
         this.dashboard = this.dashboard || document.createElement('div');
         this.dashboard.className = 'admin-dashboard';
         this.dashboard.innerHTML = `
@@ -1256,6 +1257,7 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
+        this.oldDashboardSDS = "answers";
         this.render();
     }
     
