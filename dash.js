@@ -1219,8 +1219,8 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
-        this.dashboardStayOnAnswers = true;
         this.render();
+        this.dashboardStayOnAnswers = true;
     }
 
     async swapUserAnswer(user1UUID, user2UUID) {
@@ -1264,8 +1264,8 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
-        this.dashboardStayOnAnswers = true;
         this.render();
+        this.dashboardStayOnAnswers = true;
     }
     
     async filloutAnswers() {
