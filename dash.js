@@ -403,6 +403,7 @@ class AdminDashboard {
     }
   
     updateDashboard() {
+        this.dashboardStayOnAnswers ??= false;
         const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
         if (this.currentFileIndex > -1 && !this.jsonFiles[this.currentFileIndex]) this.currentFileIndex = this.jsonFiles.length - 1;
         if (this.jsonFiles.length < 1) this.currentFileIndex = -1;
@@ -410,7 +411,8 @@ class AdminDashboard {
         this.updateHeader();
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
-        this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
+        this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = this.dashboardStayOnAnswers ? "answers" : "days";
+        this.dashboardStayOnAnswers = false;
         if (useSubjects) {
             this.dashboard.querySelector(".admin-dashboard-profile-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
@@ -1218,9 +1220,7 @@ class AdminDashboard {
 
         await this.updateJSON();
         this.render();
-        setTimeout(()=>{
-            this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section = "answers";
-        }, 200);
+        this.dashboardStayOnAnswers = true;
     }
 
     async swapUserAnswer(user1UUID, user2UUID) {
@@ -1265,9 +1265,7 @@ class AdminDashboard {
 
         await this.updateJSON();
         this.render();
-        setTimeout(()=>{
-            this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section = "answers";
-        }, 200);
+        this.dashboardStayOnAnswers = true;
     }
     
     async filloutAnswers() {
