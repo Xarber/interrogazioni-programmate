@@ -1142,17 +1142,17 @@ class AdminDashboard {
         }
     }
     
-    async clearSubjectAnswers() {
-        if (!confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}?`)) return;
-        this.jsonFiles[this.currentFileIndex].data.answers = {};
-        this.jsonFiles[this.currentFileIndex].data.answerCount = 0;
-        for (var day in this.jsonFiles[this.currentFileIndex].data.days) {
-            var max = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1];
-            this.jsonFiles[this.currentFileIndex].data.days[day].availability = max + "/" + max;
+    async clearSubjectAnswers(force = false, customIndex = this.currentFileIndex) {
+        if (!force && !confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}?`)) return;
+        this.jsonFiles[customIndex].data.answers = {};
+        this.jsonFiles[customIndex].data.answerCount = 0;
+        for (var day in this.jsonFiles[customIndex].data.days) {
+            var max = this.jsonFiles[customIndex].data.days[day].availability.split("/")[1];
+            this.jsonFiles[customIndex].data.days[day].availability = max + "/" + max;
         }
-        this.jsonFiles[this.currentFileIndex].cleared = true;
+        this.jsonFiles[customIndex].cleared = true;
         await this.updateJSON();
-        delete this.jsonFiles[this.currentFileIndex].cleared;
+        delete this.jsonFiles[customIndex].cleared;
         this.render();
     }
 
@@ -1478,6 +1478,8 @@ class AdminDashboard {
         if (this.jsonFiles.length > 1 || true) { // Allow deleting all files.
             if (customIndex < 0) return alert("Non puoi cancellare questa sezione!");
             if (!force && !confirm(`Sicuro di voler cancellare ${this.jsonFiles[customIndex] ? this.jsonFiles[customIndex].fileName : "questa sezione"}?`)) return;
+
+            this.clearSubjectAnswers(true, customIndex);
 
             await this.updateJSON({fileName: this.jsonFiles[customIndex] && this.jsonFiles[customIndex].fileName, data: "removed"});
             if (customIndex > -1) {
