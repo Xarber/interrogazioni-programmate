@@ -273,7 +273,7 @@ class AdminDashboard {
                     <h2 id="admin-dashboard-header-title" title="Clicca per rinominare la sezione." style="cursor: pointer;">Dashboard</h2>
                     <button class="admin-close-btn" title="Chiudi">&times;</button>
                 </div>
-                <div class="admin-dashboard-subject-section" data-section="days">
+                <div class="admin-dashboard-subject-section" data-section="${this.dashboardStayOnAnswers ? "answers" : "days"}">
                     <div class="admin-dashboard-controls">
                         <div class="admin-control-row">
                             <div class="admin-switch-container">
