@@ -692,7 +692,7 @@ class AdminDashboard {
             .admin-dashboard-subject-section[data-section="answers"] > .admin-dashboard-subject-answers-section {
                 display: block;
                 opacity: 1;
-                left: 0;
+                left: 0px;
             }
             .admin-dashboard-controls {
                 display: flex;
