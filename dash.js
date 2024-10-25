@@ -676,7 +676,7 @@ class AdminDashboard {
             .admin-dashboard-subject-section {
                 position: relative;
             }
-            .admin-dashboard-subject-section[data-section]:not([data-section="days"]) {display: none;}
+            .admin-dashboard-subject-section[data-section]:not([data-section="days"]) > * {display: none;}
             .admin-dashboard-subject-answers-section {
                 display: none;
                 padding: 10px;
