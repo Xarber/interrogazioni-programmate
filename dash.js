@@ -1192,8 +1192,6 @@ class AdminDashboard {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
         if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questa risposta non esiste!`);
         if (!confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
-
-        this.dashboardStayOnAnswers = true;
         
         const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
         const answerPriority = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber;
@@ -1221,6 +1219,7 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
+        this.dashboardStayOnAnswers = true;
         this.render();
     }
 
@@ -1245,8 +1244,6 @@ class AdminDashboard {
 
         if (user1Index < 0 || user2Index < 0) return alert(`Le risposte non esistono!`);
         if (!confirm(`Sei sicuro di voler scambiare queste risposte?`)) return;
-        
-        this.dashboardStayOnAnswers = true;
 
         const tmpU = this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user1Index];
         this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user1Index] = this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user2Index];
@@ -1267,6 +1264,7 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
+        this.dashboardStayOnAnswers = true;
         this.render();
     }
     
