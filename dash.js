@@ -688,7 +688,7 @@ class AdminDashboard {
             .admin-swapping-user-answer > .admin-day-item > .admin-delete-day-btn {
                 display: none;
             }
-            .admin-current-swapping-element, .admin-swapping-user-answer > .admin-day-item:hover {
+            .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover {
                 background-color: rgba(60, 60, 60, 0.3);
                 border: 2px rgba(255, 255, 255, 0.7) solid;
                 border-style: dashed;
@@ -996,7 +996,7 @@ class AdminDashboard {
                     const firstUserElement = this.dashboard.querySelector('#subjectAnswerList').querySelector(".admin-current-swapping-element");
                     const user2UUID = firstUserElement.dataset.user;
                     firstUserElement.classList.remove("admin-current-swapping-element");
-                    await this.swapUserAnswer(target.dataset.user, user2UUID);
+                    if (user2UUID != target.dataset.user) await this.swapUserAnswer(target.dataset.user, user2UUID);
                 }
             }
             if (target.classList.contains('admin-delete-day-btn')) {
