@@ -18,13 +18,13 @@ class UserDashboard {
             <div class="user-dashboard-content">
                 <div class="user-dashboard-header">
                     <h2>${this.userData.name}</h2>
-                    <button class="user-close-btn">&times;</button>
+                    <button class="user-close-btn" title="Chiudi">&times;</button>
                 </div>
                 <h3>Prenotazioni</h3>
                 <div class="user-dashboard-appointments">
                     ${this.renderAppointments()}
                 </div>
-                ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn">Dashboard</button>' : ""}
+                ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
             </div>
         `;
 
@@ -240,7 +240,7 @@ class AdminDashboard {
             <div class="admin-dashboard-sidebar">
                 <div class="admin-inline admin-dashboard-main-header">
                     <h3>Dashboard</h3>
-                    <button class="admin-dashboardMenuBtn">
+                    <button class="admin-dashboardMenuBtn" title="Menu">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
                     </button>
                 </div>
@@ -259,10 +259,10 @@ class AdminDashboard {
                         ${this.jsonFiles.length === 0 ? "<li data-index=\"-1\" class=\"\">Nessuna materia!</li>" : ""}
                     </ul>
                     <div class="inline admin-json-file-list-actions">
-                        <button id="addFileBtn" class="admin-action-button">
+                        <button id="addFileBtn" class="admin-action-button" title="Nuovo File">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
                         </button>
-                        <button id="removeFileBtn" style="background-color: red" class="admin-action-button">
+                        <button id="removeFileBtn" style="background-color: red" class="admin-action-button" title="Elimina File Attuale">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
                         </button>
                     </div>
@@ -271,7 +271,7 @@ class AdminDashboard {
             <div class="admin-dashboard-content">
                 <div class="admin-dashboard-header">
                     <h2 id="admin-dashboard-header-title" title="Clicca per rinominare la sezione." style="cursor: pointer;">Dashboard</h2>
-                    <button class="admin-close-btn">&times;</button>
+                    <button class="admin-close-btn" title="Chiudi">&times;</button>
                 </div>
                 <div class="admin-dashboard-subject-section">
                     <div class="admin-dashboard-controls">
@@ -292,17 +292,17 @@ class AdminDashboard {
                             </div>
                             <div class="admin-inline admin-user-actions">
                                 ${typeof this.dataAnalysis === "function" ? `
-                                    <button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button">
+                                    <button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Copia Risposte">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M360-240q-29.7 0-50.85-21.15Q288-282.3 288-312v-480q0-29.7 21.15-50.85Q330.3-864 360-864h384q29.7 0 50.85 21.15Q816-821.7 816-792v480q0 29.7-21.15 50.85Q773.7-240 744-240H360Zm0-72h384v-480H360v480ZM216-96q-29.7 0-50.85-21.15Q144-138.3 144-168v-552h72v552h456v72H216Zm144-216v-480 480Z"/></svg>
                                     </button>
-                                    <button id="editAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button">
+                                    <button id="editAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Modifica Risposte">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m336-168-51-51 105-105H96v-72h294L285-501l51-51 192 192-192 192Zm288-240L432-600l192-192 51 51-105 105h294v72H570l105 105-51 51Z"/></svg>
                                     </button>
                                 ` : ""}
-                                <button id="filloutAnswersBtn" style="background-color: red;" class="admin-action-button">
+                                <button id="filloutAnswersBtn" style="background-color: red;" class="admin-action-button" title="Riempi Risposte">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M576-192v-72h69L531-378l51-51 114 114v-69h72v192H576Zm-333 0-51-51 453-453h-69v-72h192v192h-72v-69L243-192Zm135-339L192-717l51-51 186 186-51 51Z"/></svg>
                                 </button>
-                                <button id="clearAnswersBtn" style="background-color: red;" class="admin-action-button">
+                                <button id="clearAnswersBtn" style="background-color: red;" class="admin-action-button" title="Svuota Risposte">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m675-144-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Zm-195 0q-140 0-238-98t-98-238h72q0 109 77.5 186.5T480-216q19 0 37-2.5t35-7.5v74q-17 4-35 6t-37 2ZM144-576v-240h72v130q46-60 114.5-95T480-816q140 0 238 98t98 238h-72q0-109-77.5-186.5T480-744q-62 0-114.5 25.5T277-648h107v72H144Zm409 205L444-480v-192h72v162l74 75-37 64Z"/></svg>
                                 </button>
                             </div>
@@ -311,7 +311,7 @@ class AdminDashboard {
                     <div class="admin-days-container">
                         <h3>Giorni</h3>
                         <div id="daysList"></div>
-                        <button id="addDayBtn" class="admin-action-button">
+                        <button id="addDayBtn" class="admin-action-button" title="Aggiungi Giorno">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
                         </button>
                     </div>
@@ -325,7 +325,7 @@ class AdminDashboard {
                 <div class="admin-dashboard-user-section">
                     <div class="admin-days-container">
                         <div id="userList"></div>
-                        <button id="addUserBtn" class="admin-action-button">
+                        <button id="addUserBtn" class="admin-action-button" title="Aggiungi Utente">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
                         </button>
                     </div>
@@ -335,10 +335,10 @@ class AdminDashboard {
                     <div class="admin-days-container">
                         <div id="profileList"></div>
                         <div class="admin-inline inline">
-                            <button id="uploadProfileBtn" class="admin-action-button" style="background-color: dodgerblue">
+                            <button id="uploadProfileBtn" class="admin-action-button" style="background-color: dodgerblue" title="Carica Profilo">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-336v-342L339-573l-51-51 192-192 192 192-51 51-105-105v342h-72ZM263.72-192Q234-192 213-213.15T192-264v-72h72v72h432v-72h72v72q0 29.7-21.16 50.85Q725.68-192 695.96-192H263.72Z"/></svg>
                             </button>
-                            <button id="addProfileBtn" class="admin-action-button">
+                            <button id="addProfileBtn" class="admin-action-button" title="Crea Profilo">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
                             </button>
                         </div>
@@ -469,13 +469,13 @@ class AdminDashboard {
                 <span>${date} (${dayData.dayName})</span>
                 <span class="admin-availability">Posti liberi: ${dayData.availability}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn" data-date="${date}">
+                    <button class="admin-edit-day-btn" data-date="${date}" title="Sposta Giorno">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>
                     </button>
-                    ${dayData.availability.split('/')[0] < dayData.availability.split('/')[1] ? `<button class="admin-clear-day-btn" data-date="${date}">
+                    ${dayData.availability.split('/')[0] < dayData.availability.split('/')[1] ? `<button class="admin-clear-day-btn" data-date="${date}" title="Svuota Risposte">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m675-144-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Zm-195 0q-140 0-238-98t-98-238h72q0 109 77.5 186.5T480-216q19 0 37-2.5t35-7.5v74q-17 4-35 6t-37 2ZM144-576v-240h72v130q46-60 114.5-95T480-816q140 0 238 98t98 238h-72q0-109-77.5-186.5T480-744q-62 0-114.5 25.5T277-648h107v72H144Zm409 205L444-480v-192h72v162l74 75-37 64Z"/></svg>
                     </button>` : ""}
-                    <button class="admin-delete-day-btn" data-date="${date}">
+                    <button class="admin-delete-day-btn" data-date="${date}" title="Elimina Giorno">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
                     </button>
                 </div>
@@ -508,13 +508,13 @@ class AdminDashboard {
                 <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userData.admin ? '[A] ' : ''}${userData.name}</span>
                 <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-invite-btn" data-user="${userUUID}">
+                    <button class="admin-invite-btn" data-user="${userUUID}" title="Copia Invito">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M168-192q-29.7 0-50.85-21.16Q96-234.32 96-264.04v-432.24Q96-726 117.15-747T168-768h624q29.7 0 50.85 21.16Q864-725.68 864-695.96v432.24Q864-234 842.85-213T792-192H168Zm312-240L168-611v347h624v-347L480-432Zm0-85 312-179H168l312 179Zm-312-94v-85 432-347Z"/></svg>
                     </button>
-                    <button class="admin-admin-btn" data-user="${userUUID}">
+                    <button class="admin-admin-btn" data-user="${userUUID}" title="Rendi/Rimuovi Admin">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M672-288q25 0 42.5-17.5T732-348q0-25-17.5-42.5T672-408q-25 0-42.5 17.5T612-348q0 25 17.5 42.5T672-288Zm-.09 120Q704-168 731-184t43-42q-23-13-48.72-19.5t-53.5-6.5q-27.78 0-53.28 7T570-226q16 26 42.91 42 26.91 16 59 16ZM480-96q-133-30-222.5-150.5T168-515v-229l312-120 312 120v221q-22-10-39-16t-33-8v-148l-240-92-240 92v180q0 49 12.5 96t36.5 88.5q24 41.5 58.5 76T425-194q8 23 25.5 48.5T489-98l-4.5 1-4.5 1Zm191.77 0Q592-96 536-152.23q-56-56.22-56-136Q480-368 536.23-424q56.22-56 136-56Q752-480 808-423.77q56 56.22 56 136Q864-208 807.77-152q-56.22 56-136 56ZM480-480Z"/></svg>
                     </button>
-                    <button class="admin-delete-day-btn" data-user="${userUUID}">
+                    <button class="admin-delete-day-btn" data-user="${userUUID}" title="Elimina Utente">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
                     </button>
                 </div>
@@ -541,13 +541,13 @@ class AdminDashboard {
             profileElement.innerHTML = `
                 <span onclick="if (confirm('Sei sicuro di voler cambiare il profilo su ${e}?')) location.href = location.href.split('?')[0]+'?profile=${e}&UID='+(new URLSearchParams(location.search).get('UID'));">${e}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-download-file-btn" data-profile="${e}">
+                    <button class="admin-download-file-btn" data-profile="${e}" title="Scarica Profilo">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M480-336 288-528l51-51 105 105v-342h72v342l105-105 51 51-192 192ZM263.72-192Q234-192 213-213.15T192-264v-72h72v72h432v-72h72v72q0 29.7-21.16 50.85Q725.68-192 695.96-192H263.72Z"/></svg>
                     </button>
-                    <button class="admin-edit-day-btn" data-profile="${e}">
+                    <button class="admin-edit-day-btn" data-profile="${e}" title="Modifica Profilo">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z"/></svg>
                     </button>
-                    <button class="admin-delete-day-btn" data-profile="${e}">
+                    <button class="admin-delete-day-btn" data-profile="${e}" title="Elimina Profilo">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
                     </button>
                 </div>
@@ -587,10 +587,10 @@ class AdminDashboard {
                     <span>[${answerData.answerNumber}] ${this.userData[UUID].name}</span>
                     <span class="admin-availability">${answerData.date}</span>
                     <div class="admin-inline admin-user-actions">
-                        <button class="admin-edit-day-btn" data-user="${UUID}" data-date="${answerData.date}">
+                        <button class="admin-edit-day-btn" data-user="${UUID}" data-date="${answerData.date}" title="Modifica Risposta">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m336-168-51-51 105-105H96v-72h294L285-501l51-51 192 192-192 192Zm288-240L432-600l192-192 51 51-105 105h294v72H570l105 105-51 51Z"/></svg>
                         </button>
-                        <button class="admin-delete-day-btn" data-user="${UUID}" data-date="${answerData.date}">
+                        <button class="admin-delete-day-btn" data-user="${UUID}" data-date="${answerData.date}" title="Elimina Risposta">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
                         </button>
                     </div>
@@ -679,8 +679,7 @@ class AdminDashboard {
             .admin-dashboard-subject-answers-section {
                 display: none;
                 padding: 10px;
-                height: 100%;
-                width: 100%;
+                width: calc(100% - 20px);
                 background-color: rgba(40, 40, 40, 1);
                 left: 0;
                 position: absolute;
