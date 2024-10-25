@@ -676,17 +676,23 @@ class AdminDashboard {
             .admin-dashboard-subject-section {
                 position: relative;
             }
+            .admin-dashboard-subject-section[data-section]:not([data-section="days"]) {
+                opacity: 0;
+            }
             .admin-dashboard-subject-answers-section {
                 display: none;
                 padding: 10px;
                 width: calc(100% - 20px);
                 background-color: rgba(40, 40, 40, 1);
-                left: 0;
                 position: absolute;
+                left: 300px;
                 top: 0;
+                opacity: 0;
             }
             .admin-dashboard-subject-section[data-section="answers"] > .admin-dashboard-subject-answers-section {
                 display: block;
+                opacity: 1;
+                left: 0;
             }
             .admin-dashboard-controls {
                 display: flex;
