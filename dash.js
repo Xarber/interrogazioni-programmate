@@ -410,6 +410,7 @@ class AdminDashboard {
         this.updateHeader();
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
+        this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
         if (useSubjects) {
             this.dashboard.querySelector(".admin-dashboard-profile-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
