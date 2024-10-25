@@ -690,6 +690,7 @@ class AdminDashboard {
                 opacity: 0;
             }
             .admin-dashboard-subject-section[data-section="answers"] > .admin-dashboard-subject-answers-section {
+                pointer-events: unset;
                 opacity: 1;
                 left: 0px;
             }
