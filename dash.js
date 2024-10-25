@@ -235,7 +235,6 @@ class AdminDashboard {
   
     render() {
         let SubjectDataSection = this.oldDashboardSDS ?? "days";
-        this.oldDashboardSDS = "days";
         this.dashboard = this.dashboard || document.createElement('div');
         this.dashboard.className = 'admin-dashboard';
         this.dashboard.innerHTML = `
@@ -413,6 +412,7 @@ class AdminDashboard {
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
         this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
         this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
+        this.oldDashboardSDS = "days";
         if (useSubjects) {
             this.dashboard.querySelector(".admin-dashboard-profile-section").classList.add("hided");
             this.dashboard.querySelector(".admin-dashboard-user-section").classList.add("hided");
@@ -936,11 +936,13 @@ class AdminDashboard {
         editAnswersBtn.addEventListener('click', () => {
             this.renderAnswers();
             this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "answers";
+            this.oldDashboardSDS = "answers";
         });
         const editAnswersLeaveBtn = this.dashboard.querySelector('#editAnswersLeaveBtn');
         editAnswersLeaveBtn.addEventListener('click', () => {
             this.renderDays();
             this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
+            this.oldDashboardSDS = "days";
         });
     
         const addUserBtn = this.dashboard.querySelector('#addUserBtn');
@@ -1257,7 +1259,6 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
-        this.oldDashboardSDS = "answers";
         this.render();
     }
     
@@ -1561,7 +1562,6 @@ class AdminDashboard {
     }
 
     update(options) {
-        this.oldDashboardSDS = (this.dashboard.querySelector('.admin-dashboard-subject-section').dataset ?? {}).section;
         var jsonFiles = options.subjects;
         var userData = options.users;
         var profiles = options.profiles;
