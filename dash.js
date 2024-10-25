@@ -906,12 +906,12 @@ class AdminDashboard {
         const editAnswersBtn = this.dashboard.querySelector('#editAnswersBtn');
         editAnswersBtn.addEventListener('click', () => {
             this.renderAnswers();
-            this.dashboard.querySelector(".admin-dashboard-subject-section").data.section = "answers";
+            this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "answers";
         });
         const editAnswersLeaveBtn = this.dashboard.querySelector('#editAnswersLeaveBtn');
         editAnswersLeaveBtn.addEventListener('click', () => {
             this.renderDays();
-            this.dashboard.querySelector(".admin-dashboard-subject-section").data.section = "days";
+            this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = "days";
         });
     
         const addUserBtn = this.dashboard.querySelector('#addUserBtn');
