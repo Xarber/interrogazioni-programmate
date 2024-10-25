@@ -587,10 +587,10 @@ class AdminDashboard {
                     <span>[${answerData.answerNumber}] ${this.userData[UUID].name}</span>
                     <span class="admin-availability">${answerData.date}</span>
                     <div class="admin-inline admin-user-actions">
-                        <button class="admin-edit-day-btn" data-user="${UUID}" data-date="${answerData.date}" title="Modifica Risposta">
+                        <button class="admin-edit-day-btn" data-user="${UUID}" title="Modifica Risposta">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m336-168-51-51 105-105H96v-72h294L285-501l51-51 192 192-192 192Zm288-240L432-600l192-192 51 51-105 105h294v72H570l105 105-51 51Z"/></svg>
                         </button>
-                        <button class="admin-delete-day-btn" data-user="${UUID}" data-date="${answerData.date}" title="Elimina Risposta">
+                        <button class="admin-delete-day-btn" data-user="${UUID}" title="Elimina Risposta">
                             <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
                         </button>
                     </div>
@@ -684,6 +684,14 @@ class AdminDashboard {
                 left: 0;
                 position: absolute;
                 top: 0;
+            }
+            .admin-swapping-user-answer > .admin-day-item > .admin-delete-day-btn {
+                display: none;
+            }
+            .admin-current-swapping-element, .admin-swapping-user-answer > .admin-day-item:hover {
+                background-color: rgba(60, 60, 60, 0.3);
+                border: 2px rgba(255, 255, 255, 0.7) solid;
+                border-style: dashed;
             }
             .admin-dashboard-subject-section[data-section="answers"] > .admin-dashboard-subject-answers-section {
                 display: block;
@@ -973,6 +981,26 @@ class AdminDashboard {
                 if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
                 navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
                 alert(`Il testo con il link d'accesso di ${name.join(" ")} è stato copiato!`);
+            }
+        });
+
+        const answerList = this.dashboard.querySelector('#subjectAnswerList');
+        answerList.addEventListener('click', async (e) => {
+            let target = e.target.dataset.user ? e.target : e.target.parentNode;
+            target = target.dataset.user ? target : target.parentNode;
+            if (target.classList.contains('admin-edit-day-btn')) {
+                this.dashboard.querySelector('#subjectAnswerList').classList.toggle("admin-swapping-user-answer");
+                if (this.dashboard.querySelector('#subjectAnswerList').classList.contains("admin-swapping-user-answer")) 
+                    target.classList.add("admin-current-swapping-element");
+                else {
+                    const firstUserElement = this.dashboard.querySelector('#subjectAnswerList').querySelector(".admin-current-swapping-element");
+                    const user2UUID = firstUserElement.dataset.user;
+                    firstUserElement.classList.remove("admin-current-swapping-element");
+                    await this.swapUserAnswer(target.dataset.user, user2UUID);
+                }
+            }
+            if (target.classList.contains('admin-delete-day-btn')) {
+                await this.removeUserAnswer(target.dataset.user);
             }
         });
 
