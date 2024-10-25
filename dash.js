@@ -234,6 +234,7 @@ class AdminDashboard {
     }
   
     render() {
+        let SubjectDataSection = this.dashboard ? this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section : "days";
         this.dashboard = this.dashboard || document.createElement('div');
         this.dashboard.className = 'admin-dashboard';
         this.dashboard.innerHTML = `
@@ -273,7 +274,7 @@ class AdminDashboard {
                     <h2 id="admin-dashboard-header-title" title="Clicca per rinominare la sezione." style="cursor: pointer;">Dashboard</h2>
                     <button class="admin-close-btn" title="Chiudi">&times;</button>
                 </div>
-                <div class="admin-dashboard-subject-section">
+                <div class="admin-dashboard-subject-section" data-section="${SubjectDataSection}">
                     <div class="admin-dashboard-controls">
                         <div class="admin-control-row">
                             <div class="admin-switch-container">
