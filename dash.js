@@ -234,7 +234,7 @@ class AdminDashboard {
     }
   
     render() {
-        let SubjectDataSection = this.dashboard ? this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section : "days";
+        let SubjectDataSection = !!this.dashboard ? this.dashboard.querySelector('.admin-dashboard-subject-section').dataset.section : "days";
         this.dashboard = this.dashboard || document.createElement('div');
         this.dashboard.className = 'admin-dashboard';
         this.dashboard.innerHTML = `
