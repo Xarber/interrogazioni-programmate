@@ -1185,12 +1185,14 @@ class AdminDashboard {
         ) return alert(`Le risposte non esistono!`);
 
         let user1Index = -1;
+        const u1Day = this.jsonFiles[this.currentFileIndex].data.answers[user1UUID].date;
         if (this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
-            user1Index = this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
+            user1Index = this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==u1Day);
         }
         let user2Index = -1;
+        const u2Day = this.jsonFiles[this.currentFileIndex].data.answers[user2UUID].date;
         if (this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
-            user2Index = this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
+            user2Index = this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==u2Day);
         }
 
         if (user1Index < 0 || user2Index < 0) return alert(`Le risposte non esistono!`);
