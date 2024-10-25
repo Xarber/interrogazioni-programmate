@@ -568,22 +568,36 @@ class AdminDashboard {
         const currentFile = this.jsonFiles[this.currentFileIndex];
         answerList.innerHTML = '';
         const objEntries = Object.entries(currentFile.data.answers);
+        const dayDividedAnswers = {};
         objEntries.forEach(([UUID, answerData]) => {
-            const answerElement = document.createElement('div');
-            answerElement.className = 'admin-day-item';
-            answerElement.innerHTML = `
-                <span>[${answerData.answerNumber}] ${this.userData[UUID].name}</span>
-                <span class="admin-availability">${answerData.date}</span>
-                <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn" data-user="${UUID}" data-date="${answerData.date}">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m336-168-51-51 105-105H96v-72h294L285-501l51-51 192 192-192 192Zm288-240L432-600l192-192 51 51-105 105h294v72H570l105 105-51 51Z"/></svg>
-                    </button>
-                    <button class="admin-delete-day-btn" data-user="${UUID}" data-date="${answerData.date}">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
-                    </button>
-                </div>
-            `;
-            answerList.appendChild(answerElement);
+            dayDividedAnswers[answerData.date] ??= [];
+            dayDividedAnswers[answerData.date].push({UUID, answerData});
+        });
+        const dayEntries = Object.entries(dayDividedAnswers);
+        dayEntries.forEach(([day, dayData]) => {
+            const dayDividerElement = document.createElement('h2');
+            dayDividerElement.innerText = day;
+            answerList.appendChild(dayDividerElement);
+            dayData.forEach(e=>{
+                const {UUID, answerData} = e;
+                const answerElement = document.createElement('div');
+                answerElement.className = 'admin-day-item';
+                answerElement.innerHTML = `
+                    <span>[${answerData.answerNumber}] ${this.userData[UUID].name}</span>
+                    <span class="admin-availability">${answerData.date}</span>
+                    <div class="admin-inline admin-user-actions">
+                        <button class="admin-edit-day-btn" data-user="${UUID}" data-date="${answerData.date}">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m336-168-51-51 105-105H96v-72h294L285-501l51-51 192 192-192 192Zm288-240L432-600l192-192 51 51-105 105h294v72H570l105 105-51 51Z"/></svg>
+                        </button>
+                        <button class="admin-delete-day-btn" data-user="${UUID}" data-date="${answerData.date}">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>
+                        </button>
+                    </div>
+                `;
+                answerList.appendChild(answerElement);
+                dayDividedAnswers[day] = dayDividedAnswers[day] || [];
+                dayDividedAnswers[day].push(...dayData);
+            })
         });
         if (objEntries.length === 0) {
             answerList.innerHTML = `
