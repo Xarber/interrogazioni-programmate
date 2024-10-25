@@ -1152,6 +1152,68 @@ class AdminDashboard {
         await this.updateJSON(undefined, false, !!force);
         this.render();
     }
+
+    async removeUserAnswer(userUUID, day) {
+        if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
+        if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questa risposta non esiste!`);
+        if (!confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
+        delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
+        this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
+        if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+            var index = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
+            if (index != -1) {
+                this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
+                if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
+            }
+        }
+
+        var tmpIndex = this.currentFileIndex;
+        this.currentFileIndex = -1;
+        await this.updateJSON(undefined, false, true);
+        this.currentFileIndex = tmpIndex;
+
+        await this.updateJSON();
+        this.render();
+    }
+
+    async swapUserAnswer(user1UUID, user2UUID) {
+        if (!this.userData[user1UUID]) return alert(`Questo utente non esiste!`);
+        if (!this.userData[user2UUID]) return alert(`Questo utente non esiste!`);
+        if (
+            (!this.jsonFiles[this.currentFileIndex].data.answers[user1UUID] || !this.jsonFiles[this.currentFileIndex].data.answers[user2UUID]) ||
+            (!this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName] || !this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName])
+        ) return alert(`Le risposte non esistono!`);
+
+        let user1Index = -1;
+        if (this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+            user1Index = this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
+        }
+        let user2Index = -1;
+        if (this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+            user2Index = this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
+        }
+
+        if (user1Index < 0 || user2Index < 0) return alert(`Le risposte non esistono!`);
+        if (!confirm(`Sei sicuro di voler scambiare queste risposte?`)) return;
+
+        const tmpU = this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user1Index];
+        this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user1Index] = this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user2Index];
+        this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user2Index] = tmpU;
+        if (!this.userEditList.includes(user1UUID)) this.userEditList.push(user1UUID);
+        if (!this.userEditList.includes(user2UUID)) this.userEditList.push(user2UUID);
+
+        const tmpF = this.jsonFiles[this.currentFileIndex].data.answers[user1UUID];
+        this.jsonFiles[this.currentFileIndex].data.answers[user1UUID] = this.jsonFiles[this.currentFileIndex].data.answers[user2UUID];
+        this.jsonFiles[this.currentFileIndex].data.answers[user2UUID] = tmpF;
+
+        var tmpIndex = this.currentFileIndex;
+        this.currentFileIndex = -1;
+        await this.updateJSON(undefined, false, true);
+        this.currentFileIndex = tmpIndex;
+
+        await this.updateJSON();
+        this.render();
+    }
     
     async filloutAnswers() {
         if (!confirm(`Sei sicuro di voler riempire i posti rimanenti con utenti casuali?`)) return;
