@@ -687,7 +687,8 @@ class AdminDashboard {
                 top: 0;
             }
             .admin-swapping-user-answer > .admin-day-item {
-                border: 2px;
+                transition: none;
+                border: 2px solid transparent;
             }
             .admin-swapping-user-answer > .admin-day-item .admin-delete-day-btn {
                 display: none;
