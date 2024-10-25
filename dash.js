@@ -318,7 +318,7 @@ class AdminDashboard {
                     <div class="admin-dashboard-subject-answers-section">
                         <span class="admin-dashboard-subject-answers-header clickable-span" id="editAnswersLeaveBtn">&lt; Giorni</span>
                         <div class="admin-days-container">
-                            <div id="subjectAnswersList"></div>
+                            <div id="subjectAnswerList"></div>
                         </div>
                     </div>
                 </div>
