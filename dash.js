@@ -1193,6 +1193,7 @@ class AdminDashboard {
         if (!confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
         
         const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
+        const answerPriority = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber;
         delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
         
         this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
@@ -1205,6 +1206,11 @@ class AdminDashboard {
                 if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
             }
         }
+
+        const objEntries = Object.entries(this.jsonFiles[this.currentFileIndex].data.answers);
+        objEntries.forEach(([userUUID, userData]) => {
+            if (userData.answerNumber > answerPriority) this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = userData.answerNumber - 1;
+        });
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
