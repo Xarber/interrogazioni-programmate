@@ -1153,10 +1153,11 @@ class AdminDashboard {
         this.render();
     }
 
-    async removeUserAnswer(userUUID, day) {
+    async removeUserAnswer(userUUID) {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
         if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questa risposta non esiste!`);
         if (!confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
+        const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
         delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
         this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
         if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
