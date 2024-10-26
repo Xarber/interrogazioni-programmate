@@ -1685,7 +1685,7 @@ class AdminDashboard {
         fileInput.click();
     }
 
-    async sendSubjectNotification(users, customIndex = this.currentFileIndex, data) {
+    async sendSubjectNotification(users = [], customIndex = this.currentFileIndex, data = {}) {
         if (!this.notificationClass) return alert("Le notifiche non sono state configurate correttamente!");
         if (users.length < 1) return alert("Non ci sono notifiche da inviare!");
 
