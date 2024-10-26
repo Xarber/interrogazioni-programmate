@@ -16,6 +16,5 @@ Per creare il primo utente, basta semplicemente accedere all'interno della pagin
 
 # TODO (Work In Progress)
  - Notifiche push
- - Pannello di gestione risposte (per admin, in modo da scambiare utenti per prenotazioni)
  - Titoli custom per le interrogazioni (Al posto di "Che giorno vuoi farti interrogare?" e "Sarai interrogato in data ...")
  - Più tipi di sezioni (Materia, Sondaggio e simili)

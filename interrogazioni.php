@@ -442,6 +442,8 @@ foreach ($subjectJSONs as $subjectNameTMP) {
     </div>
     <script>
         <?php echo file_get_contents("dash.js"); ?>
+
+        <?php echo file_exists("pushclient.js") ? file_get_contents("pushclient.js") : ""; ?>
     </script>
     <script>
         const isAdmin = <?php echo ($userData["admin"] ?? false) ? "true" : "false" ?>;
