@@ -52,35 +52,34 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(notificationEvent) {
     notificationEvent.notification.close();
-    const request = indexedDB.open('ServiceWorkerDB', 1);
-
-    request.onsuccess = event => {
-        const db = event.target.result;
-        const tx = db.transaction('pathUidStore', 'readonly');
-        const store = tx.objectStore('pathUidStore');
-        const getRequest = store.get('1');
-
-        getRequest.onsuccess = () => {
-            const data = getRequest.result;
-            if (data) {
-                self.pathname = data.pathname;
-                self.uid = data.uid;
-                const toOpenUrl = notificationEvent.notification.data.url || `${self.pathname ?? "/"}?UID=${self.uid ?? ""}`;
     
-                // Handle notification click
-                notificationEvent.waitUntil(
-                    clients
-                    .matchAll({
-                        type: "window",
-                    })
-                    .then((clientList) => {
+    // Handle notification click
+    notificationEvent.waitUntil(
+        clients
+        .matchAll({
+            type: "window",
+        })
+        .then((clientList) => {
+            const request = indexedDB.open('ServiceWorkerDB', 1);
+            request.onsuccess = event => {
+                const db = event.target.result;
+                const tx = db.transaction('pathUidStore', 'readonly');
+                const store = tx.objectStore('pathUidStore');
+                const getRequest = store.get('1');
+        
+                getRequest.onsuccess = () => {
+                    const data = getRequest.result;
+                    if (data) {
+                        self.pathname = data.pathname;
+                        self.uid = data.uid;
+                        const toOpenUrl = notificationEvent.notification.data.url || `${self.pathname ?? "/"}?UID=${self.uid ?? ""}`;
                         for (const client of clientList) {
                             if (client.url === toOpenUrl && "focus" in client) return client.focus();
                         }
                         if (clients.openWindow) return clients.openWindow(toOpenUrl);
-                    }),
-                );
-            }
-        };
-    };
+                    }
+                };
+            };
+        }),
+    );
 });
