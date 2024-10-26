@@ -745,7 +745,7 @@ class AdminDashboard {
                 dayDividedAnswers[day].push(...dayData);
             })
         });
-        if (objEntries.length === 0 && missingUsers.length > 1) {
+        if (objEntries.length === 0 && missingUsers.length < 2) {
             answerList.innerHTML = `
                 <div class="admin-day-item">
                     <span>Non ci sono risposte per questa materia!</span>
@@ -1465,7 +1465,7 @@ class AdminDashboard {
     }
 
     getMissingAnswers(customIndex = this.currentFileIndex) {
-        return Object.keys(this.userData)
+        return (Object.keys(this.jsonFiles[customIndex].data.days).length > 0) ? [] : Object.keys(this.userData)
             .filter(e => 
                 !Object.keys(this.jsonFiles[customIndex].data.answers).includes(e)
             );
