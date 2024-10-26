@@ -141,11 +141,11 @@ class UserDashboard {
         (async ()=>{
             if (!this.notificationClass) return;
             const status = await this.notificationClass.status();
-            if (!status) document.querySelector("button#dash-notifications-btn").innerHTML = "Disattiva Notifiche";
-            else document.querySelector("button#dash-notifications-btn").innerHTML = "Attiva Notifiche";
+            if (!status) document.querySelector("button#dash-notifications-btn").innerHTML = "Attiva Notifiche";
+            else document.querySelector("button#dash-notifications-btn").innerHTML = "Disattiva Notifiche";
             document.querySelector("button#dash-notifications-btn").onclick = async ()=>{
-                if (status) await this.notificationClass.unsubscribe();
-                else await this.notificationClass.subscribe();
+                if (!status) await this.notificationClass.subscribe();
+                else await this.notificationClass.unsubscribe();
                 this.render();
             };
         })();
