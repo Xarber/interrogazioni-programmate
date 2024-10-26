@@ -697,6 +697,29 @@ class AdminDashboard {
             dayDividedAnswers[answerData.date] ??= [];
             dayDividedAnswers[answerData.date].push({UUID, answerData});
         });
+        const missingUsers = this.getMissingAnswers();
+        answerList.innerHTML += `<div class="admin-inline inline">
+            <h2>In attesa di risposta</h2>
+            <button class="admin-edit-day-btn" id="admin-answerList-notifyAllBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M192-216v-72h48v-240q0-87 53.5-153T432-763v-53q0-20 14-34t34-14q20 0 34 14t14 34v53q85 16 138.5 82T720-528v240h48v72H192Zm288-276Zm-.21 396Q450-96 429-117.15T408-168h144q0 30-21.21 51t-51 21ZM312-288h336v-240q0-70-49-119t-119-49q-70 0-119 49t-49 119v240Z"/></svg>
+            </button>
+        </div>`
+        missingUsers.forEach(userUUID => {
+            const answerElement = document.createElement('div');
+            answerElement.className = 'admin-day-item';
+            answerElement.classList.add('admin-static-element');
+            answerElement.innerHTML = `
+                <span>${this.userData[userUUID].name}</span>
+                <div class="admin-inline admin-user-actions">
+                    <button class="admin-edit-day-btn admin-notify-user-btn" data-user="${userUUID}" title="Invia Notifica">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M192-216v-72h48v-240q0-87 53.5-153T432-763v-53q0-20 14-34t34-14q20 0 34 14t14 34v53q85 16 138.5 82T720-528v240h48v72H192Zm288-276Zm-.21 396Q450-96 429-117.15T408-168h144q0 30-21.21 51t-51 21ZM312-288h336v-240q0-70-49-119t-119-49q-70 0-119 49t-49 119v240Z"/></svg>
+                    </button>
+                </div>
+            `;
+            answerList.appendChild(answerElement);
+            dayDividedAnswers[day] = dayDividedAnswers[day] || [];
+            dayDividedAnswers[day].push(...dayData);
+        });
         const dayEntries = Object.entries(this.sortSubjectDates(dayDividedAnswers));
         dayEntries.forEach(([day, dayData]) => {
             const dayDividerElement = document.createElement('h2');
