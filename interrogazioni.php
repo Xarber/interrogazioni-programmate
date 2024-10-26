@@ -277,7 +277,7 @@ if ($_GET["scope"] === "getAllData") {
             array_push($userList[$userID]["pushSubscriptions"], $body["subscription"]);
 
             $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
-            die(json_encode(array("status" => $okay, "message" => null))); //This is not server-managed anymore
+            die(json_encode(array("status" => !!$okay, "message" => null))); //This is not server-managed anymore
         break;
 
         case "unsubscribe":
@@ -286,7 +286,7 @@ if ($_GET["scope"] === "getAllData") {
             unset($userList[$userID]["pushSubscriptions"]);
             $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
 
-            die(json_encode(array("status" => $okay, "message" => null))); //This is not server-managed anymore
+            die(json_encode(array("status" => !!$okay, "message" => null))); //This is not server-managed anymore
         break;
 
         case "sendNotifications": 
