@@ -1465,7 +1465,7 @@ class AdminDashboard {
     }
 
     getMissingAnswers(customIndex = this.currentFileIndex) {
-        return (Object.keys(this.jsonFiles[customIndex].data.days).length > 0) ? [] : Object.keys(this.userData)
+        return (Object.keys(this.jsonFiles[customIndex].data.days).length < 1) ? [] : Object.keys(this.userData)
             .filter(e => 
                 !Object.keys(this.jsonFiles[customIndex].data.answers).includes(e)
             );
