@@ -717,8 +717,6 @@ class AdminDashboard {
                 </div>
             `;
             answerList.appendChild(answerElement);
-            dayDividedAnswers[day] = dayDividedAnswers[day] || [];
-            dayDividedAnswers[day].push(...dayData);
         });
         const dayEntries = Object.entries(this.sortSubjectDates(dayDividedAnswers));
         dayEntries.forEach(([day, dayData]) => {
