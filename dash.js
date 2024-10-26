@@ -44,7 +44,7 @@ class PushNotifications {
             // Get push subscription
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array((await fetch(`?${new URLSearchParams({UID: this.id}).toString()}`, {
+                applicationServerKey: urlBase64ToUint8Array((await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ class PushNotifications {
             });
             
             // Send subscription to your server
-            const response = await fetch(`?${new URLSearchParams({UID: this.id}).toString()}`, {
+            const response = await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
