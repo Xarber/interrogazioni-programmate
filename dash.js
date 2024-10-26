@@ -71,7 +71,7 @@ class PushNotifications {
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         if (!subscription) return {status: true, message: null};
 
-        const response = await fetch(`?${new URLSearchParams({UID: this.id}).toString()}`, {
+        const response = await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
