@@ -100,37 +100,9 @@ const server = http.createServer(async (req, res) => {
             });
         }
 
-        // Serve static files
-        if (req.method === 'GET') {
-            try {
-                const filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
-                const content = await fs.readFile(filePath);
-                const ext = path.extname(filePath);
-                const contentType = {
-                    '.html': 'text/html',
-                    '.js': 'text/javascript',
-                    '.css': 'text/css',
-                    '.png': 'image/png',
-                    '.ico': 'image/x-icon'
-                }[ext] || 'text/plain';
-
-                res.writeHead(200, { 'Content-Type': contentType });
-                res.end(content);
-                return;
-            } catch (error) {
-                if (error.code === 'ENOENT') {
-                    res.writeHead(404);
-                    res.end('Not Found');
-                    return;
-                }
-                throw error;
-            }
-        }
-
         // Handle 404
         res.writeHead(404);
         res.end('Not Found');
-
     } catch (error) {
         console.error('Server error:', error);
         res.writeHead(500);

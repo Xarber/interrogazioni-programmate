@@ -20,7 +20,13 @@ async function initializePushNotifications() {
         // Get push subscription
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array((await fetch('/api/vapid-public-key').then(r=>r.json())).publicKey)
+            applicationServerKey: urlBase64ToUint8Array((await fetch(`pushapi.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({path: "/api/vapid-public-key"})
+            }).then(r=>r.json())).publicKey)
         });
 
         console.log('Push Subscription:', subscription);
@@ -50,12 +56,12 @@ function urlBase64ToUint8Array(base64String) {
 
 async function sendSubscriptionToServer(subscription) {
     // Implementation to send subscription to your backend
-    const response = await fetch('/api/subscribe', {
+    const response = await fetch(`pushapi.php`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(subscription)
+        body: JSON.stringify({subscription, path: "/api/subscribe"})
     });
     return response.json();
 }
