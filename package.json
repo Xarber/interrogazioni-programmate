@@ -1,0 +1,22 @@
+{
+  "name": "interrogazioni-programmate-php",
+  "version": "1.0.0",
+  "description": "Registra facilmente interrogazioni programmate (pensato per classi disfunzionali come quella dell'autore :D)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Xarber/interrogazioni-programmate.git"
+  },
+  "author": "Xarber",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Xarber/interrogazioni-programmate/issues"
+  },
+  "homepage": "https://github.com/Xarber/interrogazioni-programmate#readme",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}
