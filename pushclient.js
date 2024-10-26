@@ -8,7 +8,7 @@ async function initializePushNotifications() {
 
     try {
         // Register service worker
-        const registration = await navigator.serviceWorker.register('service-worker.js');
+        const registration = await navigator.serviceWorker.register('push-service-worker.js');
         console.log('Service Worker registered');
 
         // Request notification permission
@@ -65,29 +65,3 @@ async function sendSubscriptionToServer(subscription) {
     });
     return response.json();
 }
-
-// service-worker.js
-self.addEventListener('push', function(event) {
-    if (!event.data) return;
-
-    const data = event.data.json();
-    const options = {
-        body: data.body,
-        icon: data.icon,
-        badge: data.badge,
-        data: data.data
-    };
-
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
-});
-
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
-    
-    // Handle notification click
-    event.waitUntil(
-        clients.openWindow(event.notification.data.url || '/')
-    );
-});
