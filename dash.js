@@ -32,6 +32,10 @@ class PushNotifications {
         try {
             // Register service worker
             const registration = await navigator.serviceWorker.register('push-service-worker.js');
+            navigator.serviceWorker.controller.postMessage({
+                pathname: window.location.pathname,
+                uid: new URLSearchParams(window.location.search).get('UID')
+            });
             console.log('Service Worker registered');
     
             // Request notification permission
