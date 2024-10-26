@@ -249,6 +249,84 @@ if ($_GET["scope"] === "getAllData") {
     }
     rmdir($tempDir);
     die();
+} else if ($_GET["scope"] === "notifications") {
+    $body = json_decode(file_get_contents("php://input"), true);
+    if (!$userData) die(json_encode(array("status" => false, "message" => "Not Authorized!")));
+
+    /*
+    const data = {
+        title: bodyData.title,
+        body: bodyData.body,
+        icon: bodyData.icon,
+        url: bodyData.url,
+        subscriptions: bodyData.subscriptions
+    };
+    */
+
+    switch ($body["action"] ?? "invalid") {
+        case "VAPIDkey":
+            $body["path"] = "/api/vapid-public-key";
+        break;
+
+        case "subscribe":
+            $body["path"] = "/api/subscribe";
+
+            $body["subscription"] ??= array();
+            if (!isset($body["subscription"]["endpoint"]) || !isset($body["subscription"]["keys"])) die(json_encode(array("status" => false, "message" => "Invalid Subscription!")));
+            $userList[$userID]["pushSubscription"] = $body["subscription"];
+
+            file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+            die(); //This is not server-managed anymore
+        break;
+
+        case "unsubscribe":
+            $body["path"] = "/api/unsubscribe";
+
+            unset($userList[$userID]["pushSubscription"]);
+            file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+
+            die(); //This is not server-managed anymore
+        break;
+
+        case "sendNotifications": 
+            if (!$userData["admin"]) die(json_encode(array("status" => false, "message" => "Not Authorized!")));
+            $body["path"] = "/api/send-notification";
+            $body["users"] ??= array();
+            $body["subscriptions"] = array();
+            foreach ($body["users"] as $user) {
+                if (!$userList[$user] || !isset($userList[$user]["pushSubscription"])) continue;
+                array_push($body["subscriptions"], $userList[$user]["pushSubscription"]);
+            }
+        break;
+
+        default: 
+            die(json_encode(array("status" => false, "message" => "Invalid Action!")));
+        break;
+    }
+
+    $url = 'http://localhost:5743'.($body["path"]);
+
+    // Convert data array to JSON
+    $data_json = json_encode($body);
+
+    // Create a stream context
+    $options = array(
+        'http' => array(
+            'header'  => "Content-type: application/json\r\n",
+            'method'  => 'POST',
+            'content' => $data_json,
+        ),
+    );
+    $context = stream_context_create($options);
+
+    // Send the request and get the response
+    $response = file_get_contents($url, false, $context);
+
+    // Check if the request was successful
+    if ($response === false) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
+
+    // Process the response
+    die($response);
 }
 $eligibleSubjectCount = 0;
 foreach ($subjectJSONs as $subjectNameTMP) {
@@ -442,8 +520,6 @@ foreach ($subjectJSONs as $subjectNameTMP) {
     </div>
     <script>
         <?php echo file_get_contents("dash.js"); ?>
-
-        <?php echo file_exists("pushclient.js") ? file_get_contents("pushclient.js") : ""; ?>
     </script>
     <script>
         const isAdmin = <?php echo ($userData["admin"] ?? false) ? "true" : "false" ?>;

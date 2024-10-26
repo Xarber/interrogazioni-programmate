@@ -1,3 +1,94 @@
+class PushNotifications {
+    /**
+     * Initializes a PushNotifications object.
+     * @param {string} identifier - Unique identifier, e.g. a username.
+     */
+    constructor(identifier) {
+        this.id = identifier;
+    }
+
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+    
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+    
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    async subscribe() {
+        // Check if service worker and push messaging is supported
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.error('Push notifications not supported');
+            return {status: false, message: "Unsupported Device!"};
+        }
+    
+        try {
+            // Register service worker
+            const registration = await navigator.serviceWorker.register('push-service-worker.js');
+            console.log('Service Worker registered');
+    
+            // Request notification permission
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                return {status: false, message: permission === "default" ? "Notification Permission Dialog Dismissed!" : "Notification Permission Denied!"};
+                throw new Error('Notification permission denied');
+            }
+    
+            // Get push subscription
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array((await fetch(`?${new URLSearchParams({UID: this.id}).toString()}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({action: "VAPIDkey"})
+                }).then(r=>r.json())).publicKey)
+            });
+            
+            // Send subscription to your server
+            const response = await fetch(`?${new URLSearchParams({UID: this.id}).toString()}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({subscription, action: "subscribe"})
+            });
+            return {...response.json(), subscription};
+        } catch (error) {
+            return {status: false, message: error.toString()};
+        }
+    }
+
+    async unsubscribe() {
+        const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
+        if (!subscription) return {status: true, message: null};
+
+        const response = await fetch(`?${new URLSearchParams({UID: this.id}).toString()}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({subscription, action: "unsubscribe"})
+        }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}});
+        subscription.unsubscribe();
+
+        return response;
+    }
+
+    async status() {
+        const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
+        return !!subscription;
+    }
+}
+
 class UserDashboard {
     /**
      * UserDashboard constructor.

@@ -2,7 +2,7 @@
   "name": "interrogazioni-programmate-php",
   "version": "1.0.0",
   "description": "Registra facilmente interrogazioni programmate (pensato per classi disfunzionali come quella dell'autore :D)",
-  "main": "index.js",
+  "main": "app-push-server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

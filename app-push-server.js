@@ -68,50 +68,69 @@ const server = http.createServer(async (req, res) => {
 
         // Route handling
         if (req.url === '/api/vapid-public-key') {
-            return sendJSON(res, { publicKey: vapidKeys.publicKey });
+            return sendJSON(res, { status: true, publicKey: vapidKeys.publicKey });
         }
 
         if (req.url === '/api/subscribe') {
             const subscription = await parseBody(req);
             subscriptions.add(subscription);
-            return sendJSON(res, { message: 'Subscription saved' }, 201);
+            return sendJSON(res, { status: true, message: 'Subscription saved' }, 201);
+        }
+
+        if (req.url === "/api/unsubscribe") {
+            const subscription = await parseBody(req);
+            subscriptions.delete(subscription);
+            return sendJSON(res, { status: true, message: 'Subscription removed' }, 201);
         }
 
         if (req.url === '/api/send-notification') {
-            const data = await parseBody(req);
+            const bodyData = await parseBody(req);
+            const data = {
+                title: bodyData.title,
+                body: bodyData.body,
+                icon: bodyData.icon,
+                url: bodyData.url,
+                subscriptions: bodyData.subscriptions
+            };
             const notificationData = {
                 title: data.title || 'New Notification',
-                body: data.body || 'This is a push notification',
+                body: data.body || 'Open the website to read',
                 icon: data.icon || '/icon.png',
                 data: {
-                    url: data.url || 'https://your-site.com'
+                    url: data.url || '/'
                 }
             };
 
             const results = await Promise.all(
-                Array.from(subscriptions).map(({subscription}) => {
-                    console.log(subscription, subscription.endpoint);
-                    sendPushNotification(subscription, notificationData);
-                })
+                Array.from(data.subscriptions || subscriptions).map(({subscription}) => sendPushNotification(subscription, notificationData))
             );
 
             return sendJSON(res, {
-                success: true,
-                sentCount: results.filter(Boolean).length
+                status: true,
+                message: {
+                    total: Array.from(data.subscriptions || subscriptions).length,
+                    sent: results.filter(Boolean).length
+                },
             });
         }
 
         // Handle 404
         res.writeHead(404);
-        res.end('Not Found');
+        sendJSON(res, {
+            status: false,
+            message: "Not Found",
+        });
     } catch (error) {
         console.error('Server error:', error);
         res.writeHead(500);
-        res.end('Internal Server Error');
+        sendJSON(res, {
+            status: false,
+            message: "Internal Server Error",
+        });
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5743;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
@@ -119,10 +138,7 @@ server.listen(PORT, () => {
 // Save subscriptions to file on server shutdown
 process.on('SIGINT', async () => {
     try {
-        await fs.writeFile(
-            'subscriptions.json', 
-            JSON.stringify(Array.from(subscriptions))
-        );
+        //! REMOVED: await fs.writeFile('subscriptions.json', JSON.stringify(Array.from(subscriptions)));
         process.exit(0);
     } catch (error) {
         console.error('Error saving subscriptions:', error);
