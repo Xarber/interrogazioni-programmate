@@ -101,7 +101,7 @@ class PushNotifications {
     }
 
     async status() {
-        if (await navigator.serviceWorker.getRegistrations().length === 0) return false;
+        if ((await navigator.serviceWorker.getRegistrations()).length === 0) return false;
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         return !!subscription;
     }
