@@ -83,6 +83,18 @@ class PushNotifications {
         return response;
     }
 
+    async requestSend(users, data) {
+        const response = await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({title: data.title, body: data.body, icon: data.icon, url: data.url, users, action: "sendNotifications"})
+        }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}});
+
+        return response;
+    }
+
     async status() {
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         return !!subscription;
