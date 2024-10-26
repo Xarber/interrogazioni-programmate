@@ -67,17 +67,17 @@ const server = http.createServer(async (req, res) => {
         }
 
         // Route handling
-        if (req.method === 'GET' && req.url === '/api/vapid-public-key') {
+        if (req.url === '/api/vapid-public-key') {
             return sendJSON(res, { publicKey: vapidKeys.publicKey });
         }
 
-        if (req.method === 'POST' && req.url === '/api/subscribe') {
+        if (req.url === '/api/subscribe') {
             const subscription = await parseBody(req);
             subscriptions.add(subscription);
             return sendJSON(res, { message: 'Subscription saved' }, 201);
         }
 
-        if (req.method === 'POST' && req.url === '/api/send-notification') {
+        if (req.url === '/api/send-notification') {
             const data = await parseBody(req);
             const notificationData = {
                 title: data.title || 'New Notification',
