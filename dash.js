@@ -1138,6 +1138,7 @@ class AdminDashboard {
         answerList.addEventListener('click', async (e) => {
             let target = e.target.dataset.user ? e.target : e.target.parentNode;
             target = target.dataset.user ? target : target.parentNode;
+            console.log("click received");
             if (target.classList.contains('admin-notify-all-btn')) {
                 await this.sendSubjectNotification(this.getMissingAnswers());
             } else if (target.classList.contains('admin-notify-user-btn')) {

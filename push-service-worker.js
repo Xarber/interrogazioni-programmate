@@ -20,7 +20,7 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    const toOpenUrl = event.notification.data.url || `/?UID=${localStorage['lastUID'] ?? ""}`;
+    const toOpenUrl = event.notification.data.url || `${localStorage['lastPathName'] ?? "/"}?UID=${localStorage['lastUID'] ?? ""}`;
     
     // Handle notification click
     event.waitUntil(

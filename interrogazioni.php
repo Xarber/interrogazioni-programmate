@@ -532,6 +532,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         window.UID = "<?php echo $_GET["UID"]; ?>";
         window.notifications = new PushNotifications(window.UID);
         if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
+        localStorage["lastPathName"] = location.pathname;
 
         function analizzaDati(options = {
             clipboard: false,
