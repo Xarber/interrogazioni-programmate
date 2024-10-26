@@ -128,7 +128,7 @@ class UserDashboard {
                 <div class="user-dashboard-appointments">
                     ${this.renderAppointments()}
                 </div>
-                <div style="display: flex">
+                <div class="inline">
                     ${this.notificationClass ? '<button onclick="" id="dash-notifications-btn" title="Notification Settings">Notifiche</button>' : ""}
                     ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
                 </div>
