@@ -1,10 +1,34 @@
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open('v1').then(cache => {
+            return cache.addAll([]);
+        })
+    );
+});
+  
 self.addEventListener('message', event => {
     const data = event.data;
   
-    // Save pathname and UID for future launches
-    self.pathname = data.pathname;
-    self.uid = data.uid;
+    // Open an IndexedDB database
+    const request = indexedDB.open('ServiceWorkerDB', 1);
+  
+    request.onupgradeneeded = event => {
+        const db = event.target.result;
+        db.createObjectStore('pathUidStore', { keyPath: 'id' });
+    };
+  
+    request.onsuccess = event => {
+        const db = event.target.result;
+        const tx = db.transaction('pathUidStore', 'readwrite');
+        const store = tx.objectStore('pathUidStore');
+        store.put({ id: '1', pathname: data.pathname, uid: data.uid });
+    };
+  
+    request.onerror = () => {
+        console.error('IndexedDB error');
+    };
 });
+  
 
 self.addEventListener('push', function(event) {
     if (!event.data) return;
@@ -28,19 +52,35 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    const toOpenUrl = event.notification.data.url || `${global.pathname ?? "/"}?UID=${global.uid ?? ""}`;
+    const request = indexedDB.open('ServiceWorkerDB', 1);
+
+    request.onsuccess = event => {
+        const db = event.target.result;
+        const tx = db.transaction('pathUidStore', 'readonly');
+        const store = tx.objectStore('pathUidStore');
+        const getRequest = store.get('1');
+
+        getRequest.onsuccess = () => {
+            const data = getRequest.result;
+            if (data) {
+                self.pathname = data.pathname;
+                self.uid = data.uid;
+                const toOpenUrl = event.notification.data.url || `${global.pathname ?? "/"}?UID=${global.uid ?? ""}`;
     
-    // Handle notification click
-    event.waitUntil(
-        clients
-        .matchAll({
-            type: "window",
-        })
-        .then((clientList) => {
-            for (const client of clientList) {
-                if (client.url === toOpenUrl && "focus" in client) return client.focus();
+                // Handle notification click
+                event.waitUntil(
+                    clients
+                    .matchAll({
+                        type: "window",
+                    })
+                    .then((clientList) => {
+                        for (const client of clientList) {
+                            if (client.url === toOpenUrl && "focus" in client) return client.focus();
+                        }
+                        if (clients.openWindow) return clients.openWindow(toOpenUrl);
+                    }),
+                );
             }
-            if (clients.openWindow) return clients.openWindow(toOpenUrl);
-        }),
-    );
+        };
+    };
 });
