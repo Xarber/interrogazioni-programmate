@@ -744,7 +744,7 @@ class AdminDashboard {
                 dayDividedAnswers[day].push(...dayData);
             })
         });
-        if (objEntries.length === 0) {
+        if (objEntries.length === 0 && missingUsers.length > 1) {
             answerList.innerHTML = `
                 <div class="admin-day-item">
                     <span>Non ci sono risposte per questa materia!</span>
