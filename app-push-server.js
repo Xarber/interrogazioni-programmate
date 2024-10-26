@@ -1,11 +1,17 @@
 // server.js
 const http = require('http');
 const path = require('path');
-const fs = require('fs').promises;
+const fsSync = require('fs');
+const fs = fsSync.promises;
 const webpush = require('web-push');
 
 // Generate VAPID keys (do this once and save the keys)
-const vapidKeys = webpush.generateVAPIDKeys();
+const vapidKeys = fsSync.existsSync("vapidkeys.json") ? JSON.parse(fsSync.readFileSync("vapidkeys.json")) : (()=>{
+    const keys = webpush.generateVAPIDKeys();
+    fsSync.writeFileSync("vapidkeys.json", JSON.stringify(keys));
+    return keys;
+})();
+
 
 // Configure web-push with your VAPID keys
 webpush.setVapidDetails(
@@ -103,7 +109,6 @@ const server = http.createServer(async (req, res) => {
 
             const results = await Promise.all(
                 Array.from(data.subscriptions || subscriptions).map((element) => {
-                    console.log(element);
                     const subscription = element.subscription ?? element;
                     sendPushNotification(subscription, notificationData)
                 })
