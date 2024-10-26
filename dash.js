@@ -416,10 +416,10 @@ class AdminDashboard {
                                     <button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Copia Risposte">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M360-240q-29.7 0-50.85-21.15Q288-282.3 288-312v-480q0-29.7 21.15-50.85Q330.3-864 360-864h384q29.7 0 50.85 21.15Q816-821.7 816-792v480q0 29.7-21.15 50.85Q773.7-240 744-240H360Zm0-72h384v-480H360v480ZM216-96q-29.7 0-50.85-21.15Q144-138.3 144-168v-552h72v552h456v72H216Zm144-216v-480 480Z"/></svg>
                                     </button>
-                                    <button id="editAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Modifica Risposte">
-                                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m336-168-51-51 105-105H96v-72h294L285-501l51-51 192 192-192 192Zm288-240L432-600l192-192 51 51-105 105h294v72H570l105 105-51 51Z"/></svg>
-                                    </button>
                                 ` : ""}
+                                <button id="editAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Modifica Risposte">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m336-168-51-51 105-105H96v-72h294L285-501l51-51 192 192-192 192Zm288-240L432-600l192-192 51 51-105 105h294v72H570l105 105-51 51Z"/></svg>
+                                </button>
                                 <button id="filloutAnswersBtn" style="background-color: red;" class="admin-action-button" title="Riempi Risposte">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M576-192v-72h69L531-378l51-51 114 114v-69h72v192H576Zm-333 0-51-51 453-453h-69v-72h192v192h-72v-69L243-192Zm135-339L192-717l51-51 186 186-51 51Z"/></svg>
                                 </button>
@@ -555,6 +555,7 @@ class AdminDashboard {
                 copyAnswersBtn.classList.add("hided");
                 editAnswersBtn.classList.add("hided");
             }
+            if (this.getMissingAnswers().length > 1) editAnswersBtn.classList.remove("hided");
         
             this.renderDays();
             this.renderAnswers();
