@@ -50,8 +50,8 @@ self.addEventListener('push', function(event) {
     );
 });
 
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
+self.addEventListener('notificationclick', function(notificationEvent) {
+    notificationEvent.notification.close();
     const request = indexedDB.open('ServiceWorkerDB', 1);
 
     request.onsuccess = event => {
@@ -65,10 +65,10 @@ self.addEventListener('notificationclick', function(event) {
             if (data) {
                 self.pathname = data.pathname;
                 self.uid = data.uid;
-                const toOpenUrl = event.notification.data.url || `${global.pathname ?? "/"}?UID=${global.uid ?? ""}`;
+                const toOpenUrl = notificationEvent.notification.data.url || `${global.pathname ?? "/"}?UID=${global.uid ?? ""}`;
     
                 // Handle notification click
-                event.waitUntil(
+                notificationEvent.waitUntil(
                     clients
                     .matchAll({
                         type: "window",
