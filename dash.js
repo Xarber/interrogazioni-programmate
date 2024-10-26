@@ -79,6 +79,11 @@ class PushNotifications {
             body: JSON.stringify({subscription, action: "unsubscribe"})
         }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}});
         subscription.unsubscribe();
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (const registration of registrations) {
+                registration.unregister();
+            } 
+        });
 
         return response;
     }
@@ -96,6 +101,7 @@ class PushNotifications {
     }
 
     async status() {
+        if (await navigator.serviceWorker.getRegistrations().length === 0) return false;
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         return !!subscription;
     }
