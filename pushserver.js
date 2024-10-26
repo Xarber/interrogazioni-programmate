@@ -89,9 +89,10 @@ const server = http.createServer(async (req, res) => {
             };
 
             const results = await Promise.all(
-                Array.from(subscriptions).map(subscription =>
-                    sendPushNotification(subscription, notificationData)
-                )
+                Array.from(subscriptions).map(subscription => {
+                    console.log(subscription, subscription.endpoint);
+                    sendPushNotification(subscription, notificationData);
+                })
             );
 
             return sendJSON(res, {
