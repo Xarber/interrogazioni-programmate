@@ -38,6 +38,12 @@ async function initializePushNotifications() {
     }
 }
 
+async function unsubscribeFromPushNotifications() {
+    const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
+    if (subscription) subscription.unsubscribe();
+    return true;
+}
+
 // Helper function to convert VAPID key
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
