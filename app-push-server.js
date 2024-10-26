@@ -95,6 +95,12 @@ const server = http.createServer(async (req, res) => {
                 title: bodyData.title,
                 body: bodyData.body,
                 icon: bodyData.icon,
+                badge: bodyData.badge,
+                requireInteraction: bodyData.requireInteraction,
+                silent: bodyData.silent,
+                timestamp: new Date().getTime(),
+                actions: bodyData.actions || [],
+
                 url: bodyData.url,
                 subscriptions: bodyData.subscriptions
             };
@@ -102,9 +108,14 @@ const server = http.createServer(async (req, res) => {
                 title: data.title || 'New Notification',
                 body: data.body || 'Open the website to read',
                 icon: data.icon || '/icon.png',
+                badge: data.badge,
                 data: {
-                    url: data.url || '/'
-                }
+                    url: data.url
+                },
+                requireInteraction: data.requireInteraction || false,
+                silent: data.silent || false,
+                timestamp: data.timestamp || new Date().getTime(),
+                actions: data.actions || [],
             };
 
             const results = await Promise.all(

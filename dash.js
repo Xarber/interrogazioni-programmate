@@ -1420,6 +1420,13 @@ class AdminDashboard {
         this.render();
     }
 
+    getMissingAnswers(customIndex = this.currentFileIndex) {
+        return Object.keys(this.userData)
+            .filter(e => 
+                !Object.keys(this.jsonFiles[customIndex].data.answers).includes(e)
+            );
+    }
+
     async editDay(oldDate) {
         const date = prompt('Inserisci la data (DD-MM-YYYY):');
         if (date) {
@@ -1633,6 +1640,24 @@ class AdminDashboard {
         });
 
         fileInput.click();
+    }
+
+    async sendSubjectNotification(users, customIndex = this.currentFileIndex, data) {
+        if (!this.notificationClass) return alert("Le notifiche non sono state configurate correttamente!");
+        if (users.length < 1) return alert("Non ci sono notifiche da inviare!");
+
+        const result = await this.notificationClass.requestSend(users, {
+            title: data.title ?? "Nuova interrogazione!",
+            body: data.desc ?? `Controlla il sito, c'è una nuova interrogazione per ${this.jsonFiles[customIndex].fileName} a cui non hai risposto!`,
+            icon: data.icon ?? "",
+            url: data.url ?? "",
+            requireInteraction: true
+        });
+
+        if (!result.status) return alert(result.message);
+
+        alert(result.message.sent == result.message.total ? "Notifiche inviate!" : `${result.message.sent} notific${result.message.sent === 1 ? "a" : "he"} inviate su ${result.message.total}!`);
+        return result;
     }
   
     async updateJSON(customData, skipUpdateFunction = false, forceSkipUpdateRefresh = false) {

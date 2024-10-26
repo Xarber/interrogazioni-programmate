@@ -274,6 +274,7 @@ if ($_GET["scope"] === "getAllData") {
             $body["subscription"] ??= array();
             if (!isset($body["subscription"]["endpoint"]) || !isset($body["subscription"]["keys"])) die(json_encode(array("status" => false, "message" => "Invalid Subscription!")));
             $userList[$userID]["pushSubscriptions"] ??= array();
+            if (str_contains(json_encode($userList[$userID]["pushSubscriptions"]), json_encode($body["subscription"]))) die(json_encode(array("status" => true, "message" => "This subscription already exists!")));
             array_push($userList[$userID]["pushSubscriptions"], $body["subscription"]);
 
             $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
@@ -528,7 +529,9 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         window.users = <?php echo ($userData["admin"] ?? false) ? json_encode($userList) : "{}" ?>;
         window.profiles = <?php echo (($userData["admin"] ?? false) && $PROFILE === "") ? json_encode($profileList) : "false"; ?>;
         window.isCustomProfile = <?php echo $PROFILE == "" ? "false" : ('"'.str_replace("-", "", $PROFILE).'"'); ?>;
-        window.notifications = new PushNotifications("<?php echo $_GET["UID"]; ?>");
+        window.UID = "<?php echo $_GET["UID"]; ?>";
+        window.notifications = new PushNotifications(window.UID);
+        if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
 
         function analizzaDati(options = {
             clipboard: false,
