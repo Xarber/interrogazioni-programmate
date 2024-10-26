@@ -273,7 +273,8 @@ if ($_GET["scope"] === "getAllData") {
 
             $body["subscription"] ??= array();
             if (!isset($body["subscription"]["endpoint"]) || !isset($body["subscription"]["keys"])) die(json_encode(array("status" => false, "message" => "Invalid Subscription!")));
-            $userList[$userID]["pushSubscription"] = $body["subscription"];
+            $userList[$userID]["pushSubscriptions"] ??= array();
+            array_push($userList[$userID]["pushSubscriptions"], $body["subscription"]);
 
             file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
             die(); //This is not server-managed anymore
@@ -282,7 +283,7 @@ if ($_GET["scope"] === "getAllData") {
         case "unsubscribe":
             $body["path"] = "/api/unsubscribe";
 
-            unset($userList[$userID]["pushSubscription"]);
+            unset($userList[$userID]["pushSubscriptions"]);
             file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
 
             die(); //This is not server-managed anymore
@@ -294,8 +295,8 @@ if ($_GET["scope"] === "getAllData") {
             $body["users"] ??= array();
             $body["subscriptions"] = array();
             foreach ($body["users"] as $user) {
-                if (!$userList[$user] || !isset($userList[$user]["pushSubscription"])) continue;
-                array_push($body["subscriptions"], $userList[$user]["pushSubscription"]);
+                if (!$userList[$user] || !isset($userList[$user]["pushSubscriptions"])) continue;
+                $body["subscriptions"] = array_merge($body["subscriptions"], $userList[$user]["pushSubscriptions"]);
             }
         break;
 
