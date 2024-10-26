@@ -65,7 +65,7 @@ self.addEventListener('notificationclick', function(notificationEvent) {
             if (data) {
                 self.pathname = data.pathname;
                 self.uid = data.uid;
-                const toOpenUrl = notificationEvent.notification.data.url || `${global.pathname ?? "/"}?UID=${global.uid ?? ""}`;
+                const toOpenUrl = notificationEvent.notification.data.url || `${self.pathname ?? "/"}?UID=${self.uid ?? ""}`;
     
                 // Handle notification click
                 notificationEvent.waitUntil(
