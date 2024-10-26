@@ -107,9 +107,10 @@ class UserDashboard {
      * @param {HTMLElement} [containerDiv=document.documentElement] - The container div where the dashboard will be rendered
      * @param {Object} userData - The user data containing name, answers, and admin status
      */
-    constructor(containerDiv = null, userData) {
+    constructor(containerDiv = null, userData, notificationClass) {
         this.userData = userData;
         this.container = containerDiv || document.documentElement;
+        this.notificationClass = notificationClass;
         this.dashboard = null;
         this.render();
     }
@@ -127,6 +128,7 @@ class UserDashboard {
                 <div class="user-dashboard-appointments">
                     ${this.renderAppointments()}
                 </div>
+                ${this.notificationClass ? '<button onclick="" id="dash-notifications-btn" title="Notification Settings">Notifiche</button>' : ""}
                 ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
             </div>
         `;
@@ -136,6 +138,17 @@ class UserDashboard {
         if (!this.appended) this.container.appendChild(this.dashboard);
         this.appended = true;
         if (this.dashboard.querySelector("button#dash-admin-view-btn")) this.dashboard.querySelector("button#dash-admin-view-btn").onclick = this.userData.onOpenAdminDash;
+        (async ()=>{
+            if (!this.notificationClass) return;
+            const status = await this.notificationClass.status();
+            if (!status) document.querySelector("button#dash-notifications-btn").innerHTML = "Disattiva Notifiche";
+            else document.querySelector("button#dash-notifications-btn").innerHTML = "Attiva Notifiche";
+            document.querySelector("button#dash-notifications-btn").onclick = async ()=>{
+                if (status) await this.notificationClass.unsubscribe();
+                else await this.notificationClass.subscribe();
+                this.render();
+            };
+        })();
         this.closed = false;
     }
   
@@ -292,8 +305,9 @@ class UserDashboard {
         this.closed = true;
     }
 
-    update(userData) {
+    update(userData, notificationClass) {
         this.userData = userData || this.userData;
+        this.notificationClass = notificationClass || this.notificationClass;
         this.closed = false;
         // this.dashboard.remove();
         // this.dashboard = null;
@@ -321,6 +335,7 @@ class AdminDashboard {
         var refreshUsers = options.refreshUsers;
         var refreshProfiles = options.refreshProfiles;
         var isCustomProfile = options.isCustomProfile;
+        var notificationClass = options.notificationClass;
         this.jsonFiles = jsonFiles;
         this.userData = userData ?? {};
         this.profiles = profiles ?? [];
@@ -332,6 +347,7 @@ class AdminDashboard {
         this.refreshUsers = refreshUsers;
         this.refreshProfiles = refreshProfiles;
         this.isCustomProfile = isCustomProfile;
+        this.notificationClass = notificationClass;
         this.dashboard = null;
         this.render();
     }
@@ -1705,6 +1721,7 @@ class AdminDashboard {
         var dataAnalysis = options.analysisFunction;
         var refreshUsers = options.refreshUsers;
         var refreshProfiles = options.refreshProfiles;
+        var notificationClass = options.notificationClass;
         this.jsonFiles = jsonFiles || this.jsonFiles;
         this.userData = userData || this.userData;
         this.profiles = profiles || this.profiles;
@@ -1712,6 +1729,7 @@ class AdminDashboard {
         this.dataAnalysis = dataAnalysis || this.dataAnalysis;
         this.refreshUsers = refreshUsers || this.refreshUsers;
         this.refreshProfiles = refreshProfiles || this.refreshProfiles;
+        this.notificationClass = notificationClass || this.notificationClass;
         if (this.currentFileIndex > this.jsonFiles.length - 1) this.currentFileIndex = -1;
         // this.dashboard.remove();
         // this.dashboard = null;

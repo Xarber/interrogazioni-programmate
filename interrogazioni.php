@@ -645,6 +645,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                             users: window.users,
                             profiles: window.profiles,
                             analysisFunction: analizzaDati,
+                            notificationClass: window.notifications,
                             refreshUsers: async ()=>{
                                 const res = await fetch("?UID=<?php echo $userID; ?>&scope=getAllUsers").then(r=>r.json());
                                 return (res.status === false) ? {} : res;
@@ -659,7 +660,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                             isCustomProfile: window.isCustomProfile
                         });
                     });
-                }, ...window.userData}) : window.dash;
+                }, ...window.userData}, window.notifications) : window.dash;
             }
             if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
         document.documentElement.appendChild(btnDiv);
