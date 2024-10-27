@@ -73,6 +73,7 @@ class PushNotifications {
     }
 
     async unsubscribe() {
+        if (!(await this.status())) return true;
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         if (!subscription) return {status: true, message: null};
 
