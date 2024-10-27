@@ -65,8 +65,8 @@ class PushNotifications {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({subscription, action: "subscribe"})
-            });
-            return {...response.json(), subscription};
+            }).then(r=>r.json());
+            return {...response, subscription};
         } catch (error) {
             return {status: false, message: error.toString()};
         }
