@@ -158,6 +158,7 @@ class UserDashboard {
             if (!status) document.querySelector("button#dash-notifications-btn").innerHTML = "Attiva Notifiche";
             else document.querySelector("button#dash-notifications-btn").innerHTML = "Disattiva Notifiche";
             document.querySelector("button#dash-notifications-btn").onclick = async ()=>{
+                document.querySelector("button#dash-notifications-btn").innerHTML = "Attendi...";
                 const response = !status ? await this.notificationClass.subscribe() : await this.notificationClass.unsubscribe();
                 if (!response.status) alert(`Impossibile attivare le notifiche! Ricarica la pagina e riprova.`);
                 this.render();
