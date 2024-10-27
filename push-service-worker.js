@@ -48,11 +48,11 @@ self.addEventListener('push', function(event) {
         badge: data.badge,
         data: data.data,
         renotify: data.renotify,
-        requireInteraction: data.requireInteraction || false,
-        silent: data.silent || false,
-        vibrate: data.vibrate || [100, 50, 200],
-        timestamp: data.timestamp || new Date().getTime(),
-        actions: data.actions || [],
+        requireInteraction: data.requireInteraction ?? false,
+        silent: data.silent ?? false,
+        vibrate: data.vibrate ?? [100, 50, 200],
+        timestamp: data.timestamp ?? new Date().getTime(),
+        actions: data.actions ?? [],
     };
     console.log("Received push message", options);
 

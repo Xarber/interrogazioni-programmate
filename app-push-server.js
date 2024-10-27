@@ -104,32 +104,32 @@ const server = http.createServer(async (req, res) => {
                 vibrate: bodyData.vibrate,
                 renotify: bodyData.renotify,
                 timestamp: new Date().getTime(),
-                actions: bodyData.actions || [],
+                actions: bodyData.actions ?? [],
 
                 url: bodyData.url,
                 subscriptions: bodyData.subscriptions
             };
             const notificationData = {
-                title: data.title || 'New Notification',
+                title: data.title ?? 'New Notification',
                 tag: data.tag,
-                body: data.body || 'Open the website to read',
+                body: data.body ?? 'Open the website to read',
                 lang: data.lang,
-                icon: data.icon || '/icon.png',
+                icon: data.icon ?? '/icon.png',
                 image: data.image,
                 badge: data.badge,
                 data: {
                     url: data.url
                 },
-                requireInteraction: data.requireInteraction || false,
-                silent: data.silent || false,
-                vibrate: data.vibrate || [100, 50, 100],
+                requireInteraction: data.requireInteraction ?? false,
+                silent: data.silent ?? false,
+                vibrate: data.vibrate ?? [100, 50, 100],
                 renotify: data.renotify,
-                timestamp: data.timestamp || new Date().getTime(),
-                actions: data.actions || [],
+                timestamp: data.timestamp ?? new Date().getTime(),
+                actions: data.actions ?? [],
             };
 
             const results = await Promise.all(
-                Array.from(data.subscriptions || subscriptions).map((element) => {
+                Array.from(data.subscriptions ?? subscriptions).map((element) => {
                     const subscription = element.subscription ?? element;
                     return sendPushNotification(subscription, notificationData);
                 })
@@ -138,7 +138,7 @@ const server = http.createServer(async (req, res) => {
             return sendJSON(res, {
                 status: true,
                 message: {
-                    total: Array.from(data.subscriptions || subscriptions).length,
+                    total: Array.from(data.subscriptions ?? subscriptions).length,
                     sent: results.filter(Boolean).length
                 },
             });
