@@ -898,6 +898,9 @@ class AdminDashboard {
             .admin-swapping-user-answer > .admin-day-item .admin-delete-day-btn {
                 display: none;
             }
+            .admin-current-swapping-element {
+                background-color: rgba(100, 100, 100, 0.5);
+            }
             .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover {
                 background-color: rgba(60, 60, 60, 0.3);
                 border: 2px rgba(255, 255, 255, 0.7) solid;
