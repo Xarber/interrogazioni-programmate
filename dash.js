@@ -108,7 +108,7 @@ class PushNotifications {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({title: data.title, body: data.body, icon: data.icon, url: data.url, users, action: "sendNotifications"})
+            body: JSON.stringify({...data, users, action: "sendNotifications"})
         }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}});
 
         return response;
