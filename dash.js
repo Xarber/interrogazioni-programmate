@@ -781,7 +781,7 @@ class AdminDashboard {
             .admin-disabled {
                 background-color: rgba(100, 100, 100, 0.5) !important;
                 cursor: not-allowed !important;
-                pointer-events: none;
+                pointer-events: visible;
             }
             .admin-inline {
                 display: flex;
