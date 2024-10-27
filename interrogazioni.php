@@ -529,7 +529,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         window.users = <?php echo ($userData["admin"] ?? false) ? json_encode($userList) : "{}" ?>;
         window.profiles = <?php echo (($userData["admin"] ?? false) && $PROFILE === "") ? json_encode($profileList) : "false"; ?>;
         window.isCustomProfile = <?php echo $PROFILE == "" ? "false" : ('"'.str_replace("-", "", $PROFILE).'"'); ?>;
-        window.UID = "<?php echo $_GET["UID"]; ?>";
+        window.UID = "<?php echo $_GET["UID"] ?? ""; ?>";
         window.notifications = new PushNotifications(window.UID);
         if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
         localStorage["lastPathName"] = location.pathname;
