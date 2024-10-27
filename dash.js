@@ -1187,6 +1187,7 @@ class AdminDashboard {
                 await this.toggleAdminUser(target.dataset.user);
             }
             if (target.classList.contains('admin-invite-btn')) {
+                const name = this.userData[target.dataset.user].name.split(' ');
                 if (target.classList.contains('admin-notify-user-btn')) {
                     if (!confirm(`Vuoi mandare una notifica di accesso a ${name.join(" ")}?`)) return;
                     await this.sendSubjectNotification([target.dataset.user], this.currentFileIndex, {
@@ -1195,7 +1196,6 @@ class AdminDashboard {
                     });
                     return alert("Una notifica è stata inviata all'utente selezionato.");
                 }
-                const name = this.userData[target.dataset.user].name.split(' ');
                 if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
                 navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
                 alert(`Il testo con il link d'accesso di ${name.join(" ")} è stato copiato!`);
