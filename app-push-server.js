@@ -122,7 +122,7 @@ const server = http.createServer(async (req, res) => {
                 },
                 requireInteraction: data.requireInteraction ?? false,
                 silent: data.silent ?? false,
-                vibrate: data.vibrate ?? (!data.silent ? [100, 50, 100] : undefined),
+                vibrate: data.vibrate,
                 renotify: data.renotify,
                 timestamp: data.timestamp ?? new Date().getTime(),
                 actions: data.actions ?? [],
