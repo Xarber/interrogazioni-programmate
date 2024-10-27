@@ -54,6 +54,7 @@ self.addEventListener('push', function(event) {
         timestamp: data.timestamp || new Date().getTime(),
         actions: data.actions || [],
     };
+    console.log("Received push message", options);
 
     event.waitUntil(
         self.registration.showNotification(data.title, options)
