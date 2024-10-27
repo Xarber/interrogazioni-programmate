@@ -1732,7 +1732,7 @@ class AdminDashboard {
             requireInteraction: data.requireInteraction ?? true,
             timestamp: data.timestamp,
             silent: data.silent ?? false,
-            vibrate: data.vibrate ?? [100, 50, 100],
+            vibrate: data.vibrate ?? (!data.silent ? [100, 50, 100] : undefined),
             renotify: data.renotify,
             actions: data.actions ?? [],
         });

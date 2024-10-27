@@ -50,8 +50,8 @@ self.addEventListener('push', function(event) {
         renotify: data.renotify,
         requireInteraction: data.requireInteraction ?? false,
         silent: data.silent ?? false,
-        vibrate: data.vibrate ?? [100, 50, 200],
-        timestamp: data.timestamp ?? new Date().getTime(),
+        vibrate: data.vibrate,
+        timestamp: data.timestamp,
         actions: data.actions ?? [],
     };
     console.log("Received push message", options);
