@@ -93,11 +93,16 @@ const server = http.createServer(async (req, res) => {
             const bodyData = await parseBody(req);
             const data = {
                 title: bodyData.title,
+                tag: bodyData.tag,
                 body: bodyData.body,
+                lang: bodyData.lang,
                 icon: bodyData.icon,
+                image: bodyData.image,
                 badge: bodyData.badge,
                 requireInteraction: bodyData.requireInteraction,
                 silent: bodyData.silent,
+                vibrate: bodyData.vibrate,
+                renotify: bodyData.renotify,
                 timestamp: new Date().getTime(),
                 actions: bodyData.actions || [],
 
@@ -106,14 +111,19 @@ const server = http.createServer(async (req, res) => {
             };
             const notificationData = {
                 title: data.title || 'New Notification',
+                tag: data.tag,
                 body: data.body || 'Open the website to read',
+                lang: data.lang,
                 icon: data.icon || '/icon.png',
+                image: data.image,
                 badge: data.badge,
                 data: {
                     url: data.url
                 },
                 requireInteraction: data.requireInteraction || false,
                 silent: data.silent || false,
+                vibrate: data.vibrate || [100, 50, 100],
+                renotify: data.renotify,
                 timestamp: data.timestamp || new Date().getTime(),
                 actions: data.actions || [],
             };

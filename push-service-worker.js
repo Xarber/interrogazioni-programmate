@@ -40,12 +40,17 @@ self.addEventListener('push', function(event) {
 
     const data = event.data.json();
     const options = {
+        tag: data.tag,
         body: data.body,
+        lang: data.lang,
         icon: data.icon,
+        image: data.image,
         badge: data.badge,
         data: data.data,
+        renotify: data.renotify,
         requireInteraction: data.requireInteraction || false,
         silent: data.silent || false,
+        vibrate: data.vibrate || [100, 50, 200],
         timestamp: data.timestamp || new Date().getTime(),
         actions: data.actions || [],
     };

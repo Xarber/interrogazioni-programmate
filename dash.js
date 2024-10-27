@@ -1714,10 +1714,19 @@ class AdminDashboard {
 
         const result = await this.notificationClass.requestSend(users, {
             title: data.title ?? "Nuova interrogazione!",
+            tag: data.tag,
             body: data.desc ?? `Controlla il sito, c'è una nuova interrogazione per ${this.jsonFiles[customIndex].fileName} a cui non hai risposto!`,
+            lang: data.lang,
+            badge: data.badge,
             icon: data.icon ?? "",
+            image: data.image,
             url: data.url ?? "",
-            requireInteraction: true
+            requireInteraction: data.requireInteraction ?? true,
+            timestamp: data.timestamp,
+            silent: data.silent ?? false,
+            vibrate: data.vibrate ?? [100, 50, 100],
+            renotify: data.renotify,
+            actions: data.actions ?? [],
         });
 
         if (!result.status) return alert(result.message);
