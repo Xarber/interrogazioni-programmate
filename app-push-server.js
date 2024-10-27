@@ -51,7 +51,7 @@ async function sendPushNotification(subscription, data) {
         await webpush.sendNotification(subscription, JSON.stringify(data));
         return true;
     } catch (error) {
-        console.error('Error sending push notification:', error);
+        console.error('Error sending push notification:', error.body);
         if (error.statusCode === 410) {
             subscriptions.delete(subscription);
         }
@@ -128,8 +128,10 @@ const server = http.createServer(async (req, res) => {
                 actions: data.actions ?? [],
             };
 
+            const toSendUsers = Array.from(data.subscriptions ?? subscriptions);
+            console.log("Sending " +toSendUsers.length + " notifications!");
             const results = await Promise.all(
-                Array.from(data.subscriptions ?? subscriptions).map((element) => {
+                toSendUsers.map((element) => {
                     const subscription = element.subscription ?? element;
                     return sendPushNotification(subscription, notificationData);
                 })
@@ -138,7 +140,7 @@ const server = http.createServer(async (req, res) => {
             return sendJSON(res, {
                 status: true,
                 message: {
-                    total: Array.from(data.subscriptions ?? subscriptions).length,
+                    total: toSendUsers.length,
                     sent: results.filter(Boolean).length
                 },
             });
