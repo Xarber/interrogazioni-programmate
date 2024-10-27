@@ -722,8 +722,11 @@ class AdminDashboard {
             answerElement.innerHTML = `
                 <span>${this.userData[userUUID].name}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn admin-notify-user-btn" data-user="${userUUID}" title="Invia Notifica">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M192-216v-72h48v-240q0-87 53.5-153T432-763v-53q0-20 14-34t34-14q20 0 34 14t14 34v53q85 16 138.5 82T720-528v240h48v72H192Zm288-276Zm-.21 396Q450-96 429-117.15T408-168h144q0 30-21.21 51t-51 21ZM312-288h336v-240q0-70-49-119t-119-49q-70 0-119 49t-49 119v240Z"/></svg>
+                    <button class="admin-edit-day-btn admin-notify-user-btn ${!this.userData[userUUID].pushSubscriptions ? 'admin-disabled' : ''}" ${!this.userData[userUUID].pushSubscriptions ? 'disabled' : ''} data-user="${userUUID}" title="Invia Notifica">
+                        ${!this.userData[userUUID].pushSubscriptions ? 
+                            `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m48-144 432-720 432 720H48Zm127-72h610L480-724 175-216Zm304.79-48q15.21 0 25.71-10.29t10.5-25.5q0-15.21-10.29-25.71t-25.5-10.5q-15.21 0-25.71 10.29t-10.5 25.5q0 15.21 10.29 25.71t25.5 10.5ZM444-384h72v-192h-72v192Zm36-86Z"/></svg>`
+                            : `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M192-216v-72h48v-240q0-87 53.5-153T432-763v-53q0-20 14-34t34-14q20 0 34 14t14 34v53q85 16 138.5 82T720-528v240h48v72H192Zm288-276Zm-.21 396Q450-96 429-117.15T408-168h144q0 30-21.21 51t-51 21ZM312-288h336v-240q0-70-49-119t-119-49q-70 0-119 49t-49 119v240Z"/></svg>
+                        `}
                     </button>
                 </div>
             `;
@@ -771,6 +774,11 @@ class AdminDashboard {
                 cursor: pointer;
                 color: dodgerblue;
                 font-weight: bold;
+            }
+            .admin-disabled {
+                background-color: rgba(100, 100, 100, 0.5);
+                cursor: not-allowed;
+                pointer-events: none;
             }
             .admin-inline {
                 display: flex;
@@ -1151,6 +1159,7 @@ class AdminDashboard {
             if (target.classList.contains('admin-notify-all-btn')) {
                 await this.sendSubjectNotification(this.getMissingAnswers());
             } else if (target.classList.contains('admin-notify-user-btn')) {
+                if (target.classList.contains("admin-disabled")) return alert("Questo utente non ha attivato le notifiche!");
                 await this.sendSubjectNotification([target.dataset.user]);
             } else if (target.classList.contains('admin-edit-day-btn')) {
                 this.dashboard.querySelector('#subjectAnswerList').classList.toggle("admin-swapping-user-answer");
@@ -1709,7 +1718,7 @@ class AdminDashboard {
         });
 
         if (!result.status) return alert(result.message);
-
+        if (result.message.total === 0) return alert("Nessuna notificha è stata inviata!");
         alert(result.message.sent == result.message.total ? "Notifiche inviate!" : `${result.message.sent} notific${result.message.sent === 1 ? "a" : "he"} inviate su ${result.message.total}!`);
         return result;
     }

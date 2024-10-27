@@ -534,6 +534,10 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
         localStorage["lastPathName"] = location.pathname;
 
+        window.notifications.status().then(r=>{
+            if (r === true && !window.userData.pushSubscriptions) window.notifications.unsubscribe();
+        })
+
         function analizzaDati(options = {
             clipboard: false,
             copy: "json",
