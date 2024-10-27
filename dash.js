@@ -26,7 +26,7 @@ class PushNotifications {
         // Check if service worker and push messaging is supported
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             console.error('Push notifications not supported');
-            return {status: false, message: "Unsupported Device!"};
+            return {status: false, userError: true, message: "Unsupported Device!"};
         }
     
         try {
