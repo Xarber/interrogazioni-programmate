@@ -103,7 +103,7 @@ const server = http.createServer(async (req, res) => {
                 silent: bodyData.silent,
                 vibrate: bodyData.vibrate,
                 renotify: bodyData.renotify,
-                timestamp: new Date().getTime(),
+                timestamp: bodyData.timestamp ?? new Date().getTime(),
                 actions: bodyData.actions ?? [],
 
                 url: bodyData.url,
