@@ -42,7 +42,7 @@ class PushNotifications {
             // Request notification permission
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                return {status: false, message: permission === "default" ? "Notification Permission Dialog Dismissed!" : "Notification Permission Denied!"};
+                return {status: false, userError: true, message: permission === "default" ? "Notification Permission Dialog Dismissed!" : "Notification Permission Denied!"};
                 throw new Error('Notification permission denied');
             }
     
@@ -68,7 +68,7 @@ class PushNotifications {
             }).then(r=>r.json());
             return {...response, subscription};
         } catch (error) {
-            return {status: false, message: error.toString()};
+            return {status: false, message: error.toString(), localError: true};
         }
     }
 
@@ -168,7 +168,7 @@ class UserDashboard {
             document.querySelector("button#dash-notifications-btn").onclick = async ()=>{
                 document.querySelector("button#dash-notifications-btn").innerHTML = "Attendi...";
                 const response = !status ? await this.notificationClass.subscribe() : await this.notificationClass.unsubscribe();
-                if (!response.status) alert(`Impossibile attivare le notifiche! Ricarica la pagina e riprova.`);
+                if (!response.status) alert(!!response.userError ? response.message : `Impossibile attivare le notifiche! Ricarica la pagina e riprova.`);
                 this.render();
             };
         })();
