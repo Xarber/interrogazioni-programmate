@@ -536,6 +536,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
 
         window.notifications.status().then(r=>{
             if (r === true && !window.userData.pushSubscriptions) window.notifications.unsubscribe();
+            if (r === true) window.notifications.update();
         })
 
         function analizzaDati(options = {

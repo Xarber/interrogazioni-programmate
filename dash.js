@@ -94,6 +94,14 @@ class PushNotifications {
         return response;
     }
 
+    async update() {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (const registration of registrations) {
+                registration.update();
+            } 
+        });
+    }
+
     async requestSend(users, data) {
         const response = await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
             method: 'POST',
