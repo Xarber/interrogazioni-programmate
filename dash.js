@@ -899,7 +899,7 @@ class AdminDashboard {
                 display: none;
             }
             .admin-current-swapping-element {
-                background-color: rgba(100, 100, 100, 0.5);
+                background-color: rgba(100, 100, 100, 0.5) !important;
             }
             .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover {
                 background-color: rgba(60, 60, 60, 0.3);
