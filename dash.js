@@ -1194,7 +1194,7 @@ class AdminDashboard {
                         title: "Nuova Notifica",
                         desc: "Questa notifica ti è stata inviata da un admin per entrare nel sito. Vai a dare un occhiata!"
                     });
-                    return alert("Una notifica è stata inviata all'utente selezionato.");
+                    return;
                 }
                 if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
                 navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
