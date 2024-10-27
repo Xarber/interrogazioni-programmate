@@ -5,7 +5,12 @@ self.addEventListener('install', event => {
         })
     );
 });
-  
+
+self.addEventListener('activate', event => {
+    clients.claim();
+    console.log('Service Worker Ready!');
+});
+
 self.addEventListener('message', event => {
     const data = event.data;
   

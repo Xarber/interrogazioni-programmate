@@ -32,6 +32,7 @@ class PushNotifications {
         try {
             // Register service worker
             const registration = await navigator.serviceWorker.register('push-service-worker.js');
+            while (!navigator.serviceWorker.controller) await new Promise(r=>setTimeout(r, 1000));
             navigator.serviceWorker.controller.postMessage({
                 pathname: window.location.pathname,
                 uid: new URLSearchParams(window.location.search).get('UID')
@@ -156,8 +157,8 @@ class UserDashboard {
             if (!status) document.querySelector("button#dash-notifications-btn").innerHTML = "Attiva Notifiche";
             else document.querySelector("button#dash-notifications-btn").innerHTML = "Disattiva Notifiche";
             document.querySelector("button#dash-notifications-btn").onclick = async ()=>{
-                if (!status) await this.notificationClass.subscribe();
-                else await this.notificationClass.unsubscribe();
+                const response = !status ? await this.notificationClass.subscribe() : await this.notificationClass.unsubscribe();
+                if (!response.status) alert(`Impossibile attivare le notifiche! Ricarica la pagina e riprova.`);
                 this.render();
             };
         })();
