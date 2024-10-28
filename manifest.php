@@ -66,7 +66,7 @@ echo json_encode(array(
       "purpose" => "maskable"
     ),*/
     array(
-      "src" => "/images/original-app-hd.jpeg",
+      "src" => "/images/original-app-hd.png",
       "sizes" => "4800x4800",
       "type" => "image/png",
       "purpose" => "any"
