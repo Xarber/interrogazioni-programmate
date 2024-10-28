@@ -8,5 +8,16 @@ echo json_encode(array(
   "display" => "standalone",
   "background_color" => "#472300",
   "theme_color" => "#472300",
-  "icons" => array()
+  "icons" => array(
+    array(
+      "src" => "/images/app-192x192.png",
+      "sizes" => "192x192",
+      "type" => "image/png"
+    ),
+    array(
+      "src" => "/images/app-512x512.png",
+      "sizes" => "512x512",
+      "type" => "image/png"
+    )
+  )
 ));
