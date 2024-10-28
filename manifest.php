@@ -24,8 +24,8 @@ echo json_encode(array(
       "purpose" => "maskable"
     ),
     array(
-      "src" => "/images/app-4800x4800.png",
-      "sizes" => "4800x4800",
+      "src" => "/images/app-8727x8727.png",
+      "sizes" => "8727x8727",
       "type" => "image/png",
       "purpose" => "maskable"
     )

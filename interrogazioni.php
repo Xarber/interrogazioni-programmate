@@ -346,8 +346,8 @@ foreach ($subjectJSONs as $subjectNameTMP) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.php?<?php echo $_SERVER['QUERY_STRING'];?>">
-    <link rel="shortcut icon" href="images/app-4800x4800.png" type="image/x-icon">
-    <link rel="icon" href="images/app-4800x4800.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/app-8727x8727.png" type="image/x-icon">
+    <link rel="icon" href="images/app-8727x8727.png" type="image/x-icon">
     <title>Prenota Interrogazioni</title>
     <style>
         <?php echo file_get_contents("app.css") ?>
