@@ -1,4 +1,5 @@
 <?php
+header("Content-Type: application/json");
 echo json_encode(array(
   "name" => "Interrogazioni Programmate",
   "short_name" => "Interrogazioni",
