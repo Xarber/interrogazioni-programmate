@@ -696,6 +696,13 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             }
             if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
         document.documentElement.appendChild(btnDiv);
+
+        window.addEventListener("beforeinstallprompt", (e)=>{
+            let btn2 = document.createElement("button");
+            btn2.innerHTML = "Installa App";
+            btn2.onclick = e.prompt;
+            btnDiv.appendChild(btn2);
+        });
     </script>
 </body>
 </html>

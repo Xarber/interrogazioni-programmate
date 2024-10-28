@@ -1,10 +1,12 @@
 <?php
 header("Content-Type: application/json");
 session_start();
+$startUrl = ($_SESSION["lastAccessID"] ?? "/interrogazioni.php");
+if (!str_contains($startUrl, "UID=")) $startUrl = $startUrl."?".$_SERVER["QUERY_STRING"];
 echo json_encode(array(
   "name" => "Interrogazioni Programmate",
   "short_name" => "Interrogazioni",
-  "start_url" => ($_SESSION["lastAccessID"] ?? "/interrogazioni.php"),
+  "start_url" => $startUrl,
   "display" => "standalone",
   "background_color" => "#472300",
   "theme_color" => "#472300",
