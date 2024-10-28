@@ -120,7 +120,7 @@ class PushNotifications {
         return !!subscription;
     }
 
-    availabile() {
+    available() {
         return (('serviceWorker' in navigator) && ('PushManager' in window));
     }
 }
