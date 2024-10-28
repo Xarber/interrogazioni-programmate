@@ -26,8 +26,7 @@ echo json_encode(array(
     array(
       "src" => "/images/app-8727x8727.png",
       "sizes" => "8727x8727",
-      "type" => "image/png",
-      "purpose" => "maskable"
+      "type" => "image/png"
     )
   )
 ));
