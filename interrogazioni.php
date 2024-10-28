@@ -526,6 +526,27 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         ?>
     </div>
     <script>
+        (()=>{var script = document.createElement('script');script.src="//cdn.jsdelivr.net/npm/eruda";document.body.appendChild(script);script.onload = ()=>{
+            eruda.init();
+            document.querySelector('#eruda').style.display = "none";
+            var toggleBtn = document.createElement('button');
+            toggleBtn.style.position = "fixed";
+            toggleBtn.style.left = "10px";
+            toggleBtn.style.top = "10px";
+            toggleBtn.style.width = "10px";
+            toggleBtn.style.height = "10px";
+            toggleBtn.style.padding = "0";
+            toggleBtn.style.border = "0";
+            toggleBtn.style.opacity = "0";
+            toggleBtn.style.cursor = "default";
+            toggleBtn.style.margin = "0";
+            toggleBtn.style.zIndex = "2147483647";
+            toggleBtn.innerHTML = "";
+            toggleBtn.onclick = ()=>document.querySelector('#eruda').style.display = "block";
+            document.body.appendChild(toggleBtn);
+        }})();
+    </script>
+    <script>
         <?php echo file_get_contents("dash.js"); ?>
     </script>
     <script>
