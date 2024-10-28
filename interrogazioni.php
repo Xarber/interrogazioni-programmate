@@ -531,10 +531,10 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             document.querySelector('#eruda').style.display = "none";
             var toggleBtn = document.createElement('button');
             toggleBtn.style.position = "fixed";
-            toggleBtn.style.left = "10px";
-            toggleBtn.style.top = "10px";
-            toggleBtn.style.width = "10px";
-            toggleBtn.style.height = "10px";
+            toggleBtn.style.left = "8px";
+            toggleBtn.style.top = "8px";
+            toggleBtn.style.width = "50px";
+            toggleBtn.style.height = "50px";
             toggleBtn.style.padding = "0";
             toggleBtn.style.border = "0";
             toggleBtn.style.opacity = "0";
