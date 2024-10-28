@@ -1,0 +1,9 @@
+{
+    "name": "Interrogazioni Programmate",
+    "short_name": "Interrogazioni",
+    "start_url": "/interrogazioni.php",
+    "display": "standalone",
+    "background_color": "#472300",
+    "theme_color": "#472300",
+    "icons": []
+  }
