@@ -45,7 +45,7 @@ echo json_encode(array(
       "src" => "/images/maskable_icon_x192.png",
       "sizes" => "192x192",
       "type" => "image/png",
-      "purpose" => "maskable"
+      "purpose" => "any"
     ),/*
     array(
       "src" => "/images/maskable_icon_x384.png",
@@ -64,12 +64,12 @@ echo json_encode(array(
       "sizes" => "8000x8000",
       "type" => "image/png",
       "purpose" => "maskable"
-    ),*/
+    ),
     array(
       "src" => "/images/original-app-hd.png",
       "sizes" => "4800x4800",
       "type" => "image/png",
       "purpose" => "any"
-    ),
+    ),*/
   )
 ));
