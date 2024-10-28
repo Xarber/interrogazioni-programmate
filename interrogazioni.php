@@ -2,6 +2,7 @@
 error_reporting(E_ERROR | E_PARSE);
 session_start();
 $_SESSION["profile"] ??= "";
+echo $_SERVER['QUERY_STRING'];
 $_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"].$_SERVER['QUERY_STRING'];
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
