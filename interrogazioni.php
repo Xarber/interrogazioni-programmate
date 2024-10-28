@@ -560,9 +560,15 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
         localStorage["lastPathName"] = location.pathname;
 
-        window.notifications.status().then(r=>{
-            if (r === true && !window.userData.pushSubscriptions) window.notifications.unsubscribe();
-            if (r === true) window.notifications.update();
+        window.notifications.status().then(async r=>{
+            if (r != true) return;
+            const sw = await navigator.serviceWorker.getRegistration();
+            if (!window.userData.pushSubscriptions || !sw) return window.notifications.unsubscribe();
+            const sub = await sw.pushManager.getSubscription();
+            const userSubscriptions = new Set();
+            for (var rsub of window.userData.pushSubscriptions) userSubscriptions.add(JSON.stringify(rsub));
+            if (!userSubscriptions.has(JSON.stringify(sub))) return window.notifications.unsubscribe(false);
+            window.notifications.update();
         })
 
         function analizzaDati(options = {

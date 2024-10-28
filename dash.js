@@ -72,18 +72,18 @@ class PushNotifications {
         }
     }
 
-    async unsubscribe() {
+    async unsubscribe(sendRequestToServer = true) {
         if (!(await this.status())) return true;
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         if (!subscription) return {status: true, message: null};
 
-        const response = await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+        const response = (!!sendRequestToServer) ? await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({subscription, action: "unsubscribe"})
-        }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}});
+        }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}}) : {status: true, message: null};
         subscription.unsubscribe();
         navigator.serviceWorker.getRegistrations().then(registrations => {
             for (const registration of registrations) {
