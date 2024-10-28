@@ -119,6 +119,10 @@ class PushNotifications {
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         return !!subscription;
     }
+
+    availabile() {
+        return (('serviceWorker' in navigator) && ('PushManager' in window));
+    }
 }
 
 class UserDashboard {
@@ -149,7 +153,7 @@ class UserDashboard {
                     ${this.renderAppointments()}
                 </div>
                 <div class="inline">
-                    ${this.notificationClass ? '<button onclick="" id="dash-notifications-btn" title="Notification Settings">Notifiche</button>' : ""}
+                    ${this.notificationClass ? `<button onclick="" id="dash-notifications-btn" ${this.notificationClass.available() ? "" : 'style="display: none"'} title="Notification Settings">Notifiche</button>` : ""}
                     ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
                 </div>
             </div>
