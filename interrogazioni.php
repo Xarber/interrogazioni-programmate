@@ -2,7 +2,7 @@
 error_reporting(E_ERROR | E_PARSE);
 session_start();
 $_SESSION["profile"] ??= "";
-$_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"]."?".$_SERVER['QUERY_STRING'];
+$_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
@@ -345,7 +345,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.php">
+    <link rel="manifest" href="manifest.php?<?php echo $_SERVER['QUERY_STRING'];?>">
     <title>Prenota Interrogazioni</title>
     <style>
         <?php echo file_get_contents("app.css") ?>
