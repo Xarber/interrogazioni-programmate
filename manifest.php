@@ -45,7 +45,7 @@ $manifestFull = array(
     "client_mode" => "auto"
   )
 );
-$manifest = $manifestFull;
+$manifest = json_encode($manifestFull);
 $manifest["start_url"] = explode("?", $startUrl, 2)[0];
 echo $manifestFull;
 file_put_contents("manifest.json", json_encode($manifest, JSON_PRETTY_PRINT));
