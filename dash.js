@@ -1496,6 +1496,7 @@ class AdminDashboard {
         if (!confirm(Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) > 0 ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
 
         if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) this.removeUserAnswer(userUUID, true);
+        this.jsonFiles[this.currentFileIndex].data.answers[userUUID] ??= {};
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = date;
         this.jsonFiles[this.currentFileIndex].data.answerCount++;
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = this.jsonFiles[this.currentFileIndex].data.answerCount;
