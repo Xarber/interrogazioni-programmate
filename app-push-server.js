@@ -135,9 +135,10 @@ const server = http.createServer(async (req, res) => {
                 urgency: data.urgency
             };
             if (notificationData.priority === "high") {
-                notificationData.tag ??= "time-sensitive";
+                notificationData.tag = "time-sensitive";
                 notificationData.renotify = true;
                 notificationData.silent = false;
+                notificationData.requireInteraction = true;
             }
 
             const toSendUsers = Array.from(data.subscriptions ?? subscriptions);
