@@ -50,7 +50,7 @@ self.addEventListener('push', function(event) {
     );
 
     if (typeof postMessage === "function") postMessage(postData);
-    else for (var c of clients) c.postMessage(postData);
+    else clients.matchAll({type: "window"}).then(cl=>{for (var c of cl) c.postMessage(postData)});
 });
 
 self.addEventListener('notificationclick', function(notificationEvent) {
