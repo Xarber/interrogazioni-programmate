@@ -924,7 +924,7 @@ class AdminDashboard {
             }
             .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover, .admin-switch-to-date {
                 background-color: rgba(60, 60, 60, 0.3);
-                border: 2px rgba(255, 255, 255, 0.7) solid;
+                border: 2px rgba(255, 255, 255, 0.2) solid;
                 border-style: dashed;
             }
             .admin-dashboard-subject-section[data-section="answers"] > .admin-dashboard-subject-answers-section {
