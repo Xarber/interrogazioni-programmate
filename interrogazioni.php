@@ -569,6 +569,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             for (var rsub of window.userData.pushSubscriptions) userSubscriptions.add(JSON.stringify(rsub));
             if (!userSubscriptions.has(JSON.stringify(sub))) return window.notifications.unsubscribe(false);
             window.notifications.update();
+            navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
         })
 
         function analizzaDati(options = {
