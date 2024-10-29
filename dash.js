@@ -1510,6 +1510,7 @@ class AdminDashboard {
         let oldUserAnswerIndex = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==date);
         if (oldUserAnswerIndex > -1) this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName][oldUserAnswerIndex] = date;
         else this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].push(date);
+        if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
