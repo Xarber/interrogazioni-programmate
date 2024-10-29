@@ -292,6 +292,7 @@ if ($_GET["scope"] === "getAllData") {
                     if (json_encode($subscription) != json_encode($body["subscription"])) array_push($newPushSubs, $subscription);
                 }
                 $userList[$userID]["pushSubscriptions"] = $newPushSubs;
+                if (count($userList[$userID]["pushSubscriptions"]) === 0) unset($userList[$userID]["pushSubscriptions"]);
             } else unset($userList[$userID]["pushSubscriptions"]);
 
             $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
