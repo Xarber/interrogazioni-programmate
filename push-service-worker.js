@@ -39,21 +39,10 @@ self.addEventListener('push', function(event) {
     if (!event.data) return;
 
     const data = event.data.json();
-    const options = {
-        tag: data.tag,
-        body: data.body,
-        lang: data.lang,
-        icon: data.icon,
-        image: data.image,
-        badge: data.badge,
-        data: data.data,
-        renotify: data.renotify,
-        requireInteraction: data.requireInteraction ?? false,
-        silent: data.silent ?? false,
-        vibrate: data.vibrate,
-        timestamp: data.timestamp,
-        actions: data.actions ?? [],
-    };
+    let options = data;
+    options.requireInteraction ??= false;
+    options.silent ??= false;
+    options.actions ??= [];
 
     event.waitUntil(
         self.registration.showNotification(data.title, options)

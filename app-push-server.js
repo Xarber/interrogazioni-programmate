@@ -126,6 +126,9 @@ const server = http.createServer(async (req, res) => {
                 vibrate: data.vibrate,
                 renotify: data.renotify,
                 timestamp: data.timestamp ?? new Date().getTime(),
+                priority: data.urgency,
+                urgency: data.urgency,
+                importance: data.urgency,
                 actions: data.actions ?? [],
             };
             const options = {
