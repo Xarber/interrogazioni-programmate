@@ -550,6 +550,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         <?php echo file_get_contents("dash.js"); ?>
     </script>
     <script>
+        const PWA = window.matchMedia('(display-mode: standalone)').matches;
         const isAdmin = <?php echo ($userData["admin"] ?? false) ? "true" : "false" ?>;
         window.userData = <?php echo json_encode($userData ?? new stdClass); ?>;
         window.users = <?php echo ($userData["admin"] ?? false) ? json_encode($userList) : "{}" ?>;
