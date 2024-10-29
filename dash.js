@@ -1497,7 +1497,7 @@ class AdminDashboard {
         
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
-        if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) this.removeUserAnswer(userUUID, true);
+        if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) await this.removeUserAnswer(userUUID, true);
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID] ??= {};
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = date;
         this.jsonFiles[this.currentFileIndex].data.answerCount++;
