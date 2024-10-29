@@ -1506,6 +1506,16 @@ class AdminDashboard {
         const newAvailability = Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[0]) - 1;
         this.jsonFiles[this.currentFileIndex].data.days[date].availability = `${newAvailability > -1 ? newAvailability.toString() : "0"}/${this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[1]}`;
 
+        this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName] ??= [];
+        let oldUserAnswerIndex = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==date);
+        oldUserAnswerIndex = oldUserAnswerIndex < 0 ? this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].length : oldUserAnswerIndex;
+        this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName][oldUserAnswerIndex] = date;
+
+        var tmpIndex = this.currentFileIndex;
+        this.currentFileIndex = -1;
+        await this.updateJSON(undefined, false, true);
+        this.currentFileIndex = tmpIndex;
+
         await this.updateJSON();
         this.render();
         this.dashboardStayOnAnswers = true;
