@@ -48,7 +48,7 @@ function sendJSON(res, data, status = 200) {
 // Send push notification
 async function sendPushNotification(subscription, data, options) {
     try {
-        console.log(data, options);
+        //console.log(data, options);
         await webpush.sendNotification(subscription, JSON.stringify(data), options);
         return true;
     } catch (error) {
