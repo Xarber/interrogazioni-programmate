@@ -1508,8 +1508,8 @@ class AdminDashboard {
 
         this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName] ??= [];
         let oldUserAnswerIndex = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==date);
-        oldUserAnswerIndex = oldUserAnswerIndex < 0 ? this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].length : oldUserAnswerIndex;
-        this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName][oldUserAnswerIndex] = date;
+        if (oldUserAnswerIndex > -1) this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName][oldUserAnswerIndex] = date;
+        else this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].push(date);
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
