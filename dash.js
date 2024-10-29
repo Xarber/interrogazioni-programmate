@@ -805,8 +805,8 @@ class AdminDashboard {
             });
             answerList.innerHTML += `
                 <div class="admin-day-item admin-switch-to-date">
-                    <span>Switch user to this date</span>
-                    <span class="admin-availability">${this.jsonFiles[this.currentFileIndex].data.days[day].availability}</span>
+                    <span>Sposta la risposta qui</span>
+                    <span class="admin-availability">${this.jsonFiles[this.currentFileIndex].data.days[day].availability} Posti liberi</span>
                     <div class="admin-inline admin-user-actions">
                         <button class="admin-edit-day-btn" data-user="0/swapToDate-${day}" title="Modifica Risposta">
                             ${this.icons.swap}
