@@ -286,7 +286,12 @@ if ($_GET["scope"] === "getAllData") {
         case "unsubscribe":
             $body["path"] = "/api/unsubscribe";
 
-            unset($userList[$userID]["pushSubscriptions"]);
+            if ($body["subscription"] && isset($userList[$userID]["pushSubscriptions"])) {
+                foreach($userList[$userID]["pushSubscriptions"] as $key => $subscription) {
+                    if (json_encode($subscription) === json_encode($body["subscription"])) unset($userList[$userID]["pushSubscriptions"][$key]);
+                }
+            } else unset($userList[$userID]["pushSubscriptions"]);
+
             $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
 
             die(json_encode(array("status" => !!$okay, "message" => null))); //This is not server-managed anymore
