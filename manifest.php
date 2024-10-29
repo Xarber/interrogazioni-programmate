@@ -8,7 +8,7 @@ header("Content-Type: application/json");
 session_start();
 $startUrl = ($_SESSION["lastAccessID"] ?? "/interrogazioni.php");
 if (!str_contains($startUrl, "UID=")) $startUrl = $startUrl."?".$_SERVER["QUERY_STRING"];
-$manifest = json_encode(array(
+$manifestFull = array(
   "name" => "Interrogazioni Programmate",
   "short_name" => "Interrogazioni",
   "start_url" => $startUrl,
@@ -44,6 +44,8 @@ $manifest = json_encode(array(
   "launch_handler" => array(
     "client_mode" => "auto"
   )
-), JSON_PRETTY_PRINT);
-echo $manifest;
-file_put_contents("manifest.json", $manifest);
+);
+$manifest = $manifestFull;
+$manifest["start_url"] = explode("?", $startUrl, 2)[0];
+echo $manifestFull;
+file_put_contents("manifest.json", json_encode($manifest, JSON_PRETTY_PRINT));
