@@ -49,7 +49,7 @@ self.addEventListener('push', function(event) {
         self.registration.showNotification(data.title, options)
     );
 
-    if (postMessage) postMessage(postData);
+    if (typeof postMessage === "function") postMessage(postData);
     else clients.forEach(c => c.postMessage(postData));
 });
 
