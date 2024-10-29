@@ -1411,10 +1411,10 @@ class AdminDashboard {
         this.render();
     }
 
-    async removeUserAnswer(userUUID) {
+    async removeUserAnswer(userUUID, force = false) {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
         if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questa risposta non esiste!`);
-        if (!confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
+        if (!force && !confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
         
         const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
         const answerPriority = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber;
@@ -1485,6 +1485,23 @@ class AdminDashboard {
         this.currentFileIndex = -1;
         await this.updateJSON(undefined, false, true);
         this.currentFileIndex = tmpIndex;
+
+        await this.updateJSON();
+        this.render();
+        this.dashboardStayOnAnswers = true;
+    }
+
+    async moveUserToDate(userUUID, date) {
+        if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
+        if (!confirm(Number(this.jsonFiles[this.currentFileIndex].data.availability.split('/')[0]) > 0 ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
+
+        if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) this.removeUserAnswer(userUUID, true);
+        this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = date;
+        this.jsonFiles[this.currentFileIndex].data.answerCount++;
+        this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = this.jsonFiles[this.currentFileIndex].data.answerCount;
+        
+        const newAvailability = Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[0]) - 1;
+        this.jsonFiles[this.currentFileIndex].data.days[date].availability = `${newAvailability > -1 ? newAvailability.toString() : "0"}/${this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[1]}`;
 
         await this.updateJSON();
         this.render();
