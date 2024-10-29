@@ -1493,7 +1493,7 @@ class AdminDashboard {
 
     async moveUserToDate(userUUID, date) {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
-        if (!confirm(Number(this.jsonFiles[this.currentFileIndex].data.availability.split('/')[0]) > 0 ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
+        if (!confirm(Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) > 0 ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
 
         if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) this.removeUserAnswer(userUUID, true);
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = date;
