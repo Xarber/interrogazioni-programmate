@@ -46,9 +46,9 @@ function sendJSON(res, data, status = 200) {
 }
 
 // Send push notification
-async function sendPushNotification(subscription, data) {
+async function sendPushNotification(subscription, data, options) {
     try {
-        await webpush.sendNotification(subscription, JSON.stringify(data));
+        await webpush.sendNotification(subscription, JSON.stringify(data), options);
         return true;
     } catch (error) {
         console.error('Error sending push notification:', error.body);
@@ -107,6 +107,7 @@ const server = http.createServer(async (req, res) => {
                 actions: bodyData.actions ?? [],
 
                 url: bodyData.url,
+                urgency: bodyData.urgency ?? "normal",
                 subscriptions: bodyData.subscriptions
             };
             const notificationData = {
@@ -127,13 +128,16 @@ const server = http.createServer(async (req, res) => {
                 timestamp: data.timestamp ?? new Date().getTime(),
                 actions: data.actions ?? [],
             };
+            const options = {
+                urgency: data.urgency
+            };
 
             const toSendUsers = Array.from(data.subscriptions ?? subscriptions);
             console.log("Sending " +toSendUsers.length + " notifications!");
             const results = await Promise.all(
                 toSendUsers.map((element) => {
                     const subscription = element.subscription ?? element;
-                    return sendPushNotification(subscription, notificationData);
+                    return sendPushNotification(subscription, notificationData, options);
                 })
             );
 

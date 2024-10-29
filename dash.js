@@ -1231,10 +1231,10 @@ class AdminDashboard {
             let target = e.target.dataset.user ? e.target : e.target.parentNode;
             target = target.dataset.user ? target : target.parentNode;
             if (target.classList.contains('admin-notify-all-btn')) {
-                await this.sendSubjectNotification(this.getMissingAnswers());
+                await this.sendSubjectNotification(this.getMissingAnswers(), undefined, {urgency: "high"});
             } else if (target.classList.contains('admin-notify-user-btn')) {
                 if (target.classList.contains("admin-disabled")) return alert("Questo utente non ha attivato le notifiche!");
-                await this.sendSubjectNotification([target.dataset.user]);
+                await this.sendSubjectNotification([target.dataset.user], undefined, {urgency: "high"});
             } else if (target.classList.contains('admin-edit-day-btn')) {
                 this.dashboard.querySelector('#subjectAnswerList').classList.toggle("admin-swapping-user-answer");
                 if (this.dashboard.querySelector('#subjectAnswerList').classList.contains("admin-swapping-user-answer")) 
@@ -1836,6 +1836,7 @@ class AdminDashboard {
             vibrate: data.vibrate ?? (!data.silent ? [100, 50, 100] : undefined),
             renotify: data.renotify,
             actions: data.actions ?? [],
+            urgency: data.urgency ?? "normal"
         });
 
         if (!result.status) return alert(result.message);
