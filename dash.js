@@ -1498,7 +1498,6 @@ class AdminDashboard {
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
         if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) await this.removeUserAnswer(userUUID, true);
-        console.log(this.jsonFiles[this.currentFileIndex].data.answers);
 
         this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName] ??= [];
         let oldUserAnswerIndex = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==date);
@@ -1517,8 +1516,7 @@ class AdminDashboard {
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = date;
         this.jsonFiles[this.currentFileIndex].data.answerCount++;
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = this.jsonFiles[this.currentFileIndex].data.answerCount;
-        console.log(this.jsonFiles[this.currentFileIndex].data.answers);
-        
+
         const newAvailability = Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[0]) - 1;
         this.jsonFiles[this.currentFileIndex].data.days[date].availability = `${newAvailability > -1 ? newAvailability.toString() : "0"}/${this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[1]}`;
 
