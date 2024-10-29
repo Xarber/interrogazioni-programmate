@@ -916,8 +916,7 @@ class AdminDashboard {
             .admin-current-swapping-element {
                 background-color: rgba(100, 100, 100, 0.5) !important;
             }
-            .admin-switch-to-date {display: none !important;}
-            .admin-swapping-user-answer > .admin-switch-to-date {display: block;}
+            .admin-switch-to-date:not(.admin-swapping-user-answer > .admin-switch-to-date) {display: none !important;}
             .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover, .admin-switch-to-date {
                 background-color: rgba(60, 60, 60, 0.3);
                 border: 2px rgba(255, 255, 255, 0.7) solid;
