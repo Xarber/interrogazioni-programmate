@@ -39,7 +39,6 @@ self.addEventListener('push', function(event) {
     if (!event.data) return;
 
     const data = event.data.json();
-    postMessage(JSON.stringify({type: "push", data: data}));
     let options = data;
     options.requireInteraction ??= false;
     options.silent ??= false;
@@ -48,6 +47,7 @@ self.addEventListener('push', function(event) {
     event.waitUntil(
         self.registration.showNotification(data.title, options)
     );
+    postMessage(JSON.stringify({type: "push", data: data}));
 });
 
 self.addEventListener('notificationclick', function(notificationEvent) {
