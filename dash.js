@@ -802,7 +802,18 @@ class AdminDashboard {
                 answerList.appendChild(answerElement);
                 dayDividedAnswers[day] = dayDividedAnswers[day] || [];
                 dayDividedAnswers[day].push(...dayData);
-            })
+            });
+            answerList.innerHTML += `
+                <div class="admin-day-item admin-switch-to-date">
+                    <span>Switch user to this date</span>
+                    <span class="admin-availability">${dayData.availability}</span>
+                    <div class="admin-inline admin-user-actions">
+                        <button class="admin-edit-day-btn" data-user="0/swapToDate-${day}" title="Modifica Risposta">
+                            ${this.icons.swap}
+                        </button>
+                    </div>
+                </div>
+            `;
         });
         if (objEntries.length === 0 && missingUsers.length < 2) {
             answerList.innerHTML = `
@@ -905,7 +916,9 @@ class AdminDashboard {
             .admin-current-swapping-element {
                 background-color: rgba(100, 100, 100, 0.5) !important;
             }
-            .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover {
+            .admin-switch-to-date {display: none;}
+            .admin-swapping-user-answer > .admin-switch-to-date {display: block;}
+            .admin-day-item:has(.admin-current-swapping-element), .admin-swapping-user-answer > .admin-day-item:hover, .admin-switch-to-date {
                 background-color: rgba(60, 60, 60, 0.3);
                 border: 2px rgba(255, 255, 255, 0.7) solid;
                 border-style: dashed;
@@ -1226,7 +1239,11 @@ class AdminDashboard {
                     const firstUserElement = this.dashboard.querySelector('#subjectAnswerList').querySelector(".admin-current-swapping-element");
                     const user2UUID = firstUserElement.dataset.user;
                     firstUserElement.classList.remove("admin-current-swapping-element");
-                    if (user2UUID != target.dataset.user) await this.swapUserAnswer(target.dataset.user, user2UUID);
+                    if (target.dataset.user.indexOf("0/swapToDate-") === 0) {
+                        await this.moveUserToDate(user2UUID, target.dataset.user.split("swapToDate-")[1]);
+                    } else {
+                        if (user2UUID != target.dataset.user) await this.swapUserAnswer(target.dataset.user, user2UUID);
+                    }
                 }
             }
             if (target.classList.contains('admin-delete-day-btn')) {
