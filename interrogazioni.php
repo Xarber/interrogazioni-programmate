@@ -287,9 +287,11 @@ if ($_GET["scope"] === "getAllData") {
             $body["path"] = "/api/unsubscribe";
 
             if ($body["subscription"] && isset($userList[$userID]["pushSubscriptions"])) {
+                $newPushSubs = array();
                 foreach($userList[$userID]["pushSubscriptions"] as $key => $subscription) {
-                    if (json_encode($subscription) === json_encode($body["subscription"])) unset($userList[$userID]["pushSubscriptions"][$key]);
+                    if (json_encode($subscription) != json_encode($body["subscription"])) array_push($newPushSubs, $subscription);
                 }
+                $userList[$userID]["pushSubscriptions"] = $newPushSubs;
             } else unset($userList[$userID]["pushSubscriptions"]);
 
             $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
