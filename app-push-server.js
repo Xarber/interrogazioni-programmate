@@ -110,7 +110,7 @@ const server = http.createServer(async (req, res) => {
                 urgency: bodyData.urgency ?? "normal",
                 subscriptions: bodyData.subscriptions
             };
-            const notificationData = {
+            let notificationData = {
                 title: data.title ?? 'New Notification',
                 tag: data.tag,
                 body: data.body ?? 'Open the website to read',
@@ -134,6 +134,11 @@ const server = http.createServer(async (req, res) => {
             const options = {
                 urgency: data.urgency
             };
+            if (notificationData.priority === "high") {
+                notificationData.tag ??= "time-sensitive";
+                notificationData.renotify = true;
+                notificationData.silent = false;
+            }
 
             const toSendUsers = Array.from(data.subscriptions ?? subscriptions);
             console.log("Sending " +toSendUsers.length + " notifications!");
