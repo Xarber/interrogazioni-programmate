@@ -923,7 +923,7 @@ class AdminDashboard {
             .admin-swapping-user-answer > .admin-day-item .admin-delete-day-btn {
                 display: none;
             }
-            .admin-add-answer-btn > .admin-add-answer-btn:not(.admin-current-swapping-element) {display: none !important;}
+            .admin-swapping-user-answer > .admin-day-item .admin-add-answer-btn:not(.admin-current-swapping-element) {display: none !important;}
             .admin-current-swapping-element {
                 background-color: rgba(100, 100, 100, 0.5) !important;
             }
