@@ -1245,7 +1245,7 @@ class AdminDashboard {
             } else if (target.classList.contains('admin-notify-user-btn')) {
                 if (target.classList.contains("admin-disabled")) return alert("Questo utente non ha attivato le notifiche!");
                 if (confirm(`Sei sicuro di voler inviare una notifica a ${this.userData[target.dataset.user].name}?`)) await this.sendSubjectNotification([target.dataset.user], undefined, {urgency: "high"});
-            } else if (target.classList.contains("admin-add-answer-btn")) {
+            } else if (target.classList.contains("admin-add-answer-btn") && false) { //! This is disabled because swapping to a day actually has better UI.
                 const day = prompt(`Che giorno vuoi prenotare ${this.userData[target.dataset.user].name}? DD-MM-YYYY`);
                 if (!prompt) return;
                 await this.moveUserToDate(target.dataset.user, day, true);
