@@ -768,7 +768,7 @@ class AdminDashboard {
             answerElement.innerHTML = `
                 <span>${this.userData[userUUID].name}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn admin-add-answer-btn" data-user="${UUID}" title="Aggiungi Risposta">
+                    <button class="admin-edit-day-btn admin-add-answer-btn" data-user="${userUUID}" title="Aggiungi Risposta">
                         ${this.icons.plus}
                     </button>
                     <button class="admin-edit-day-btn admin-notify-user-btn ${!this.userData[userUUID].pushSubscriptions ? 'admin-disabled' : ''}" ${!this.userData[userUUID].pushSubscriptions ? 'disabled' : ''} data-user="${userUUID}" title="Invia Notifica">
