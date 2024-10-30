@@ -1832,7 +1832,7 @@ class AdminDashboard {
                 ),
             lang: data.lang,
             badge: data.badge,
-            icon: data.icon ?? "",
+            icon: data.icon ?? `${location.href.replace(location.pathname, '').replace(location.search, '')}/images/maskable_icon_x512.png`,
             image: data.image,
             url: data.url ?? "",
             requireInteraction: data.requireInteraction ?? true,
