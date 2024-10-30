@@ -754,6 +754,10 @@ class AdminDashboard {
             dayDividedAnswers[answerData.date] ??= [];
             dayDividedAnswers[answerData.date].push({UUID, answerData});
         });
+        const dayList = Object.entries(currentFile.data.days);
+        dayList.forEach(([day, data])=>{
+            dayDividedAnswers[day] ??= [];
+        });
         const missingUsers = this.getMissingAnswers();
         if (missingUsers.length > 0) answerList.innerHTML += `<div class="admin-inline inline">
             <h2 style="flex: 1;">In attesa di risposta</h2>
@@ -806,6 +810,7 @@ class AdminDashboard {
                 dayDividedAnswers[day] = dayDividedAnswers[day] || [];
                 dayDividedAnswers[day].push(...dayData);
             });
+            if (dayData.length === 0) dayDividerElement.classList.add('admin-day-divider-empty-day');
             answerList.innerHTML += `
                 <div class="admin-day-item admin-switch-to-date">
                     <span>Sposta la risposta qui</span>
@@ -909,6 +914,8 @@ class AdminDashboard {
                 position: absolute;
                 top: 0;
             }
+            .admin-day-divider-empty-day {display: none;}
+            .admin-swapping-user-answer > .admin-day-divider-empty-day {display: block !important;}
             .admin-swapping-user-answer > .admin-day-item {
                 transition: none;
                 border: 2px solid transparent;
