@@ -1231,10 +1231,10 @@ class AdminDashboard {
             let target = e.target.dataset.user ? e.target : e.target.parentNode;
             target = target.dataset.user ? target : target.parentNode;
             if (target.classList.contains('admin-notify-all-btn')) {
-                await this.sendSubjectNotification(this.getMissingAnswers(), undefined, {urgency: "high"});
+                if (confirm("Sei sicuro di voler inviare una notifica a TUTTI gli utenti mancanti?")) await this.sendSubjectNotification(this.getMissingAnswers(), undefined, {urgency: "high"});
             } else if (target.classList.contains('admin-notify-user-btn')) {
                 if (target.classList.contains("admin-disabled")) return alert("Questo utente non ha attivato le notifiche!");
-                await this.sendSubjectNotification([target.dataset.user], undefined, {urgency: "high"});
+                if (confirm(`Sei sicuro di voler inviare una notifica a ${this.userData[target.dataset.user].name}?`)) await this.sendSubjectNotification([target.dataset.user], undefined, {urgency: "high"});
             } else if (target.classList.contains('admin-edit-day-btn')) {
                 this.dashboard.querySelector('#subjectAnswerList').classList.toggle("admin-swapping-user-answer");
                 if (this.dashboard.querySelector('#subjectAnswerList').classList.contains("admin-swapping-user-answer")) 
