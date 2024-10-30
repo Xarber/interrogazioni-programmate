@@ -108,6 +108,8 @@ const server = http.createServer(async (req, res) => {
                 actions: bodyData.actions ?? [],
 
                 url: bodyData.url,
+                subject: bodyData.subject,
+                additionalInfo: bodyData.additionalInfo ?? {},
                 urgency: bodyData.urgency ?? "normal",
                 subscriptions: bodyData.subscriptions
             };
@@ -120,7 +122,9 @@ const server = http.createServer(async (req, res) => {
                 image: data.image,
                 badge: data.badge,
                 data: {
-                    url: data.url
+                    url: data.url,
+                    subject: data.subject,
+                    ...data.additionalInfo
                 },
                 requireInteraction: data.requireInteraction ?? false,
                 silent: data.silent ?? false,

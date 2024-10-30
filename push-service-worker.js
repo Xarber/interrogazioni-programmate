@@ -81,7 +81,8 @@ self.addEventListener('notificationclick', function(notificationEvent) {
                         if (data) {
                             self.pathname = data.pathname;
                             self.uid = data.uid;
-                            const toOpenUrl = notificationEvent.notification.data.url || `${self.pathname ?? "/"}?UID=${self.uid ?? ""}`;
+                            let toOpenUrl = notificationEvent.notification.data.url || `${self.pathname ?? "/"}?UID=${self.uid ?? ""}`;
+                            if (!!notificationEvent.notification.data.subject) toOpenUrl += `${toOpenUrl.indexOf('?') != -1 ? '&' : '?'}subject=${notificationEvent.notification.data.subject}`;
                             for (const client of clientList) {
                                 if (client.url === toOpenUrl && "focus" in client) return client.focus();
                             }
