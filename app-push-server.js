@@ -140,7 +140,7 @@ const server = http.createServer(async (req, res) => {
                 urgency: data.urgency
             };
             if (notificationData.priority === "high") {
-                notificationData.tag = "time-sensitive";
+                notificationData.tag = `time-sensitive-${((new Date().getTime()) + Math.random()).toString()}`;
                 notificationData.renotify = true;
                 notificationData.silent = false;
                 notificationData.requireInteraction = true;
