@@ -541,8 +541,8 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             toggleBtn.style.position = "fixed";
             toggleBtn.style.left = "8px";
             toggleBtn.style.top = "8px";
-            toggleBtn.style.width = "50px";
-            toggleBtn.style.height = "50px";
+            toggleBtn.style.width = "30px";
+            toggleBtn.style.height = "30px";
             toggleBtn.style.padding = "0";
             toggleBtn.style.border = "0";
             toggleBtn.style.opacity = "0";
@@ -550,7 +550,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             toggleBtn.style.margin = "0";
             toggleBtn.style.zIndex = "2147483647";
             toggleBtn.innerHTML = "";
-            toggleBtn.onclick = ()=>document.querySelector('#eruda').style.display = "block";
+            toggleBtn.onclick = ()=>document.querySelector('#eruda').style.display = document.querySelector('#eruda').style.display === "none" ? "block" : "none";
             document.body.appendChild(toggleBtn);
         }})();
     </script>
