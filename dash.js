@@ -1824,7 +1824,12 @@ class AdminDashboard {
         const result = await this.notificationClass.requestSend(users, {
             title: data.title ?? "Nuova interrogazione!",
             tag: data.tag,
-            body: data.desc ?? ((this.jsonFiles[customIndex].data.hide || this.jsonFiles[customIndex].data.lock) ? `Questo è un promemoria per rispondere alle interrogazioni di ${this.jsonFiles[customIndex].fileName}. La votazione non è ancora possibile, ma sarà attivata a breve.` : `Controlla il sito, c'è una nuova interrogazione per ${this.jsonFiles[customIndex].fileName} a cui non hai risposto!`),
+            body: data.desc ?? (
+                (this.jsonFiles[customIndex].data.hide ||
+                    this.jsonFiles[customIndex].data.lock) 
+                    ? `Questo è un promemoria per rispondere alle interrogazioni di ${this.jsonFiles[customIndex].fileName}. La votazione non è ancora possibile, ma sarà attivata a breve.` :
+                    `Controlla il sito, c'è una nuova interrogazione per ${this.jsonFiles[customIndex].fileName} a cui non hai risposto!`
+                ),
             lang: data.lang,
             badge: data.badge,
             icon: data.icon ?? "",
@@ -1833,7 +1838,7 @@ class AdminDashboard {
             requireInteraction: data.requireInteraction ?? true,
             timestamp: data.timestamp,
             silent: data.silent ?? false,
-            subject: this.jsonFiles[customIndex].fileName,
+            subject: customIndex > -1 ? this.jsonFiles[customIndex].fileName : undefined,
             vibrate: data.vibrate ?? (!data.silent ? [100, 50, 100] : undefined),
             renotify: data.renotify,
             actions: data.actions ?? [],
