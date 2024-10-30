@@ -768,6 +768,9 @@ class AdminDashboard {
             answerElement.innerHTML = `
                 <span>${this.userData[userUUID].name}</span>
                 <div class="admin-inline admin-user-actions">
+                    <button class="admin-edit-day-btn admin-add-answer-btn" data-user="${UUID}" title="Aggiungi Risposta">
+                        ${this.icons.plus}
+                    </button>
                     <button class="admin-edit-day-btn admin-notify-user-btn ${!this.userData[userUUID].pushSubscriptions ? 'admin-disabled' : ''}" ${!this.userData[userUUID].pushSubscriptions ? 'disabled' : ''} data-user="${userUUID}" title="Invia Notifica">
                         ${!this.userData[userUUID].pushSubscriptions ? 
                             this.icons.warn
@@ -1235,6 +1238,10 @@ class AdminDashboard {
             } else if (target.classList.contains('admin-notify-user-btn')) {
                 if (target.classList.contains("admin-disabled")) return alert("Questo utente non ha attivato le notifiche!");
                 if (confirm(`Sei sicuro di voler inviare una notifica a ${this.userData[target.dataset.user].name}?`)) await this.sendSubjectNotification([target.dataset.user], undefined, {urgency: "high"});
+            } else if (target.classList.contains("admin-add-answer-btn")) {
+                const day = prompt(`Che giorno vuoi prenotare ${this.userData[target.dataset.user].name}? DD-MM-YYYY`);
+                if (!prompt) return;
+                await this.moveUserToDate(target.dataset.user, day, true);
             } else if (target.classList.contains('admin-edit-day-btn')) {
                 this.dashboard.querySelector('#subjectAnswerList').classList.toggle("admin-swapping-user-answer");
                 if (this.dashboard.querySelector('#subjectAnswerList').classList.contains("admin-swapping-user-answer")) 
@@ -1512,9 +1519,9 @@ class AdminDashboard {
         this.dashboardStayOnAnswers = true;
     }
 
-    async moveUserToDate(userUUID, date) {
+    async moveUserToDate(userUUID, date, force) {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
-        if (!confirm(Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) > 0 ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
+        if (!force && !confirm(Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) > 0 ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
         
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
