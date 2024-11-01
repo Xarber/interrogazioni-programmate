@@ -71,6 +71,7 @@
     </div>
     <div class="mainDiv hided" id="dayunavailable">
         <h1>Non puoi prenotarti per questo giorno!</h1>
+        <button onclick="window.renderPage();">Cambia giorno</button>
     </div>
     <div class="mainDiv hided" id="alreadyscheduled">
         <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
