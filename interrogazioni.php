@@ -353,12 +353,12 @@ foreach ($subjectJSONs as $subjectNameTMP) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.php?<?php echo $_SERVER['QUERY_STRING'];?>">
+    <link rel="manifest" href="/assets/manifest.php?<?php echo $_SERVER['QUERY_STRING'];?>">
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
     <title>Prenota Interrogazioni</title>
     <style>
-        <?php echo file_get_contents("app.css") ?>
+        <?php echo file_get_contents("./assets/app.css") ?>
     </style>
 </head>
 <body>
@@ -555,7 +555,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
         }})();
     </script>
     <script>
-        <?php echo file_get_contents("dash.js"); ?>
+        <?php echo file_get_contents("./assets/dash.js"); ?>
     </script>
     <script>
         const PWA = window.matchMedia('(display-mode: standalone)').matches;

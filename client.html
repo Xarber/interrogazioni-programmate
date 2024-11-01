@@ -6,7 +6,7 @@
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
     <title>Prenota Interrogazioni</title>
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
     <div class="mainDiv hided" id="welcome">
@@ -124,7 +124,7 @@
             document.body.appendChild(toggleBtn);
         }})();
     </script>
-    <script src="dash.js"></script>
+    <script src="/assets/dash.js"></script>
     <script>
         const PWA = window.matchMedia('(display-mode: standalone)').matches;
         window.UID = new URLSearchParams(location.search).get('UID');
@@ -133,7 +133,7 @@
 
         var link = document.createElement('link');
         link.rel = 'manifest';
-        link.href = `manifest.php?UID=${window.UID}`;
+        link.href = `/assets/manifest.php?UID=${window.UID}`;
         document.head.appendChild(link);
 
         function CHANGESEC(section) {
