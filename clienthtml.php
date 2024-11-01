@@ -184,11 +184,13 @@
                 localStorage["lastPathName"] = location.pathname;
 
                 document.querySelector('#changeProfileButton').classList.add("hided");
+                document.querySelector('#changeProfileButton').parentNode.classList.remove("inline");
                 document.querySelector('select.id-select-profilelist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-subjectlist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-daylist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 for (var profile in window.pageData.profileList) {
                     document.querySelector('#changeProfileButton').classList.remove("hided");
+                    document.querySelector('#changeProfileButton').parentNode.classList.add("inline");
                     document.querySelector('select.id-select-profilelist').innerHTML += `<option value="${window.pageData.profileList[profile].name}">${profile.admin ? `<b>Admin</b> ` : ``}${window.pageData.profileList[profile].name}</option>`;
                 }
                 for (var subject of window.pageData.subjectList) {
