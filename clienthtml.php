@@ -191,7 +191,7 @@
 
                 document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.innerHTML = window.userData.name);
                 document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
-                document.querySelector('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = window.userData.subjectData.day);
+                document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = window.userData.subjectData.day);
             }
 
             CHANGESEC(window.pageData.section);
