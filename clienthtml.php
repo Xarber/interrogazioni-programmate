@@ -59,7 +59,7 @@
         </div>
     </div>
     <div class="mainDiv hided" id="schedule-subject">
-        <h1 id="javascript-change-user-name">Ciao, <span class="dummy" id="javascript-change-user-name">$USERNAME!</span></h1>
+        <h1>Ciao, <span class="dummy" id="javascript-change-user-name">$USERNAME!</span></h1>
         <p>Per quale materia vuoi prenotarti?</p>
         <select name="subject" id="subject" class="id-select-subjectlist" required>
             <option selected disabled>Scegli una materia</option>
