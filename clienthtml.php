@@ -51,7 +51,7 @@
         <h1>Scegli un profilo!</h1>
         <p>Scegli un profilo in cui sei registrato per continuare!</p>
         <select name="profile" id="profile" class="id-select-profilelist" required>
-            <option selected disabled>Scegli un profilo</option>
+            <option value="" selected disabled>Scegli un profilo</option>
         </select>
         <div class="inline">
             <button type="button" onclick="location.href = '?'">Cambia Utente</button>
