@@ -4,6 +4,7 @@ session_start();
 $_SESSION["profile"] ??= "";
 $_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
 $body = strlen(file_get_contents("php://input")) > 1 ? json_decode(file_get_contents("php://input"), true) : array();
+var_dump($body);
 $_GET = array_merge($_GET, $_POST, $body);
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
@@ -116,7 +117,7 @@ if ($_GET["scope"] === "loadPageData") {
         !$userData ? (
             count($result["profileList"]) > 0 ? "changeprofile" : "login-account-not-found"
         ) : (
-            $_GET["changeprofile"] ? "changeprofile" : (
+            (isset($_GET["changeProfile"])) ? "changeprofile" : (
                 ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) ? "schedule-subject" : (
                     (isset($subjectData["answers"][$userID])) ? "alreadyscheduled" : (
                         ((isset($_GET["day"])) && (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0)) ? "dayunavailable" : (
