@@ -24,7 +24,7 @@
             };
             fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json()).then(r=>{
                 if (!r.status) return alert('Impossibile completare l\'azione!');
-                location.href = '?UID='+this.parentNode.querySelector('input[name=\'uid\']').value;
+                window.renderPage(this.parentNode.querySelector('input[name=\'uid\']').value);
             })
         ">Accedi</button>
         <script>
@@ -39,13 +39,13 @@
         <h1>Ciao! Accedi per continuare.</h1>
         <p>Inserisci un ID oppure usa un link diretto se ne hai uno a disposizione.</p>
         <input type="text" name="UID" id="UID">
-        <button onclick="location.href = '?UID='+document.getElementById('UID').value">Accedi</button>
+        <button onclick="window.renderPage(document.getElementById('UID').value);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="login-account-not-found">
         <h1>Il tuo account non esiste!</h1>
         <p>Inserisci un nuovo ID oppure usa un link diretto se ne hai uno a disposizione.</p>
         <input type="text" name="UID" id="UID">
-        <button onclick="location.href = '?UID='+document.getElementById('UID').value">Accedi</button>
+        <button onclick="window.renderPage(document.getElementById('UID').value);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="changeprofile">
         <h1>Scegli un profilo!</h1>
@@ -54,7 +54,7 @@
             <option value="default" selected>Scegli un profilo (Profilo Default)</option>
         </select>
         <div class="inline">
-            <button type="button" onclick="location.href = '?'">Cambia Utente</button>
+            <button type="button" onclick="window.renderPage('');">Cambia Utente</button>
             <button type="submit" onclick="window.renderPage(undefined, undefined, document.getElementById('profile').value)">Accedi</button>
         </div>
     </div>
@@ -66,7 +66,7 @@
         </select>
         <div class="inline">
             <button type="button" id="changeProfileButton" onclick="CHANGESEC('changeprofile');">Cambia Profilo</button>
-            <button type="submit" onclick="location.href = `?UID=${window.UID}&subject=${document.getElementById('subject').value}`">Conferma</button>
+            <button type="submit" onclick="window.renderPage(undefined, document.getElementById('subject').value);">Conferma</button>
         </div>
     </div>
     <div class="mainDiv hided" id="dayunavailable">
@@ -75,12 +75,12 @@
     <div class="mainDiv hided" id="alreadyscheduled">
         <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
         <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span></p>
-        <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
+        <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="scheduleconfirmed">
         <h1>Ti sei prenotato!</h1>
         <p>Ti sei prenotato a <span class="dummy" id="javascript-change-schedule-data">$SUBJECTNAME</span> per il <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span>!</p>
-        <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
+        <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedulefailed">
         <h1>Whoops! :( </h1>
@@ -89,7 +89,7 @@
     </div>
     <div class="mainDiv hided" id="nodays">
         <h1>Questa materia è bloccata o non ha interrogazioni!</h1>
-        <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
+        <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedule-day">
         <h1>Che giorno vuoi farti interrogare?</h1>
@@ -98,7 +98,7 @@
             <option value="" selected disabled>Scegli un giorno</option>
         </select>
         <div class="inline">
-            <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
+            <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
             <button onclick="scheduleDay(document.getElementById('day').value)">Conferma</button>
         </div>
     </div>
