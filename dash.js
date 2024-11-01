@@ -3,8 +3,9 @@ class PushNotifications {
      * Initializes a PushNotifications object.
      * @param {string} identifier - Unique identifier, e.g. a username.
      */
-    constructor(identifier) {
+    constructor(identifier, fetchPrefix) {
         this.id = identifier;
+        this.fetchPrefix = fetchPrefix ?? "";
     }
 
     urlBase64ToUint8Array(base64String) {
@@ -49,7 +50,7 @@ class PushNotifications {
             // Get push subscription
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: this.urlBase64ToUint8Array((await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+                applicationServerKey: this.urlBase64ToUint8Array((await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ class PushNotifications {
             });
             
             // Send subscription to your server
-            const response = await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+            const response = await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ class PushNotifications {
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         if (!subscription) return {status: true, message: null};
 
-        const response = (!!sendRequestToServer) ? await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+        const response = (!!sendRequestToServer) ? await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -103,7 +104,7 @@ class PushNotifications {
     }
 
     async requestSend(users, data) {
-        const response = await fetch(`?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+        const response = await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -352,6 +353,10 @@ class AdminDashboard {
      * @param {Object} [options.users] - An object containing user data.
      * @param {function} [options.analysisFunction] - A callback to call when the user wants to analyze the data. The callback takes one argument: an object with properties subject, users, data, log, clipboard and copy.
      * @param {function} [options.refreshUsers] - A callback to refresh users when syncing settings.
+     * @param {function} [options.refreshProfiles] - A callback to refresh profiles when syncing settings.
+     * @param {function} [options.notificationClass] - A class to add to the notifications.
+     * @param {bool} [options.isCustomProfile] - A callback to check if a profile is a custom profile.
+     * @param {string} [options.fetchPrefix] - The page to make fetch requests to
     */
     constructor(containerDiv = null, options) {
         var jsonFiles = options.subjects;
@@ -363,6 +368,7 @@ class AdminDashboard {
         var refreshProfiles = options.refreshProfiles;
         var isCustomProfile = options.isCustomProfile;
         var notificationClass = options.notificationClass;
+        var fetchPrefix = options.fetchPrefix ?? "";
         this.jsonFiles = jsonFiles;
         this.userData = userData ?? {};
         this.profiles = profiles ?? [];
@@ -375,6 +381,7 @@ class AdminDashboard {
         this.refreshProfiles = refreshProfiles;
         this.isCustomProfile = isCustomProfile;
         this.notificationClass = notificationClass;
+        this.fetchPrefix = fetchPrefix;
         this.dashboard = null;
         this.render();
     }
@@ -1359,7 +1366,7 @@ class AdminDashboard {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            const r = await fetch('?scope=profileMGMT&UID='+(new URLSearchParams(location.search).get("UID")), {
+            const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${new URLSearchParams(location.search).get("UID")}`, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "newprofile",
@@ -1377,7 +1384,7 @@ class AdminDashboard {
     async deleteProfile(profile, force = false) {
         if (profile === "default" || profile === "" || !this.profiles.includes(profile)) return alert("Non puoi cancellare questo profilo!");
         if (!force && !confirm(`Sicuro di voler eliminare il profilo ${profile}?`)) return;
-        const r = await fetch('?scope=profileMGMT&UID='+new URLSearchParams(location.search).get("UID"), {
+        const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${new URLSearchParams(location.search).get("UID")}`, {
             method: "POST",
             body: JSON.stringify({
                 action: "deleteprofile",
@@ -1716,7 +1723,7 @@ class AdminDashboard {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            const r = await fetch('?scope=profileMGMT&UID='+(new URLSearchParams(location.search).get("UID")), {
+            const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${new URLSearchParams(location.search).get("UID")}`, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "renameprofile",
@@ -1806,7 +1813,7 @@ class AdminDashboard {
         fileInput.accept = ".zip";
         form.appendChild(fileInput);
 
-        form.action = "?scope=uploadProfile&UID="+(new URLSearchParams(location.search).get("UID"));
+        form.action = `${this.fetchPrefix}?scope=uploadProfile&UID=${new URLSearchParams(location.search).get("UID")}`;
         form.method = "post";
         form.setAttribute("onsubmit", "return false")
         form.enctype = "multipart/form-data";
@@ -1912,6 +1919,7 @@ class AdminDashboard {
         var refreshUsers = options.refreshUsers;
         var refreshProfiles = options.refreshProfiles;
         var notificationClass = options.notificationClass;
+        var fetchPrefix = options.fetchPrefix;
         this.jsonFiles = jsonFiles || this.jsonFiles;
         this.userData = userData || this.userData;
         this.profiles = profiles || this.profiles;
@@ -1920,6 +1928,7 @@ class AdminDashboard {
         this.refreshUsers = refreshUsers || this.refreshUsers;
         this.refreshProfiles = refreshProfiles || this.refreshProfiles;
         this.notificationClass = notificationClass || this.notificationClass;
+        this.fetchPrefix = fetchPrefix || this.fetchPrefix;
         if (this.currentFileIndex > this.jsonFiles.length - 1) this.currentFileIndex = -1;
         // this.dashboard.remove();
         // this.dashboard = null;

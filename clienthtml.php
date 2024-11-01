@@ -152,7 +152,7 @@
                 window.users = window.pageData.users;
                 window.profiles = window.pageData.profiles;
                 window.isCustomProfile = window.pageData.profiled;
-                window.notifications = new PushNotifications(window.UID);
+                window.notifications = new PushNotifications(window.UID, "manager.php");
                 if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
                 localStorage["lastPathName"] = location.pathname;
 
@@ -275,6 +275,7 @@
                     window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard(null, {admin: isAdmin, onOpenAdminDash: ()=>{
                         fetch(`manager.php?UID=${window.UID}&scope=getAllData`).then(r=>r.json()).then(r=>{
                             window.adminDash = new AdminDashboard(null, {
+                                fetchPrefix: "manager.php",
                                 subjects: r,
                                 updateCallback: (type, fullData, fileData, forceBlockRefresh = false)=>{
                                     console.log(fullData, fileData);
