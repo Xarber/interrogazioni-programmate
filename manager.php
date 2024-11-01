@@ -7,6 +7,9 @@ $body = strlen(file_get_contents("php://input")) > 1 ? json_decode(file_get_cont
 $_ORIGINALGET = $_GET;
 $_GET = array_merge($_GET, $_POST, $body);
 $_GET["profile"] = $_ORIGINALGET["profile"] ?? false;
+var_dump($PROFILE);
+var_dump($_GET["profile"]);
+var_dump($_SESSION["profile"]);
 $_GET["subject"] = $_ORIGINALGET["subject"] ?? false;
 $_GET["scope"] ??= false;
 $_GET["saveProfile"] ??= "true";
@@ -18,9 +21,6 @@ if ($_GET["saveProfile"] === "false" && !true) { //This is a very beta feature a
     $_SESSION["profile"] = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $_SESSION["profile"]);
     $PROFILE = $_SESSION["profile"] === "" ? "" : ("-".$_SESSION["profile"]);
 }
-var_dump($PROFILE);
-var_dump($_GET["profile"]);
-var_dump($_SESSION["profile"]);
 if (!file_exists("./JSON{$PROFILE}") || !is_dir("./JSON{$PROFILE}")) {
     if ($PROFILE != "") {
         header('Content-Type: application/json');
