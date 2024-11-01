@@ -109,7 +109,6 @@ if ($_GET["scope"] === "loadPageData") {
         array_push($result["subjectList"], str_replace(".json", "", $subject));
     }
 
-    /*
     $result["section"] = 
     (count($userList) === 0 ? "welcome" : (
         !$userData ? (
@@ -126,7 +125,6 @@ if ($_GET["scope"] === "loadPageData") {
             )
         )
     ));
-    */
 
     die(json_encode($result, JSON_PRETTY_PRINT));
 } else if ($_GET["scope"] === "getAllData") {
