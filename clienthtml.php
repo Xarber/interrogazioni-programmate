@@ -148,7 +148,7 @@
                 }
                 */
                 window.userData = window.pageData.user;
-                const isAdmin = window.userData.admin;
+                window.isAdmin = window.userData.admin;
                 window.users = window.pageData.users;
                 window.profiles = window.pageData.profiles;
                 window.isCustomProfile = window.pageData.profiled;
