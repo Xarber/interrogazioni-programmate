@@ -146,6 +146,7 @@
             window.UID = UID;
             window.SUBJECT = subject;
             window.PROFILE = profile;
+            window.isAdmin = false;
 
             window.pageData = {section: "login"};
             if (window.UID) {
@@ -200,165 +201,165 @@
                 document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.innerHTML = window.userData.name);
                 document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
                 document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = window.userData.subjectData.day);
+            
+                window.notifications.status().then(async r=>{
+                    if (r != true) return;
+                    const sw = await navigator.serviceWorker.getRegistration();
+                    if (!window.userData.pushSubscriptions || !sw) return window.notifications.unsubscribe();
+                    const sub = await sw.pushManager.getSubscription();
+                    const userSubscriptions = new Set();
+                    for (var rsub of window.userData.pushSubscriptions) userSubscriptions.add(JSON.stringify(rsub));
+                    if (!userSubscriptions.has(JSON.stringify(sub))) return window.notifications.unsubscribe(false);
+                    window.notifications.update();
+                    navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
+                })
+
+                window.scheduleDay = async function(day) {
+                    const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
+                    if (res.status === true) {
+                        document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
+                        document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
+                        return CHANGESEC("scheduleconfirmed");
+                    }
+                    if (res.message === "Invalid Day!") return CHANGESEC("dayunavailable");
+                    return CHANGESEC("schedulefailed");
+                }
+
+                function analizzaDati(options = {
+                    clipboard: false,
+                    copy: "json",
+                    log: true,
+                    data: undefined,
+                    subject: undefined,
+                    users: undefined,
+                }) {
+                    const copyToClipboard = options.clipboard ?? false;
+                    const valueToCopy = options.copy ?? "json";
+                    const logger = options.log ? console : {group: ()=>{}, groupEnd: ()=>{}, error: ()=>{}, log: ()=>{}};
+
+                    const utenti = options.users ?? window.users;
+                    const datiMateria = options.data ?? window.pageData.currentSubject;
+                    if (!datiMateria) return false;
+                    const materia = options.subject ?? window.SUBJECT;
+                    const messageArr = [];
+                    var listaPrenotazioni = {};
+
+                    for (var data in datiMateria.days ?? []) {
+                        listaPrenotazioni[data] ??= {
+                            header: `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName} ${data}`,
+                            answers: []
+                        }
+                    }
+
+                    for (var utente in datiMateria.answers) {
+                        let date = datiMateria.answers[utente].date;
+                        listaPrenotazioni[datiMateria.answers[utente].date] ??= {
+                            header: `[??] ${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
+                            answers: []
+                        };
+                        listaPrenotazioni[datiMateria.answers[utente].date].answers.push(`[${datiMateria.answers[utente].answerNumber}] ${utenti[utente].name}`)
+                    }
+
+                    var listaPrenotazioniText = `[${materia}] Prenotati (Numero Risposta, Nome): ---\n`;
+                    for (var data in listaPrenotazioni) {
+                        listaPrenotazioniText+="\n"+data+"\n"+listaPrenotazioni[data].answers.join("\n")+"\n";
+                    }
+                    
+                    logger.group("Lista Prenotazioni per "+materia);
+                    listaPrenotazioniText.length > 0 && logger.log(listaPrenotazioniText);
+                    logger.groupEnd();
+
+                    const returnOBJ = {
+                        prenotazioni: listaPrenotazioniText,
+                        linkUtente: messageArr
+                    };
+
+                    if (copyToClipboard) {
+                        var toCopy = "";
+                        if (!valueToCopy) valueToCopy = "json";
+                        if (valueToCopy != "json" && returnOBJ[valueToCopy]) toCopy = returnOBJ[valueToCopy];
+                        else toCopy = JSON.stringify(returnOBJ);
+                        navigator.clipboard.writeText(toCopy);
+                    }
+
+                    return returnOBJ;
+                }
+
+                let btnDiv = document.createElement("div");
+                    btnDiv.style.display = "flex";
+                    btnDiv.style.position = "fixed";
+                    btnDiv.style.bottom = "10px";
+                    btnDiv.style.right = "10px";
+                    btnDiv.style.gap = "2.5px";
+
+                if (isAdmin) {
+                    if (analizzaDati() != false) {
+                        let btn = document.createElement("button");
+                            btn.innerHTML = "Copia le prenotazioni";
+                            btn.onclick = ()=>{
+                                btn.innerHTML = "Prenotazioni copiate!";
+                                setTimeout(()=>btn.innerHTML = "Copia le prenotazioni", 3000);
+                                analizzaDati({
+                                    clipboard: true, 
+                                    copy: "prenotazioni", 
+                                    log: false
+                                });
+                            };
+                        btnDiv.appendChild(btn);
+                    }
+                }
+                
+                let btn = document.createElement("button");
+                    btn.innerHTML = "Dati utente";
+                    btn.onclick = ()=>{
+                        window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard(null, {admin: isAdmin, onOpenAdminDash: ()=>{
+                            fetch(`manager.php?UID=${window.UID}&scope=getAllData`).then(r=>r.json()).then(r=>{
+                                window.adminDash = new AdminDashboard(null, {
+                                    fetchPrefix: "manager.php",
+                                    subjects: r,
+                                    updateCallback: (type, fullData, fileData, forceBlockRefresh = false)=>{
+                                        console.log(fullData, fileData);
+                                        fetch(`manager.php?UID=${window.UID}&scope=updateSettings&type=${type}`, {
+                                            method: "POST",
+                                            body: JSON.stringify([fileData])
+                                        }).then(r=>r.json()).then(r=>{
+                                            console.log(r);
+                                            if (r.status != true) alert("Impossibile completare l'azione!");
+                                            else {
+                                                // alert("Dati aggiornati con successo!");
+                                                !forceBlockRefresh && window.adminDash && window.adminDash.update({
+                                                    subjects: r.newData.subjects,
+                                                    users: r.newData.users,
+                                                    profiles: !!r.newData.profiles ? r.newData.profiles : undefined
+                                                });
+                                            }
+                                        });
+                                    },
+                                    users: window.users,
+                                    profiles: window.profiles,
+                                    analysisFunction: analizzaDati,
+                                    notificationClass: window.notifications,
+                                    refreshUsers: async ()=>{
+                                        const res = await fetch(`manager.php?UID=${window.UID}&scope=getAllUsers`).then(r=>r.json());
+                                        return (res.status === false) ? {} : res;
+                                    },
+                                    refreshProfiles: async()=>{
+                                        const res = await fetch(`manager.php?UID=${window.UID}&scope=profileMGMT`, {
+                                            method: "POST",
+                                            body: JSON.stringify({action: "listprofiles"})
+                                        }).then(r=>r.json());
+                                        return (res.status === false || !res.profiles) ? [] : res.profiles;
+                                    },
+                                    isCustomProfile: window.isCustomProfile
+                                });
+                            });
+                        }, ...window.userData}, window.notifications) : window.dash;
+                    }
+                    if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
+                document.documentElement.appendChild(btnDiv);
             }
 
             CHANGESEC(window.pageData.section);
-
-            window.notifications.status().then(async r=>{
-                if (r != true) return;
-                const sw = await navigator.serviceWorker.getRegistration();
-                if (!window.userData.pushSubscriptions || !sw) return window.notifications.unsubscribe();
-                const sub = await sw.pushManager.getSubscription();
-                const userSubscriptions = new Set();
-                for (var rsub of window.userData.pushSubscriptions) userSubscriptions.add(JSON.stringify(rsub));
-                if (!userSubscriptions.has(JSON.stringify(sub))) return window.notifications.unsubscribe(false);
-                window.notifications.update();
-                navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
-            })
-
-            window.scheduleDay = async function(day) {
-                const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
-                if (res.status === true) {
-                    document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
-                    document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
-                    return CHANGESEC("scheduleconfirmed");
-                }
-                if (res.message === "Invalid Day!") return CHANGESEC("dayunavailable");
-                return CHANGESEC("schedulefailed");
-            }
-
-            function analizzaDati(options = {
-                clipboard: false,
-                copy: "json",
-                log: true,
-                data: undefined,
-                subject: undefined,
-                users: undefined,
-            }) {
-                const copyToClipboard = options.clipboard ?? false;
-                const valueToCopy = options.copy ?? "json";
-                const logger = options.log ? console : {group: ()=>{}, groupEnd: ()=>{}, error: ()=>{}, log: ()=>{}};
-
-                const utenti = options.users ?? window.users;
-                const datiMateria = options.data ?? window.pageData.currentSubject;
-                if (!datiMateria) return false;
-                const materia = options.subject ?? window.SUBJECT;
-                const messageArr = [];
-                var listaPrenotazioni = {};
-
-                for (var data in datiMateria.days ?? []) {
-                    listaPrenotazioni[data] ??= {
-                        header: `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName} ${data}`,
-                        answers: []
-                    }
-                }
-
-                for (var utente in datiMateria.answers) {
-                    let date = datiMateria.answers[utente].date;
-                    listaPrenotazioni[datiMateria.answers[utente].date] ??= {
-                        header: `[??] ${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
-                        answers: []
-                    };
-                    listaPrenotazioni[datiMateria.answers[utente].date].answers.push(`[${datiMateria.answers[utente].answerNumber}] ${utenti[utente].name}`)
-                }
-
-                var listaPrenotazioniText = `[${materia}] Prenotati (Numero Risposta, Nome): ---\n`;
-                for (var data in listaPrenotazioni) {
-                    listaPrenotazioniText+="\n"+data+"\n"+listaPrenotazioni[data].answers.join("\n")+"\n";
-                }
-                
-                logger.group("Lista Prenotazioni per "+materia);
-                listaPrenotazioniText.length > 0 && logger.log(listaPrenotazioniText);
-                logger.groupEnd();
-
-                const returnOBJ = {
-                    prenotazioni: listaPrenotazioniText,
-                    linkUtente: messageArr
-                };
-
-                if (copyToClipboard) {
-                    var toCopy = "";
-                    if (!valueToCopy) valueToCopy = "json";
-                    if (valueToCopy != "json" && returnOBJ[valueToCopy]) toCopy = returnOBJ[valueToCopy];
-                    else toCopy = JSON.stringify(returnOBJ);
-                    navigator.clipboard.writeText(toCopy);
-                }
-
-                return returnOBJ;
-            }
-
-            let btnDiv = document.createElement("div");
-                btnDiv.style.display = "flex";
-                btnDiv.style.position = "fixed";
-                btnDiv.style.bottom = "10px";
-                btnDiv.style.right = "10px";
-                btnDiv.style.gap = "2.5px";
-
-            if (isAdmin) {
-                if (analizzaDati() != false) {
-                    let btn = document.createElement("button");
-                        btn.innerHTML = "Copia le prenotazioni";
-                        btn.onclick = ()=>{
-                            btn.innerHTML = "Prenotazioni copiate!";
-                            setTimeout(()=>btn.innerHTML = "Copia le prenotazioni", 3000);
-                            analizzaDati({
-                                clipboard: true, 
-                                copy: "prenotazioni", 
-                                log: false
-                            });
-                        };
-                    btnDiv.appendChild(btn);
-                }
-            }
-            
-            let btn = document.createElement("button");
-                btn.innerHTML = "Dati utente";
-                btn.onclick = ()=>{
-                    window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard(null, {admin: isAdmin, onOpenAdminDash: ()=>{
-                        fetch(`manager.php?UID=${window.UID}&scope=getAllData`).then(r=>r.json()).then(r=>{
-                            window.adminDash = new AdminDashboard(null, {
-                                fetchPrefix: "manager.php",
-                                subjects: r,
-                                updateCallback: (type, fullData, fileData, forceBlockRefresh = false)=>{
-                                    console.log(fullData, fileData);
-                                    fetch(`manager.php?UID=${window.UID}&scope=updateSettings&type=${type}`, {
-                                        method: "POST",
-                                        body: JSON.stringify([fileData])
-                                    }).then(r=>r.json()).then(r=>{
-                                        console.log(r);
-                                        if (r.status != true) alert("Impossibile completare l'azione!");
-                                        else {
-                                            // alert("Dati aggiornati con successo!");
-                                            !forceBlockRefresh && window.adminDash && window.adminDash.update({
-                                                subjects: r.newData.subjects,
-                                                users: r.newData.users,
-                                                profiles: !!r.newData.profiles ? r.newData.profiles : undefined
-                                            });
-                                        }
-                                    });
-                                },
-                                users: window.users,
-                                profiles: window.profiles,
-                                analysisFunction: analizzaDati,
-                                notificationClass: window.notifications,
-                                refreshUsers: async ()=>{
-                                    const res = await fetch(`manager.php?UID=${window.UID}&scope=getAllUsers`).then(r=>r.json());
-                                    return (res.status === false) ? {} : res;
-                                },
-                                refreshProfiles: async()=>{
-                                    const res = await fetch(`manager.php?UID=${window.UID}&scope=profileMGMT`, {
-                                        method: "POST",
-                                        body: JSON.stringify({action: "listprofiles"})
-                                    }).then(r=>r.json());
-                                    return (res.status === false || !res.profiles) ? [] : res.profiles;
-                                },
-                                isCustomProfile: window.isCustomProfile
-                            });
-                        });
-                    }, ...window.userData}, window.notifications) : window.dash;
-                }
-                if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
-            document.documentElement.appendChild(btnDiv);
         });
         window.renderPage();
 
