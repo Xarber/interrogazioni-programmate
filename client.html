@@ -41,7 +41,7 @@
         <input type="text" name="UID" id="UID">
         <button onclick="
             document.getElementById('UID').value = document.getElementById('UID').value.indexOf('UID=') != -1 ?
-            (new URLSearchParams(`?${location.href.split('?', 2)[1]}`)).get('UID') : document.getElementById('UID').value;
+            (new URLSearchParams(`?${document.getElementById('UID').value.split('?', 2)[1]}`)).get('UID') : document.getElementById('UID').value;
             window.renderPage(document.getElementById('UID').value);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="login-account-not-found">
