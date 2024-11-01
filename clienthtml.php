@@ -106,7 +106,24 @@ if ($_GET["scope"] === "loadPageData") {
     foreach ($subjectJSONs as $subject) {
         array_push($result["subjectList"], str_replace(".json", "", $subject));
     }
-    
+
+    $result["section"] = 
+    (count($userList) === 0 ? "welcome" : (
+        !$userData ? (
+            count($result["profileList"]) > 0 ? "changeprofile" : "login"
+        ) : (
+            $_GET["changeprofile"] ? "changeprofile" : (
+                ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) ? "schedule-subject" : (
+                    (isset($subjectData["answers"][$userID])) ? "alreadyscheduled" : (
+                        ((isset($_GET["day"])) && (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0)) ? "dayunavailable" : (
+                            (count($subjectData["days"] ?? array()) === 0 || $subjectData["lock"] === true) ? "nodays" : "schedule-day"
+                        )
+                    )
+                )
+            )
+        )
+    ));
+
     die(json_encode($result, JSON_PRETTY_PRINT));
 } else if ($_GET["scope"] === "getAllData") {
     if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
