@@ -195,12 +195,16 @@
                     document.querySelector('#changeProfileButton').parentNode.classList.add("inline");
                     document.querySelector('select.id-select-profilelist').innerHTML += `<option value="${window.pageData.profileList[profile].name}">${profile.admin ? `<b>Admin</b> ` : ``}${window.pageData.profileList[profile].name}</option>`;
                 }
+                var subjcount = 0;
                 for (var subject of window.pageData.subjectList) {
+                    subjcount++;
+                    if (subjcount > 1) {
+                        document.querySelector('#changeSubjectButton:not(.notInlineBtn)').classList.remove("hided");
+                        document.querySelector('#changeSubjectButton:not(.notInlineBtn)').parentNode.classList.add("inline");
+                    }
                     document.querySelector('select.id-select-subjectlist').innerHTML += `<option value="${subject}">${subject}</option>`;
                 }
                 for (var day in window.pageData.subject.days) {
-                    document.querySelector('#changeSubjectButton:not(.notInlineBtn)').classList.remove("hided");
-                    document.querySelector('#changeSubjectButton:not(.notInlineBtn)').parentNode.classList.add("inline");
                     document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName} ${day}</option>`;
                 }
 
