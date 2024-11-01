@@ -127,7 +127,7 @@
     <script src="/assets/dash.js"></script>
     <script>
         const PWA = window.matchMedia('(display-mode: standalone)').matches;
-        window.UID = new URLSearchParams(location.search).get('UID') ?? localStorage["lastUID"];
+        window.UID = new URLSearchParams(location.search).get('UID') ?? localStorage["cachedUID"];
         window.SUBJECT = new URLSearchParams(location.search).get('subject');
         window.PROFILE = new URLSearchParams(location.search).get('profile') ?? false;
 
@@ -147,7 +147,7 @@
             window.SUBJECT = subject;
             window.PROFILE = profile;
             window.isAdmin = false;
-            localStorage["lastUID"] = window.UID;
+            localStorage["cachedUID"] = window.UID;
 
             window.pageData = {section: "login"};
             if (window.UID) {
