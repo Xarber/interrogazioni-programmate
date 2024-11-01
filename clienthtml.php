@@ -141,7 +141,10 @@
             document.querySelector('.mainDiv#'+section).classList.remove('hided');
         }
 
-        const renderPage = (async ()=>{
+        const renderPage = (async (UID = window.UID, subject = window.SUBJECT)=>{
+            window.UID = UID;
+            window.SUBJECT = subject;
+            
             window.pageData = {section: "login"};
             if (window.UID) {
                 window.pageData = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT ?? ""}&scope=loadPageData`, {
@@ -206,7 +209,7 @@
             })
 
             window.scheduleDay = async function(day) {
-                const res = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
+                const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
                 if (res.status === true) return CHANGESEC("scheduleconfirmed");
                 if (res.message === "Invalid Day!") return CHANGESEC("dayunavailable");
                 return CHANGESEC("schedulefailed");
