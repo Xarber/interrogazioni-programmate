@@ -65,7 +65,7 @@
             <option selected disabled>Scegli una materia</option>
         </select>
         <div class="inline">
-            <button type="button" id="changeProfileButton" onclick="location.href = `?UID=${window.UID}&changeProfile=true`">Cambia Profilo</button>
+            <button type="button" id="changeProfileButton" onclick="CHANGESEC('changeprofile');">Cambia Profilo</button>
             <button type="submit" onclick="location.href = `?UID=${window.UID}&subject=${document.getElementById('subject').value}`">Conferma</button>
         </div>
     </div>
@@ -135,6 +135,11 @@
         link.href = `manifest.php?UID=${window.UID}`;
         document.head.appendChild(link);
 
+        function CHANGESEC(section) {
+            document.querySelectorAll('.mainDiv').forEach(e=>e.classList.add('hided'));
+            document.querySelectorAll('.mainDiv#'+section).classList.remove('hided');
+        }
+
         (async ()=>{
             window.pageData = {section: "login"};
             if (window.UID) {
@@ -188,7 +193,7 @@
 
             }
 
-            document.querySelector('div.mainDiv#'+window.pageData.section).classList.remove('hided');
+            CHANGESEC(window.pageData.section);
 
             window.notifications.status().then(async r=>{
                 if (r != true) return;
