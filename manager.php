@@ -5,7 +5,6 @@ $_SESSION["profile"] ??= "";
 $_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
 $body = strlen(file_get_contents("php://input")) > 1 ? json_decode(file_get_contents("php://input"), true) : array();
 $_GET = array_merge($_GET, $_POST, $body);
-var_dump($_GET);
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
