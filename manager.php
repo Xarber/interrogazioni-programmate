@@ -97,11 +97,12 @@ if ($_GET["scope"] === "loadPageData") {
     $result["subject"] = $subjectData ? array("name" => $subjectName, "days" => $subjectData["days"], "lock" => $subjectData["lock"]) : false;
 
     $result["users"] = $userData["admin"] ? $userList : array();
-    $result["profiled"] = $PROFILE == "" ? "false" : ('"'.str_replace("-", "", $PROFILE).'"');
+    $result["profiled"] = $PROFILE == "" ? "false" : str_replace("-", "", $PROFILE);
     $result["profiles"] = $userData["admin"] ? $profileList : array();
     
     $result["profileList"] = array();
     $result["subjectList"] = array();
+    if (!$userData && file_exists("./JSON/users.json")) $userExistsInMainProfile = isset(json_decode(file_get_contents("./JSON/users.json"), true)[$_GET["UID"]]);
     foreach ($profileList as $profile) {
         $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
         if ($profileUserData[$_GET["UID"]] ?? false) array_push($result["profileList"], array("name" => $profile, "admin" => $profileUserData[$_GET["UID"]]["admin"] ?? false ));
@@ -115,7 +116,7 @@ if ($_GET["scope"] === "loadPageData") {
     $result["section"] = 
     (count($userList) === 0 ? "welcome" : (
         !$userData ? (
-            count($result["profileList"]) > 0 ? "changeprofile" : "login-account-not-found"
+            (count($result["profileList"]) > 0 || $userExistsInMainProfile) ? "changeprofile" : "login-account-not-found"
         ) : (
             (isset($_GET["changeProfile"])) ? "changeprofile" : (
                 ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) ? "schedule-subject" : (
