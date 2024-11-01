@@ -74,12 +74,12 @@
     </div>
     <div class="mainDiv hided" id="alreadyscheduled">
         <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
-        <p id="javascript-change-schedule-data">Sarai interrogato in data: $SUBJECTDATE</p>
+        <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data">$SUBJECTDATE</span></p>
         <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="scheduleconfirmed">
         <h1>Ti sei prenotato!</h1>
-        <p id="javascript-change-schedule-data">Ti sei prenotato a $SUBJECTNAME per il $SUBJECTDATE!</p>
+        <p>Ti sei prenotato a <span class="dummy" id="javascript-change-schedule-data">$SUBJECTNAME</span> per il <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span>!</p>
         <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedulefailed">
@@ -144,7 +144,7 @@
         const renderPage = (async (UID = window.UID, subject = window.SUBJECT)=>{
             window.UID = UID;
             window.SUBJECT = subject;
-            
+
             window.pageData = {section: "login"};
             if (window.UID) {
                 window.pageData = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT ?? ""}&scope=loadPageData`, {
@@ -189,9 +189,9 @@
                     document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName} ${day}</option>`;
                 }
 
-                document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.innerHTML = e.innerHTML.replaceAll('$USERNAME', window.userData.name));
-                document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = e.innerHTML.replaceAll('$SUBJECTDATE', window.userData.subjectData.day).replaceAll('$SUBJECTNAME', window.SUBJECT));
-
+                document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.innerHTML = window.userData.name);
+                document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
+                document.querySelector('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = window.userData.subjectData.day);
             }
 
             CHANGESEC(window.pageData.section);
@@ -210,7 +210,10 @@
 
             window.scheduleDay = async function(day) {
                 const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
-                if (res.status === true) return CHANGESEC("scheduleconfirmed");
+                if (res.status === true) {
+                    document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = day);
+                    return CHANGESEC("scheduleconfirmed");
+                }
                 if (res.message === "Invalid Day!") return CHANGESEC("dayunavailable");
                 return CHANGESEC("schedulefailed");
             }
