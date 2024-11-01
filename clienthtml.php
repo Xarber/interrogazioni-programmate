@@ -22,7 +22,7 @@
                 admin: true,
                 answers: {}
             };
-            fetch('?scope=updateSettings&type=users', {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json()).then(r=>{
+            fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json()).then(r=>{
                 if (!r.status) return alert('Impossibile completare l\'azione!');
                 location.href = '?UID='+this.parentNode.querySelector('input[name=\'uid\']').value;
             })
@@ -93,7 +93,7 @@
         </select>
         <div class="inline">
             <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
-            <button onclick="fetch(`?UID=${window.UID}&subject=${window.SUBJECT}&day=${document.getElementById('day').value}`).then(r=>r.text()).then((r)=>document.write(r))">Conferma</button>
+            <button onclick="fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT}&day=${document.getElementById('day').value}`).then(r=>r.text()).then((r)=>document.write(r))">Conferma</button>
         </div>
     </div>
     </div>
@@ -273,12 +273,12 @@
                 btn.innerHTML = "Dati utente";
                 btn.onclick = ()=>{
                     window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard(null, {admin: isAdmin, onOpenAdminDash: ()=>{
-                        fetch(`?UID=${window.UID}&scope=getAllData`).then(r=>r.json()).then(r=>{
+                        fetch(`manager.php?UID=${window.UID}&scope=getAllData`).then(r=>r.json()).then(r=>{
                             window.adminDash = new AdminDashboard(null, {
                                 subjects: r,
                                 updateCallback: (type, fullData, fileData, forceBlockRefresh = false)=>{
                                     console.log(fullData, fileData);
-                                    fetch(`?UID=${window.UID}&scope=updateSettings&type=${type}`, {
+                                    fetch(`manager.php?UID=${window.UID}&scope=updateSettings&type=${type}`, {
                                         method: "POST",
                                         body: JSON.stringify([fileData])
                                     }).then(r=>r.json()).then(r=>{
@@ -299,11 +299,11 @@
                                 analysisFunction: analizzaDati,
                                 notificationClass: window.notifications,
                                 refreshUsers: async ()=>{
-                                    const res = await fetch(`?UID=${window.UID}&scope=getAllUsers`).then(r=>r.json());
+                                    const res = await fetch(`manager.php?UID=${window.UID}&scope=getAllUsers`).then(r=>r.json());
                                     return (res.status === false) ? {} : res;
                                 },
                                 refreshProfiles: async()=>{
-                                    const res = await fetch(`?UID=${window.UID}&scope=profileMGMT`, {
+                                    const res = await fetch(`manager.php?UID=${window.UID}&scope=profileMGMT`, {
                                         method: "POST",
                                         body: JSON.stringify({action: "listprofiles"})
                                     }).then(r=>r.json());
