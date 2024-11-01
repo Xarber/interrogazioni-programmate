@@ -104,7 +104,7 @@ if ($_GET["scope"] === "loadPageData") {
         if ($profileUserData[$_GET["UID"]] ?? false) array_push($result["profileList"], array("name" => $profile, "admin" => $profileUserData[$_GET["UID"]]["admin"] ?? false ));
     }
     foreach ($subjectJSONs as $subject) {
-        if ($subject === "users") continue;
+        if ($subject === "users.json") continue;
         if (json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true)["hide"] ?? false) continue;
         array_push($result["subjectList"], str_replace(".json", "", $subject));
     }
