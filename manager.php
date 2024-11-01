@@ -97,7 +97,7 @@ if ($_GET["scope"] === "loadPageData") {
     $result["subject"] = $subjectData ? array("name" => $subjectName, "days" => $subjectData["days"], "lock" => $subjectData["lock"]) : false;
 
     $result["users"] = $userData["admin"] ? $userList : array();
-    $result["profiled"] = $PROFILE != "";
+    $result["profiled"] = $PROFILE == "" ? "false" : ('"'.str_replace("-", "", $PROFILE).'"');
     $result["profiles"] = $userData["admin"] ? $profileList : array();
     
     $result["profileList"] = array();

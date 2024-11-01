@@ -129,7 +129,7 @@
         const PWA = window.matchMedia('(display-mode: standalone)').matches;
         window.UID = new URLSearchParams(location.search).get('UID');
         window.SUBJECT = new URLSearchParams(location.search).get('subject');
-        window.PROFILE = false;
+        window.PROFILE = new URLSearchParams(location.search).get('profile') ?? false;
 
         var link = document.createElement('link');
         link.rel = 'manifest';
@@ -177,14 +177,17 @@
                 window.users = window.pageData.users;
                 window.profiles = window.pageData.profiles;
                 window.isCustomProfile = window.pageData.profiled;
+                window.PROFILE = window.isCustomProfile;
                 window.notifications = new PushNotifications(window.UID, "manager.php");
                 if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
                 localStorage["lastPathName"] = location.pathname;
 
+                document.querySelector('#changeProfileButton').classList.add("hided");
                 document.querySelector('select.id-select-profilelist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-subjectlist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-daylist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 for (var profile in window.pageData.profileList) {
+                    document.querySelector('#changeProfileButton').classList.remove("hided");
                     document.querySelector('select.id-select-profilelist').innerHTML += `<option value="${window.pageData.profileList[profile].name}">${profile.admin ? `<b>Admin</b> ` : ``}${window.pageData.profileList[profile].name}</option>`;
                 }
                 for (var subject of window.pageData.subjectList) {
