@@ -3,7 +3,8 @@ error_reporting(E_ERROR | E_PARSE);
 session_start();
 $_SESSION["profile"] ??= "";
 $_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
-$_GET = array_merge($_GET, $_POST);
+$body = json_decode(file_get_contents("php://input"), true);
+$_GET = array_merge($_GET, $_POST, $body);
 var_dump($_GET);
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
@@ -141,7 +142,6 @@ if ($_GET["scope"] === "loadPageData") {
 } else if ($_GET["scope"] === "updateSettings") {
     if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
     $allSubjectsData = array();
-    $body = json_decode(file_get_contents("php://input"), true);
     $okay = true;
     foreach($body as $updateSubject) {
         if ($_GET["type"] === "users") {
@@ -180,7 +180,6 @@ if ($_GET["scope"] === "loadPageData") {
 } else if ($_GET["scope"] === "profileMGMT") {
     if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
     header('Content-Type: application/json');
-    $body = json_decode(file_get_contents("php://input"), true);
     $target = preg_replace('/[^a-zA-Z0-9_-]+/', '-', ($body["profile"]??""));
     $body["action"]??="";
     $body["method"]??="";
@@ -297,7 +296,6 @@ if ($_GET["scope"] === "loadPageData") {
     rmdir($tempDir);
     die();
 } else if ($_GET["scope"] === "notifications") {
-    $body = json_decode(file_get_contents("php://input"), true);
     if (!$userData) die(json_encode(array("status" => false, "message" => "Not Authorized!")));
 
     /*
