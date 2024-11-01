@@ -59,7 +59,7 @@
         </div>
     </div>
     <div class="mainDiv hided" id="schedule-subject">
-        <h1>Ciao, <span class="dummy" id="javascript-change-user-name">$USERNAME!</span></h1>
+        <h1>Ciao, <span class="dummy" id="javascript-change-user-name">$USERNAME</span>!</h1>
         <p>Per quale materia vuoi prenotarti?</p>
         <select name="subject" id="subject" class="id-select-subjectlist" required>
             <option selected disabled>Scegli una materia</option>
@@ -211,7 +211,8 @@
             window.scheduleDay = async function(day) {
                 const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
                 if (res.status === true) {
-                    document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = day);
+                    document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
+                    document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
                     return CHANGESEC("scheduleconfirmed");
                 }
                 if (res.message === "Invalid Day!") return CHANGESEC("dayunavailable");
