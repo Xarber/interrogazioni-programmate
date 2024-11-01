@@ -182,12 +182,15 @@
                 localStorage["lastPathName"] = location.pathname;
 
                 for (var profile in window.pageData.profileList) {
+                    document.querySelector('select.id-select-profilelist').querySelectorAll('option').forEach(e=>e.remove());
                     document.querySelector('select.id-select-profilelist').innerHTML += `<option value="${window.pageData.profileList[profile].name}">${profile.admin ? `<b>Admin</b> ` : ``}${window.pageData.profileList[profile].name}</option>`;
                 }
                 for (var subject of window.pageData.subjectList) {
+                    document.querySelector('select.id-select-subjectlist').querySelectorAll('option').forEach(e=>e.remove());
                     document.querySelector('select.id-select-subjectlist').innerHTML += `<option value="${subject}">${subject}</option>`;
                 }
                 for (var day in window.pageData.subject.days) {
+                    document.querySelector('select.id-select-daylist').querySelectorAll('option').forEach(e=>e.remove());
                     document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName} ${day}</option>`;
                 }
 
