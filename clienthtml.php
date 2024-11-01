@@ -181,16 +181,16 @@
                 if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
                 localStorage["lastPathName"] = location.pathname;
 
+                document.querySelector('select.id-select-profilelist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
+                document.querySelector('select.id-select-subjectlist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
+                document.querySelector('select.id-select-daylist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 for (var profile in window.pageData.profileList) {
-                    document.querySelector('select.id-select-profilelist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                     document.querySelector('select.id-select-profilelist').innerHTML += `<option value="${window.pageData.profileList[profile].name}">${profile.admin ? `<b>Admin</b> ` : ``}${window.pageData.profileList[profile].name}</option>`;
                 }
                 for (var subject of window.pageData.subjectList) {
-                    document.querySelector('select.id-select-subjectlist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                     document.querySelector('select.id-select-subjectlist').innerHTML += `<option value="${subject}">${subject}</option>`;
                 }
                 for (var day in window.pageData.subject.days) {
-                    document.querySelector('select.id-select-daylist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                     document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName} ${day}</option>`;
                 }
 
