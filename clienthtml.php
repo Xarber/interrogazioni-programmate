@@ -145,6 +145,11 @@
                         UID: window.UID,
                     })
                 }).then(r=>r.json());
+                if (window.pageData.status === false && window.pageData.message === "This profile does not exist!") {
+                    await fetch(`manager.php?profile=default`);
+                    location.reload();
+                    //! Critical page error, return to default profile!
+                }
                 /*
                 {
                     section: "sectionName",
