@@ -4,10 +4,10 @@ session_start();
 $_SESSION["profile"] ??= "";
 $_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
 $body = strlen(file_get_contents("php://input")) > 1 ? json_decode(file_get_contents("php://input"), true) : array();
-var_dump($body);
+$_ORIGINALGET = $_GET;
 $_GET = array_merge($_GET, $_POST, $body);
-$_GET["profile"] ??= false;
-$_GET["subject"] ??= false;
+$_GET["profile"] = $_ORIGINALGET["profile"] ?? false;
+$_GET["subject"] = $_ORIGINALGET["subject"] ?? false;
 $_GET["scope"] ??= false;
 $_GET["saveProfile"] ??= "true";
 if ($_GET["saveProfile"] === "false" && !true) { //This is a very beta feature and stuff does break with it. Please don't use it.
