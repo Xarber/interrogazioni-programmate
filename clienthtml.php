@@ -185,8 +185,8 @@
 
                 document.querySelector('#changeProfileButton').classList.add("hided");
                 document.querySelector('#changeProfileButton').parentNode.classList.remove("inline");
-                document.querySelector('#changeSubjectButton:not(.notInlineBtn)').classList.add("hided");
-                document.querySelector('#changeSubjectButton:not(.notInlineBtn)').parentNode.classList.remove("inline");
+                document.querySelectorAll('#changeSubjectButton').forEach(e=>e.classList.add("hided"));
+                document.querySelectorAll('#changeSubjectButton:not(.notInlineBtn)').forEach(e=>e.parentNode.classList.remove("inline"));
                 document.querySelector('select.id-select-profilelist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-subjectlist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-daylist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
@@ -199,8 +199,8 @@
                 for (var subject of window.pageData.subjectList) {
                     subjcount++;
                     if (subjcount > 1) {
-                        document.querySelector('#changeSubjectButton:not(.notInlineBtn)').classList.remove("hided");
-                        document.querySelector('#changeSubjectButton:not(.notInlineBtn)').parentNode.classList.add("inline");
+                        document.querySelectorAll('#changeSubjectButton').forEach(e=>e.classList.remove("hided"));
+                        document.querySelectorAll('#changeSubjectButton:not(.notInlineBtn)').forEach(e=>e.parentNode.classList.add("inline"));
                     }
                     document.querySelector('select.id-select-subjectlist').innerHTML += `<option value="${subject}">${subject}</option>`;
                 }
