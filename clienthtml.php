@@ -59,7 +59,7 @@
         </div>
     </div>
     <div class="mainDiv hided" id="schedule-subject">
-        <h1 id="javascript-change-user-name">Ciao, $USERNAME!</h1>
+        <h1 id="javascript-change-user-name">Ciao, <span class="dummy" id="javascript-change-user-name">$USERNAME!</span></h1>
         <p>Per quale materia vuoi prenotarti?</p>
         <select name="subject" id="subject" class="id-select-subjectlist" required>
             <option selected disabled>Scegli una materia</option>
@@ -74,7 +74,7 @@
     </div>
     <div class="mainDiv hided" id="alreadyscheduled">
         <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
-        <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data">$SUBJECTDATE</span></p>
+        <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span></p>
         <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="scheduleconfirmed">
