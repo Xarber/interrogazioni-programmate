@@ -141,7 +141,7 @@
             document.querySelector('.mainDiv#'+section).classList.remove('hided');
         }
 
-        (async ()=>{
+        const renderPage = (async ()=>{
             window.pageData = {section: "login"};
             if (window.UID) {
                 window.pageData = await fetch(`manager.php?UID=${window.UID}&scope=loadPageData`, {
@@ -340,7 +340,8 @@
                 }
                 if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
             document.documentElement.appendChild(btnDiv);
-        })();
+        });
+        renderPage();
 
         window.addEventListener("beforeinstallprompt", (e)=>{
             e.preventDefault();

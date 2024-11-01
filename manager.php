@@ -112,6 +112,9 @@ if ($_GET["scope"] === "loadPageData") {
         array_push($result["subjectList"], str_replace(".json", "", $subject));
     }
 
+    var_dump($subjectData);
+    var_dump($subject);
+
     $result["section"] = 
     (count($userList) === 0 ? "welcome" : (
         !$userData ? (
