@@ -385,6 +385,7 @@ if ($_GET["scope"] === "loadPageData") {
 } else if ($_GET["scope"] === "schedule") {
     if (!$subjectData || !$subjectData["days"][$_GET["day"]]) die(json_encode(array("status" => false, "message" => "Invalid Day!")));
     $availability = explode("/", $subjectData["days"][$_GET["day"]]["availability"], 2);
+    if ($availability[0] == "0") die(json_encode(array("status" => false, "message" => "Invalid Day!")));
     $subjectData["days"][$_GET["day"]]["availability"] = ($availability[0] - 1) . "/" . $availability[1];
     $subjectData["answerCount"] = $subjectData["answerCount"] + 1;
     $subjectData["answers"][$userID] = array("date" => $_GET["day"], "answerNumber" => $subjectData["answerCount"]);

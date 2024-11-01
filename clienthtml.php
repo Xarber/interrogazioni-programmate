@@ -99,7 +99,7 @@
         </select>
         <div class="inline">
             <button id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}`">Cambia Materia</button>
-            <button onclick="fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT}&day=${document.getElementById('day').value}`).then(r=>r.text()).then((r)=>document.write(r))">Conferma</button>
+            <button onclick="scheduleDay(document.getElementById('day').value)">Conferma</button>
         </div>
     </div>
     </div>
@@ -204,6 +204,13 @@
                 window.notifications.update();
                 navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
             })
+
+            window.scheduleDay = async function(day) {
+                const res = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
+                if (res.status === true) return CHANGESEC("scheduleconfirmed");
+                if (res.message === "Invalid Day!") return CHANGESEC("dayunavailable");
+                return CHANGESEC("schedulefailed");
+            }
 
             function analizzaDati(options = {
                 clipboard: false,
