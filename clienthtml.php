@@ -144,12 +144,9 @@
         const renderPage = (async ()=>{
             window.pageData = {section: "login"};
             if (window.UID) {
-                window.pageData = await fetch(`manager.php?UID=${window.UID}&scope=loadPageData`, {
+                window.pageData = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT ?? ""}&scope=loadPageData`, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        subject: window.SUBJECT,
-                        UID: window.UID,
-                    })
+                    body: JSON.stringify({})
                 }).then(r=>r.json());
                 if (window.pageData.status === false && window.pageData.message === "This profile does not exist!") {
                     await fetch(`manager.php?profile=default`);
