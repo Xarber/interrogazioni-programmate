@@ -150,7 +150,7 @@
 
             window.pageData = {section: "login"};
             if (window.UID) {
-                window.pageData = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT ?? ""}&scope=loadPageData${!!window.PROFILE ? `&profile=${window.PROFILE}` : ``}`, {
+                window.pageData = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT ?? ""}&scope=loadPageData${(!!window.PROFILE && window.PROFILE != false) ? `&profile=${window.PROFILE}` : ``}`, {
                     method: 'POST',
                     body: JSON.stringify({})
                 }).then(r=>r.json());
