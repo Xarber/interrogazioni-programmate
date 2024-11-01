@@ -41,6 +41,12 @@
         <input type="text" name="UID" id="UID">
         <button onclick="location.href = '?UID='+document.getElementById('UID').value">Accedi</button>
     </div>
+    <div class="mainDiv hided" id="login-account-not-found">
+        <h1>Il tuo account non esiste!</h1>
+        <p>Inserisci un nuovo ID oppure usa un link diretto se ne hai uno a disposizione.</p>
+        <input type="text" name="UID" id="UID">
+        <button onclick="location.href = '?UID='+document.getElementById('UID').value">Accedi</button>
+    </div>
     <div class="mainDiv hided" id="changeprofile">
         <h1>Scegli un profilo!</h1>
         <p>Scegli un profilo in cui sei registrato per continuare!</p>

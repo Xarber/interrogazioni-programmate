@@ -114,7 +114,7 @@ if ($_GET["scope"] === "loadPageData") {
     $result["section"] = 
     (count($userList) === 0 ? "welcome" : (
         !$userData ? (
-            count($result["profileList"]) > 0 ? "changeprofile" : "login"
+            count($result["profileList"]) > 0 ? "changeprofile" : "login-account-not-found"
         ) : (
             $_GET["changeprofile"] ? "changeprofile" : (
                 ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) ? "schedule-subject" : (
