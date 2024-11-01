@@ -4,6 +4,7 @@ session_start();
 $_SESSION["profile"] ??= "";
 $_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
 $_GET = array_merge($_GET, $_POST);
+var_dump($_GET);
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;
