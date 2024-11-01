@@ -51,11 +51,11 @@
         <h1>Scegli un profilo!</h1>
         <p>Scegli un profilo in cui sei registrato per continuare!</p>
         <select name="profile" id="profile" class="id-select-profilelist" required>
-            <option value="" selected disabled>Scegli un profilo</option>
+            <option value="default" selected>Scegli un profilo (Profilo Default)</option>
         </select>
         <div class="inline">
             <button type="button" onclick="location.href = '?'">Cambia Utente</button>
-            <button type="submit" onclick="location.href = '?profile='+document.getElementById('profile').value+'&UID='+(new URLSearchParams(location.search).get('UID'))">Accedi</button>
+            <button type="submit" onclick="window.renderPage(undefined, undefined, document.getElementById('profile').value)">Accedi</button>
         </div>
     </div>
     <div class="mainDiv hided" id="schedule-subject">
@@ -129,6 +129,7 @@
         const PWA = window.matchMedia('(display-mode: standalone)').matches;
         window.UID = new URLSearchParams(location.search).get('UID');
         window.SUBJECT = new URLSearchParams(location.search).get('subject');
+        window.PROFILE = false;
 
         var link = document.createElement('link');
         link.rel = 'manifest';
@@ -141,13 +142,14 @@
             document.querySelector('.mainDiv#'+section).classList.remove('hided');
         }
 
-        const renderPage = (async (UID = window.UID, subject = window.SUBJECT)=>{
+        window.renderPage = (async (UID = window.UID, subject = window.SUBJECT, profile = window.PROFILE)=>{
             window.UID = UID;
             window.SUBJECT = subject;
+            window.PROFILE = profile;
 
             window.pageData = {section: "login"};
             if (window.UID) {
-                window.pageData = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT ?? ""}&scope=loadPageData`, {
+                window.pageData = await fetch(`manager.php?UID=${window.UID}&subject=${window.SUBJECT ?? ""}&scope=loadPageData${!!window.PROFILE ? `&profile=${window.PROFILE}` : ``}`, {
                     method: 'POST',
                     body: JSON.stringify({})
                 }).then(r=>r.json());
@@ -352,7 +354,7 @@
                 if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
             document.documentElement.appendChild(btnDiv);
         });
-        renderPage();
+        window.renderPage();
 
         window.addEventListener("beforeinstallprompt", (e)=>{
             e.preventDefault();
