@@ -3,6 +3,7 @@ error_reporting(E_ERROR | E_PARSE);
 session_start();
 $_SESSION["profile"] ??= "";
 $_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
+$_GET = array_merge($_GET, $_POST);
 $_GET["profile"] ??= false;
 $_GET["subject"] ??= false;
 $_GET["scope"] ??= false;

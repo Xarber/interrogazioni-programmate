@@ -59,7 +59,7 @@
             <option selected disabled>Scegli una materia</option>
         </select>
         <div class="inline">
-            <button type="button" id="changeSubjectButton" onclick="location.href = `?UID=${window.UID}&changeProfile=true`">Cambia Materia</button>
+            <button type="button" id="changeProfileButton" onclick="location.href = `?UID=${window.UID}&changeProfile=true`">Cambia Profilo</button>
             <button type="submit" onclick="location.href = `?UID=${window.UID}&subject=${document.getElementById('subject').value}`">Conferma</button>
         </div>
     </div>
@@ -132,7 +132,13 @@
         (async ()=>{
             window.pageData = {section: "login"};
             if (window.UID) {
-                window.pageData = await fetch(`manager.php?UID=${window.UID}&scope=loadPageData`).then(r=>r.json());
+                window.pageData = await fetch(`manager.php?UID=${window.UID}&scope=loadPageData`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        subject: window.SUBJECT,
+                        UID: window.UID,
+                    })
+                }).then(r=>r.json());
                 /*
                 {
                     section: "sectionName",
