@@ -76,21 +76,21 @@
     <div class="mainDiv hided" id="alreadyscheduled">
         <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
         <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span></p>
-        <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="scheduleconfirmed">
         <h1>Ti sei prenotato!</h1>
         <p>Ti sei prenotato a <span class="dummy" id="javascript-change-schedule-data">$SUBJECTNAME</span> per il <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span>!</p>
-        <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedulefailed">
         <h1>Whoops! :( </h1>
         <p>C'è stato un problema mentre provavi a prenotarti, per favore riprova o cambia giorno.</p>
-        <button onclick='location.reload();'>Cambia giorno</button>
+        <button onclick="window.renderPage();">Cambia giorno</button>
     </div>
     <div class="mainDiv hided" id="nodays">
         <h1>Questa materia è bloccata o non ha interrogazioni!</h1>
-        <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedule-day">
         <h1>Che giorno vuoi farti interrogare?</h1>
@@ -102,7 +102,6 @@
             <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
             <button onclick="scheduleDay(document.getElementById('day').value)">Conferma</button>
         </div>
-    </div>
     </div>
     <script>
         (()=>{var script = document.createElement('script');script.src="//cdn.jsdelivr.net/npm/eruda";document.body.appendChild(script);script.onload = ()=>{
@@ -186,6 +185,8 @@
 
                 document.querySelector('#changeProfileButton').classList.add("hided");
                 document.querySelector('#changeProfileButton').parentNode.classList.remove("inline");
+                document.querySelector('#changeSubjectButton:not(.notInlineBtn)').classList.add("hided");
+                document.querySelector('#changeSubjectButton:not(.notInlineBtn)').parentNode.classList.remove("inline");
                 document.querySelector('select.id-select-profilelist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-subjectlist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-daylist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
@@ -198,6 +199,8 @@
                     document.querySelector('select.id-select-subjectlist').innerHTML += `<option value="${subject}">${subject}</option>`;
                 }
                 for (var day in window.pageData.subject.days) {
+                    document.querySelector('#changeSubjectButton:not(.notInlineBtn)').classList.remove("hided");
+                    document.querySelector('#changeSubjectButton:not(.notInlineBtn)').parentNode.classList.add("inline");
                     document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName} ${day}</option>`;
                 }
 
