@@ -136,8 +136,9 @@
         document.head.appendChild(link);
 
         function CHANGESEC(section) {
+            if (!document.querySelector('.mainDiv#'+section)) return false;
             document.querySelectorAll('.mainDiv').forEach(e=>e.classList.add('hided'));
-            document.querySelectorAll('.mainDiv#'+section).classList.remove('hided');
+            document.querySelector('.mainDiv#'+section).classList.remove('hided');
         }
 
         (async ()=>{
