@@ -1294,7 +1294,7 @@ class AdminDashboard {
     
         const fileList = this.dashboard.querySelector('.admin-json-file-list');
         fileList.addEventListener('click', (e) => {
-            if (e.target.tagName === 'LI' && !e.getAttribute('preventDefault')) {
+            if (e.target.tagName === 'LI' && !e.target.getAttribute('preventDefault')) {
                 this.currentFileIndex = parseInt(e.target.dataset.index);
                 fileList.querySelectorAll('li').forEach(li => li.classList.remove('admin-active'));
                 e.target.classList.add('admin-active');
