@@ -342,12 +342,13 @@
                     return returnOBJ;
                 }
 
-                let btnDiv = document.createElement("div");
+                window.btnDiv = window.btnDiv ?? document.createElement("div");
                     btnDiv.style.display = "flex";
                     btnDiv.style.position = "fixed";
                     btnDiv.style.bottom = "10px";
                     btnDiv.style.right = "10px";
                     btnDiv.style.gap = "2.5px";
+                    btnDiv.innerHTML = "";
 
                 if (isAdmin) {
                     if (analizzaDati() != false) {

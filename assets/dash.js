@@ -1165,6 +1165,7 @@ class AdminDashboard {
         if (typeof this.dataAnalysis === "function") {
             const copyAnswersBtn = this.dashboard.querySelector('#copyAnswersBtn');
             copyAnswersBtn.addEventListener('click', () => {
+                if (!confirm(`Vuoi copiare le prenotazioni per questa materia?`)) return;
                 this.dataAnalysis({
                     clipboard: true, 
                     copy: "prenotazioni", 
