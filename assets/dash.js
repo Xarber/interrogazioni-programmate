@@ -1464,10 +1464,6 @@ class AdminDashboard {
         
         const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
         const answerPriority = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber;
-        delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
-        
-        this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
-        this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
         
         if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
         if (this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
@@ -1477,16 +1473,21 @@ class AdminDashboard {
                 if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
             }
         }
+        
+        var tmpIndex = this.currentFileIndex;
+        this.currentFileIndex = -1;
+        await this.updateJSON(undefined, false, true);
+        this.currentFileIndex = tmpIndex;
 
+        delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
+        this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
+        this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
+        
         const objEntries = Object.entries(this.jsonFiles[this.currentFileIndex].data.answers);
         objEntries.forEach(([userUUID, userData]) => {
             if (userData.answerNumber > answerPriority) this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = userData.answerNumber - 1;
         });
 
-        var tmpIndex = this.currentFileIndex;
-        this.currentFileIndex = -1;
-        await this.updateJSON(undefined, false, true);
-        this.currentFileIndex = tmpIndex;
 
         await this.updateJSON();
         this.render();
