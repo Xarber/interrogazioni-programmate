@@ -1766,10 +1766,10 @@ class AdminDashboard {
             if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
         }
 
-        var tmpIndex = this.currentFileIndex;
-        this.currentFileIndex = -1;
-        await this.updateJSON(undefined, false, true);
-        this.currentFileIndex = tmpIndex;
+        //var tmpIndex = this.currentFileIndex;
+        //this.currentFileIndex = -1;
+        //await this.updateJSON(undefined, false, true);
+        //this.currentFileIndex = tmpIndex;
     }
 
     async deleteUser(uuid) {
