@@ -214,63 +214,6 @@
                     navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
                 })
 
-                window.actions = {
-                    welcomeCreate: function(elThis) {
-                        return new Promise(async (re)=>{
-                            const body = {};
-                            body[elThis.parentNode.querySelector('input[name=\'uid\']').value] = {
-                                name: elThis.parentNode.querySelector('input[name=\'name\']').value,
-                                admin: true,
-                                answers: {}
-                            };
-                            const r = await fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json());
-                            if (!r.status) return r(alert('Impossibile completare l\'azione!'));
-                            re(await window.renderPage(elThis.parentNode.querySelector('input[name=\'uid\']').value));
-                        });
-                    },
-                    login: function(elThis) {
-                        return new Promise(async (r)=>{
-                            document.getElementById('UID').value =
-                                document.getElementById('UID').value.indexOf('UID=') != -1
-                                    ? (new URLSearchParams(`?${document.getElementById('UID').value.split('?', 2)[1]}`)).get('UID')
-                                    : document.getElementById('UID').value;
-                            r(await window.renderPage(document.getElementById('UID').value));
-                        });
-                    },
-                    changeUser: function(elThis) {
-                        return new Promise(async (r)=>{
-                            r(await window.renderPage(''));
-                        });
-                    },
-                    changeProfile: function(profile = window.PROFILE) {
-                        return new Promise(async (r)=>{
-                            r(await window.renderPage(undefined, undefined, profile));
-                        });
-                    },
-                    changeSubject: function(subject = window.SUBJECT) {
-                        return new Promise(async (r)=>{
-                            r(await window.renderPage(undefined, subject));
-                        });
-                    },
-                    changeDay: function() {
-                        return new Promise(async (r)=>{
-                            r(await window.renderPage());
-                        });
-                    },
-                    scheduleDay: function(day) {
-                        return new Promise(async (r)=>{
-                            const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
-                            if (res.status === true) {
-                                document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
-                                document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
-                                return r(CHANGESEC("scheduleconfirmed"));
-                            }
-                            if (res.message === "Invalid Day!") r(CHANGESEC("dayunavailable"));
-                            return r(CHANGESEC("schedulefailed"));
-                        });
-                    }
-                }
-
                 function analizzaDati(options = {}) {
                     const defaultOptions = {
                         clipboard: false,
@@ -416,6 +359,85 @@
                     if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
                 document.documentElement.appendChild(btnDiv);
             }
+
+            
+            window.actionManager = [[], async (promise = false)=>{
+                if (!window.navigator.onLine) return window.actionManager[0].push(promise);
+                // Logic to execute all promises
+            }];
+            window.addEventListener('online', ()=>window.actionManager[1]());
+            
+
+            window.actions = {
+                welcomeCreate: function(elThis) {
+                    const promise = new Promise(async (re)=>{
+                        const body = {};
+                        body[elThis.parentNode.querySelector('input[name=\'uid\']').value] = {
+                            name: elThis.parentNode.querySelector('input[name=\'name\']').value,
+                            admin: true,
+                            answers: {}
+                        };
+                        const r = await fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json());
+                        if (!r.status) return r(alert('Impossibile completare l\'azione!'));
+                        re(await window.renderPage(elThis.parentNode.querySelector('input[name=\'uid\']').value));
+                    });
+                    window.actionManager[1](promise);
+                    return promise;
+                },
+                login: function(elThis) {
+                    const promise = new Promise(async (r)=>{
+                        document.getElementById('UID').value =
+                            document.getElementById('UID').value.indexOf('UID=') != -1
+                                ? (new URLSearchParams(`?${document.getElementById('UID').value.split('?', 2)[1]}`)).get('UID')
+                                : document.getElementById('UID').value;
+                        r(await window.renderPage(document.getElementById('UID').value));
+                    });
+                    window.actionManager[1](promise);
+                    return promise;
+                },
+                changeUser: function(elThis) {
+                    const promise = new Promise(async (r)=>{
+                        r(await window.renderPage(''));
+                    });
+                    window.actionManager[1](promise);
+                    return promise;
+                },
+                changeProfile: function(profile = window.PROFILE) {
+                    const promise = new Promise(async (r)=>{
+                        r(await window.renderPage(undefined, undefined, profile));
+                    });
+                    window.actionManager[1](promise);
+                    return promise;
+                },
+                changeSubject: function(subject = window.SUBJECT) {
+                    const promise = new Promise(async (r)=>{
+                        r(await window.renderPage(undefined, subject));
+                    });
+                    window.actionManager[1](promise);
+                    return promise;
+                },
+                changeDay: function() {
+                    const promise = new Promise(async (r)=>{
+                        r(await window.renderPage());
+                    });
+                    window.actionManager[1](promise);
+                    return promise;
+                },
+                scheduleDay: function(day) {
+                    const promise = new Promise(async (r)=>{
+                        const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
+                        if (res.status === true) {
+                            document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
+                            document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
+                            return r(CHANGESEC("scheduleconfirmed"));
+                        }
+                        if (res.message === "Invalid Day!") r(CHANGESEC("dayunavailable"));
+                        return r(CHANGESEC("schedulefailed"));
+                    });
+                    window.actionManager[1](promise);
+                    return promise;
+                }
+            };
 
             CHANGESEC(window.pageData.section);
         });
