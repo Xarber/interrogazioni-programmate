@@ -415,6 +415,8 @@ class AdminDashboard {
         `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M192-216v-72h48v-240q0-87 53.5-153T432-763v-53q0-20 14-34t34-14q20 0 34 14t14 34v53q85 16 138.5 82T720-528v240h48v72H192Zm288-276Zm-.21 396Q450-96 429-117.15T408-168h144q0 30-21.21 51t-51 21ZM312-288h336v-240q0-70-49-119t-119-49q-70 0-119 49t-49 119v240Z"></path></svg>`,
         warn: 
         `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m48-144 432-720 432 720H48Zm127-72h610L480-724 175-216Zm304.79-48q15.21 0 25.71-10.29t10.5-25.5q0-15.21-10.29-25.71t-25.5-10.5q-15.21 0-25.71 10.29t-10.5 25.5q0 15.21 10.29 25.71t25.5 10.5ZM444-384h72v-192h-72v192Zm36-86Z"/></svg>`,
+        fix: 
+        `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M748-144 531-361l68-68 217 217-68 68Zm-536 0-68-68 268-268-64-64-38 38-52-52v70l-26 26-112-112 26-26h70l-36-37 144-144q17-17 38.5-26t45.5-9q24 0 45.5 9t38.5 26l-87 86 47 47-36 36 64 64 83-83q-5-13-8-26t-3-27q0-55 38.5-93.5T684-816q14 0 27 3t26 8l-87 87 68 68 87-87q6 12 8.5 25.5T816-684q0 55-38.5 93T684-553q-14 0-27-2.5t-26-8.5L212-144Z"/></svg>`,
     }
   
     render() {
@@ -495,9 +497,14 @@ class AdminDashboard {
                     <div class="admin-days-container">
                         <h3>Giorni</h3>
                         <div id="daysList"></div>
-                        <button id="addDayBtn" class="admin-action-button" title="Aggiungi Giorno">
-                            ${this.icons.plus}
-                        </button>
+                        <div class="admin-inline inline">
+                            <button id="fixAnswersBtn" class="admin-action-button" title="Aggiusta risposte utente">
+                                ${this.icons.fix}
+                            </button>
+                            <button id="addDayBtn" class="admin-action-button" title="Aggiungi Giorno">
+                                ${this.icons.plus}
+                            </button>
+                        </div>
                     </div>
                     <div class="admin-dashboard-subject-answers-section">
                         <span class="admin-dashboard-subject-answers-header clickable-span" id="editAnswersLeaveBtn">&lt; Giorni</span>
@@ -1195,6 +1202,9 @@ class AdminDashboard {
 
         const addDayBtn = this.dashboard.querySelector('#addDayBtn');
         addDayBtn.addEventListener('click', async () => await this.addDay());
+
+        const fixAnswersBtn = this.dashboard.querySelector('#fixAnswersBtn');
+        fixAnswersBtn.addEventListener('click', async () => await this.fixUserDataAnswers());
 
         const addProfileBtn = this.dashboard.querySelector('#addProfileBtn');
         addProfileBtn.addEventListener('click', async () => await this.addProfile());
