@@ -1769,6 +1769,7 @@ class AdminDashboard {
             )
         ) return;
         if (customIndex < 0) return;
+        if (Object.keys(this.jsonFiles[customIndex].data.answers).length === 0) return;
         
         for (var userUUID in this.userData) {
             if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
