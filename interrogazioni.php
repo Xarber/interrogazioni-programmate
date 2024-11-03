@@ -683,23 +683,22 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                     fetch("?UID=<?php echo $userID; ?>&scope=getAllData").then(r=>r.json()).then(r=>{
                         window.adminDash = new AdminDashboard(null, {
                             subjects: r,
-                            updateCallback: (type, fullData, fileData, forceBlockRefresh = false)=>{
+                            updateCallback: async (type, fullData, fileData, forceBlockRefresh = false)=>{
                                 console.log(fullData, fileData);
-                                fetch("?UID=<?php echo $userID; ?>&scope=updateSettings&type="+type, {
+                                const r = fetch("?UID=<?php echo $userID; ?>&scope=updateSettings&type="+type, {
                                     method: "POST",
                                     body: JSON.stringify([fileData])
-                                }).then(r=>r.json()).then(r=>{
-                                    console.log(r);
-                                    if (r.status != true) alert("Impossibile completare l'azione!");
-                                    else {
-                                        // alert("Dati aggiornati con successo!");
-                                        !forceBlockRefresh && window.adminDash && window.adminDash.update({
-                                            subjects: r.newData.subjects,
-                                            users: r.newData.users,
-                                            profiles: !!r.newData.profiles ? r.newData.profiles : undefined
-                                        });
-                                    }
-                                });
+                                }).then(r=>r.json());
+                                console.log(r);
+                                if (r.status != true) alert("Impossibile completare l'azione!");
+                                else {
+                                    // alert("Dati aggiornati con successo!");
+                                    !forceBlockRefresh && window.adminDash && window.adminDash.update({
+                                        subjects: r.newData.subjects,
+                                        users: r.newData.users,
+                                        profiles: !!r.newData.profiles ? r.newData.profiles : undefined
+                                    });
+                                }
                             },
                             users: window.users,
                             profiles: window.profiles,

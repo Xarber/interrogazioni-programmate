@@ -1908,7 +1908,7 @@ class AdminDashboard {
             }
         }
         
-        if (!skipUpdateFunction) this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData, forceSkipUpdateRefresh);
+        if (!skipUpdateFunction) await this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData, forceSkipUpdateRefresh);
         this.updating = false;
 
         return [(this.currentFileIndex > -1 ? "subject" : "users"), this.jsonFiles, customData];
