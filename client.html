@@ -216,7 +216,7 @@
 
                 window.actions = {
                     welcomeCreate: function(elThis) {
-                        return new Promise(async (r)=>{
+                        return new Promise(async (re)=>{
                             const body = {};
                             body[elThis.parentNode.querySelector('input[name=\'uid\']').value] = {
                                 name: elThis.parentNode.querySelector('input[name=\'name\']').value,
@@ -225,7 +225,7 @@
                             };
                             const r = await fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json());
                             if (!r.status) return r(alert('Impossibile completare l\'azione!'));
-                            r(await window.renderPage(elThis.parentNode.querySelector('input[name=\'uid\']').value));
+                            re(await window.renderPage(elThis.parentNode.querySelector('input[name=\'uid\']').value));
                         });
                     },
                     login: function(elThis) {
