@@ -581,28 +581,33 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
         })
 
-        function analizzaDati(options = {
-            clipboard: false,
-            copy: "json",
-            log: true,
-            data: undefined,
-            subject: undefined,
-            users: undefined,
-        }) {
+        function analizzaDati(options = {}) {
+            const defaultOptions = {
+                clipboard: false,
+                copy: "json",
+                log: true,
+                data: undefined,
+                subject: undefined,
+                users: undefined,
+                minimal: false,
+            };
+            options = {...defaultOptions, ...options};
             const copyToClipboard = options.clipboard ?? false;
             const valueToCopy = options.copy ?? "json";
             const logger = options.log ? console : {group: ()=>{}, groupEnd: ()=>{}, error: ()=>{}, log: ()=>{}};
 
             const utenti = options.users ?? window.users;
-            const datiMateria = options.data ?? <?php echo ($userData["admin"] ?? false) ? json_encode($subjectData) : "{}" ?>;
+            const datiMateria = options.data ?? window.pageData.currentSubject;
             if (!datiMateria) return false;
-            const materia = options.subject ?? `<?php echo $subjectName; ?>`;
+            const materia = options.subject ?? window.SUBJECT;
             const messageArr = [];
             var listaPrenotazioni = {};
 
             for (var data in datiMateria.days ?? []) {
                 listaPrenotazioni[data] ??= {
-                    header: `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName} ${data}`,
+                    header: options.minimal 
+                        ? `${datiMateria.days[data].dayName} ${data}`
+                        : `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName} ${data}`,
                     answers: []
                 }
             }
@@ -610,13 +615,19 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             for (var utente in datiMateria.answers) {
                 let date = datiMateria.answers[utente].date;
                 listaPrenotazioni[datiMateria.answers[utente].date] ??= {
-                    header: `[??] ${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
+                    header: options.minimal 
+                        ? `${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`
+                        : `[??] ${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
                     answers: []
                 };
-                listaPrenotazioni[datiMateria.answers[utente].date].answers.push(`[${datiMateria.answers[utente].answerNumber}] ${utenti[utente].name}`)
+                listaPrenotazioni[datiMateria.answers[utente].date].answers.push(
+                    options.minimal
+                        ? `${utenti[utente].name}`
+                        : `[${datiMateria.answers[utente].answerNumber}] ${utenti[utente].name}`
+                );
             }
 
-            var listaPrenotazioniText = `[${materia}] Prenotati (Numero Risposta, Nome): ---\n`;
+            var listaPrenotazioniText = options.minimal ? `${materia}: ---\n` : `[${materia}] Prenotati (Numero Risposta, Nome): ---\n`;
             for (var data in listaPrenotazioni) {
                 listaPrenotazioniText+="\n"+data+"\n"+listaPrenotazioni[data].answers.join("\n")+"\n";
             }

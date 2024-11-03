@@ -15,40 +15,19 @@
         <input type="text" name="name" id="name" placeholder="Nome Utente">
         <p>Il tuo UserID / Chiave di accesso (clicca per copiare):</p>
         <input type="text" name="uid" id="uid" style="cursor: pointer;" readonly onclick="navigator.clipboard.writeText(this.value);alert('UserID Copiato!');">
-        <button onclick="
-            const body = {};
-            body[this.parentNode.querySelector('input[name=\'uid\']').value] = {
-                name: this.parentNode.querySelector('input[name=\'name\']').value,
-                admin: true,
-                answers: {}
-            };
-            fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json()).then(r=>{
-                if (!r.status) return alert('Impossibile completare l\'azione!');
-                window.renderPage(this.parentNode.querySelector('input[name=\'uid\']').value);
-            })
-        ">Accedi</button>
-        <script>
-            const uid = ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            }));
-            document.querySelector('input[name=\'uid\']').value = uid;
-        </script>
+        <button onclick="window.actions.welcomeCreate(this);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="login">
         <h1>Ciao! Accedi per continuare.</h1>
         <p>Inserisci un ID oppure usa un link diretto se ne hai uno a disposizione.</p>
         <input type="text" name="UID" id="UID">
-        <button onclick="
-            document.getElementById('UID').value = document.getElementById('UID').value.indexOf('UID=') != -1 ?
-            (new URLSearchParams(`?${document.getElementById('UID').value.split('?', 2)[1]}`)).get('UID') : document.getElementById('UID').value;
-            window.renderPage(document.getElementById('UID').value);">Accedi</button>
+        <button onclick="window.action.login(this);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="login-account-not-found">
         <h1>Il tuo account non esiste!</h1>
         <p>Inserisci un nuovo ID oppure usa un link diretto se ne hai uno a disposizione.</p>
         <input type="text" name="UID" id="UID">
-        <button onclick="window.renderPage(document.getElementById('UID').value);">Accedi</button>
+        <button onclick="window.actions.login(this);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="changeprofile">
         <h1>Scegli un profilo!</h1>
@@ -57,8 +36,8 @@
             <option value="default" selected>Scegli un profilo (Profilo Default)</option>
         </select>
         <div class="inline">
-            <button type="button" onclick="window.renderPage('');">Cambia Utente</button>
-            <button type="submit" onclick="window.renderPage(undefined, undefined, document.getElementById('profile').value)">Accedi</button>
+            <button type="button" onclick="window.actions.changeUser(this);">Cambia Utente</button>
+            <button type="submit" onclick="window.actions.changeProfile(document.getElementById('profile').value);">Accedi</button>
         </div>
     </div>
     <div class="mainDiv hided" id="schedule-subject">
@@ -69,31 +48,31 @@
         </select>
         <div class="inline">
             <button type="button" id="changeProfileButton" onclick="CHANGESEC('changeprofile');">Cambia Profilo</button>
-            <button type="submit" onclick="window.renderPage(undefined, document.getElementById('subject').value);">Conferma</button>
+            <button type="submit" onclick="window.actions.changeSubject(document.getElementById('subject').value);">Conferma</button>
         </div>
     </div>
     <div class="mainDiv hided" id="dayunavailable">
         <h1>Non puoi prenotarti per questo giorno!</h1>
-        <button onclick="window.renderPage();">Cambia giorno</button>
+        <button onclick="window.actions.changeDay();">Cambia giorno</button>
     </div>
     <div class="mainDiv hided" id="alreadyscheduled">
         <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
         <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span></p>
-        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="scheduleconfirmed">
         <h1>Ti sei prenotato!</h1>
         <p>Ti sei prenotato a <span class="dummy" id="javascript-change-schedule-data">$SUBJECTNAME</span> per il <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span>!</p>
-        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedulefailed">
         <h1>Whoops! :( </h1>
         <p>C'è stato un problema mentre provavi a prenotarti, per favore riprova o cambia giorno.</p>
-        <button onclick="window.renderPage();">Cambia giorno</button>
+        <button onclick="window.actions.changeDay();">Cambia giorno</button>
     </div>
     <div class="mainDiv hided" id="nodays">
         <h1>Questa materia è bloccata o non ha interrogazioni!</h1>
-        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedule-day">
         <h1>Che giorno vuoi farti interrogare?</h1>
@@ -102,8 +81,8 @@
             <option value="" selected disabled>Scegli un giorno</option>
         </select>
         <div class="inline">
-            <button id="changeSubjectButton" onclick="window.renderPage(undefined, '');">Cambia Materia</button>
-            <button onclick="scheduleDay(document.getElementById('day').value)">Conferma</button>
+            <button id="changeSubjectButton" onclick="window.actions.changeSubject('');">Cambia Materia</button>
+            <button onclick="window.actions.scheduleDay(document.getElementById('day').value)">Conferma</button>
         </div>
     </div>
     <script>
@@ -128,6 +107,13 @@
         }})();
     </script>
     <script src="/assets/dash.js"></script>
+    <script>
+        const uid = ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        }));
+        document.querySelector('input[name=\'uid\']').value = uid;
+    </script>
     <script>
         const PWA = window.matchMedia('(display-mode: standalone)').matches;
         window.UID = new URLSearchParams(location.search).get('UID') ?? localStorage["cachedUID"];
@@ -216,7 +202,7 @@
                 document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
                 document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = window.userData.subjectData.day);
             
-                window.notifications.status().then(async r=>{
+                await window.notifications.status().then(async r=>{
                     if (r != true) return;
                     const sw = await navigator.serviceWorker.getRegistration();
                     if (!window.userData.pushSubscriptions || !sw) return window.notifications.unsubscribe();
@@ -228,25 +214,74 @@
                     navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
                 })
 
-                window.scheduleDay = async function(day) {
-                    const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
-                    if (res.status === true) {
-                        document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
-                        document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
-                        return CHANGESEC("scheduleconfirmed");
+                window.actions = {
+                    welcomeCreate: function(elThis) {
+                        return new Promise(async (r)=>{
+                            const body = {};
+                            body[elThis.parentNode.querySelector('input[name=\'uid\']').value] = {
+                                name: elThis.parentNode.querySelector('input[name=\'name\']').value,
+                                admin: true,
+                                answers: {}
+                            };
+                            const r = await fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json());
+                            if (!r.status) return r(alert('Impossibile completare l\'azione!'));
+                            r(await window.renderPage(elThis.parentNode.querySelector('input[name=\'uid\']').value));
+                        });
+                    },
+                    login: function(elThis) {
+                        return new Promise(async (r)=>{
+                            document.getElementById('UID').value =
+                                document.getElementById('UID').value.indexOf('UID=') != -1
+                                    ? (new URLSearchParams(`?${document.getElementById('UID').value.split('?', 2)[1]}`)).get('UID')
+                                    : document.getElementById('UID').value;
+                            r(await window.renderPage(document.getElementById('UID').value));
+                        });
+                    },
+                    changeUser: function(elThis) {
+                        return new Promise(async (r)=>{
+                            r(await window.renderPage(''));
+                        });
+                    },
+                    changeProfile: function(profile = window.PROFILE) {
+                        return new Promise(async (r)=>{
+                            r(await window.renderPage(undefined, undefined, profile));
+                        });
+                    },
+                    changeSubject: function(subject = window.SUBJECT) {
+                        return new Promise(async (r)=>{
+                            r(await window.renderPage(undefined, subject));
+                        });
+                    },
+                    changeDay: function() {
+                        return new Promise(async (r)=>{
+                            r(await window.renderPage());
+                        });
+                    },
+                    scheduleDay: function(day) {
+                        return new Promise(async (r)=>{
+                            const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
+                            if (res.status === true) {
+                                document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
+                                document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
+                                return r(CHANGESEC("scheduleconfirmed"));
+                            }
+                            if (res.message === "Invalid Day!") r(CHANGESEC("dayunavailable"));
+                            return r(CHANGESEC("schedulefailed"));
+                        });
                     }
-                    if (res.message === "Invalid Day!") return CHANGESEC("dayunavailable");
-                    return CHANGESEC("schedulefailed");
                 }
 
-                function analizzaDati(options = {
-                    clipboard: false,
-                    copy: "json",
-                    log: true,
-                    data: undefined,
-                    subject: undefined,
-                    users: undefined,
-                }) {
+                function analizzaDati(options = {}) {
+                    const defaultOptions = {
+                        clipboard: false,
+                        copy: "json",
+                        log: true,
+                        data: undefined,
+                        subject: undefined,
+                        users: undefined,
+                        minimal: false,
+                    };
+                    options = {...defaultOptions, ...options};
                     const copyToClipboard = options.clipboard ?? false;
                     const valueToCopy = options.copy ?? "json";
                     const logger = options.log ? console : {group: ()=>{}, groupEnd: ()=>{}, error: ()=>{}, log: ()=>{}};
@@ -260,7 +295,9 @@
 
                     for (var data in datiMateria.days ?? []) {
                         listaPrenotazioni[data] ??= {
-                            header: `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName} ${data}`,
+                            header: options.minimal 
+                                ? `${datiMateria.days[data].dayName} ${data}`
+                                : `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName} ${data}`,
                             answers: []
                         }
                     }
@@ -268,13 +305,19 @@
                     for (var utente in datiMateria.answers) {
                         let date = datiMateria.answers[utente].date;
                         listaPrenotazioni[datiMateria.answers[utente].date] ??= {
-                            header: `[??] ${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
+                            header: options.minimal 
+                                ? `${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`
+                                : `[??] ${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
                             answers: []
                         };
-                        listaPrenotazioni[datiMateria.answers[utente].date].answers.push(`[${datiMateria.answers[utente].answerNumber}] ${utenti[utente].name}`)
+                        listaPrenotazioni[datiMateria.answers[utente].date].answers.push(
+                            options.minimal
+                                ? `${utenti[utente].name}`
+                                : `[${datiMateria.answers[utente].answerNumber}] ${utenti[utente].name}`
+                        );
                     }
 
-                    var listaPrenotazioniText = `[${materia}] Prenotati (Numero Risposta, Nome): ---\n`;
+                    var listaPrenotazioniText = options.minimal ? `${materia}: ---\n` : `[${materia}] Prenotati (Numero Risposta, Nome): ---\n`;
                     for (var data in listaPrenotazioni) {
                         listaPrenotazioniText+="\n"+data+"\n"+listaPrenotazioni[data].answers.join("\n")+"\n";
                     }

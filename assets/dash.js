@@ -1171,7 +1171,8 @@ class AdminDashboard {
                     log: false,
                     data: this.jsonFiles[this.currentFileIndex].data,
                     subject: this.jsonFiles[this.currentFileIndex].fileName,
-                    users: this.userData
+                    users: this.userData,
+                    minimal: !confirm(`Vuoi copiare la versione completa? (Annulla = Minimale)`)
                 });
                 alert("Prenotazioni utente copiate!");
             });
