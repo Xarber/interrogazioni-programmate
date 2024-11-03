@@ -1750,6 +1750,28 @@ class AdminDashboard {
         }
     }
 
+    async fixUserDataAnswers(force = false, customIndex = this.currentFileIndex) {
+        if (
+            !force &&
+            !confirm(`Sicuro di voler eseguire una correzione forzata delle risposte?`) &&
+            !confirm(`Questa azione cancellerà tutte le vecchie risposte degli utenti per questa materia!`)
+        ) return;
+        if (customIndex < 0) return;
+        
+        for (var userUUID in this.userData) {
+            if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
+            this.userData[userUUID].answers[this.jsonFiles[customIndex].fileName] = [
+                this.jsonFiles[customIndex].data.answers[userUUID].date
+            ];
+            if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
+        }
+
+        var tmpIndex = this.currentFileIndex;
+        this.currentFileIndex = -1;
+        await this.updateJSON(undefined, false, true);
+        this.currentFileIndex = tmpIndex;
+    }
+
     async deleteUser(uuid) {
         if (confirm(`Sicuro di voler cancellare ${this.userData[uuid].name}?`)) {
             delete this.userData[uuid];
