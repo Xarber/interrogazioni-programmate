@@ -1433,6 +1433,7 @@ class AdminDashboard {
                 this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
 
                 for (var user in this.userData) {
+                    if (Array.isArray(this.userData[user].answers) && this.userData[user].answers.length === 0) this.userData[user].answers = {};
                     if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
                         var index = this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
                         if (index != -1) {
@@ -1468,6 +1469,7 @@ class AdminDashboard {
         this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
         this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
         
+        if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
         if (this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
             var index = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
             if (index != -1) {
@@ -1494,6 +1496,8 @@ class AdminDashboard {
     async swapUserAnswer(user1UUID, user2UUID) {
         if (!this.userData[user1UUID]) return alert(`Questo utente non esiste!`);
         if (!this.userData[user2UUID]) return alert(`Questo utente non esiste!`);
+        if (Array.isArray(this.userData[user1UUID].answers) && this.userData[user1UUID].answers.length === 0) this.userData[user1UUID].answers = {};
+        if (Array.isArray(this.userData[user2UUID].answers) && this.userData[user2UUID].answers.length === 0) this.userData[user2UUID].answers = {};
         if (
             (!this.jsonFiles[this.currentFileIndex].data.answers[user1UUID] || !this.jsonFiles[this.currentFileIndex].data.answers[user2UUID]) ||
             (!this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName] || !this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName])
@@ -1542,6 +1546,7 @@ class AdminDashboard {
         
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
+        if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
         if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) await this.removeUserAnswer(userUUID, true);
 
         this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName] ??= [];
@@ -1601,6 +1606,7 @@ class AdminDashboard {
                 await this.updateJSON(undefined, false, true);
     
                 // Update user's answers
+                if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
                 if (!this.userData[userUUID].answers[currentSubject]) {
                     this.userData[userUUID].answers[currentSubject] = [];
                 }
@@ -1654,6 +1660,7 @@ class AdminDashboard {
                     }
                 }
                 for (var user in this.userData) {
+                    if (Array.isArray(this.userData[user].answers) && this.userData[user].answers.length === 0) this.userData[user].answers = {};
                     if (this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
                         var index = this.userData[user].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==oldDate);
                         if (index != -1) {
@@ -1700,6 +1707,7 @@ class AdminDashboard {
             await this.addFile(newName, this.jsonFiles[customIndex].data);
             let userEditCount = 0;
             for (var userUUID in this.userData) {
+                if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
                 if (!!this.userData[userUUID].answers[oldName]) {
                     userEditCount = userEditCount + 1;
                     if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
@@ -1892,6 +1900,7 @@ class AdminDashboard {
         } else {
             await this.mergeUserEdits();
             for (var usr in customData) {
+                if (Array.isArray(customData[usr].answers) && customData[usr].answers.length === 0) customData[usr].answers = {};
                 for (var subj in customData[usr].answers) {
                     customData[usr].answers[subj] = this.sortUserDates(customData[usr].answers[subj]);
                 }
