@@ -597,9 +597,9 @@ foreach ($subjectJSONs as $subjectNameTMP) {
             const logger = options.log ? console : {group: ()=>{}, groupEnd: ()=>{}, error: ()=>{}, log: ()=>{}};
 
             const utenti = options.users ?? window.users;
-            const datiMateria = options.data ?? window.pageData.currentSubject;
+            const datiMateria = options.data ?? <?php echo ($userData["admin"] ?? false) ? json_encode($subjectData) : ""; ?>
             if (!datiMateria) return false;
-            const materia = options.subject ?? window.SUBJECT;
+            const materia = options.subject ?? <?php echo $subjectName; ?>;
             const messageArr = [];
             var listaPrenotazioni = {};
 
