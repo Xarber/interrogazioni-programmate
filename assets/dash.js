@@ -1753,16 +1753,18 @@ class AdminDashboard {
     async fixUserDataAnswers(force = false, customIndex = this.currentFileIndex) {
         if (
             !force &&
-            !confirm(`Sicuro di voler eseguire una correzione forzata delle risposte?`) &&
-            !confirm(`Questa azione cancellerà tutte le vecchie risposte degli utenti per questa materia!`)
+            (
+                !confirm(`Sicuro di voler eseguire una correzione forzata delle risposte?`) ||
+                !confirm(`Questa azione cancellerà tutte le vecchie risposte degli utenti per questa materia!`)
+            )
         ) return;
         if (customIndex < 0) return;
         
         for (var userUUID in this.userData) {
             if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
-            this.userData[userUUID].answers[this.jsonFiles[customIndex].fileName] = [
-                this.jsonFiles[customIndex].data.answers[userUUID].date
-            ];
+            this.userData[userUUID].answers[this.jsonFiles[customIndex].fileName] = [];
+            if (this.jsonFiles[customIndex].data.answers[userUUID])
+                this.userData[userUUID].answers[this.jsonFiles[customIndex].fileName].push(this.jsonFiles[customIndex].data.answers[userUUID].date);
             if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
         }
 
