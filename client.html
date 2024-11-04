@@ -359,13 +359,106 @@
                 document.documentElement.appendChild(btnDiv);
             }
 
+            window.actionQueue = {
+                queue: [],
+                isProcessing: false,
+                immediateActions: new Set([]) ?? new Set([
+                    'changeProfile',
+                    'changeSubject',
+                    'changeDay'
+                ]),
+
+                // Add action to queue
+                add(actionName, args) {
+                    const action = { actionName, args };
+                    this.queue.push(action);
+                    
+                    // Store queue in localStorage
+                    this.saveQueue();
+                    
+                    // If online, process queue
+                    if (navigator.onLine) {
+                        this.processQueue();
+                    }
+                },
+
+                // Save queue to localStorage
+                saveQueue() {
+                    localStorage.setItem('actionQueue', JSON.stringify(this.queue));
+                },
+
+                // Load queue from localStorage
+                loadQueue() {
+                    const savedQueue = localStorage.getItem('actionQueue');
+                    if (savedQueue) {
+                        this.queue = JSON.parse(savedQueue);
+                    }
+                },
+
+                // Process all queued actions
+                async processQueue() {
+                    if (this.isProcessing || !navigator.onLine) return;
+                    
+                    this.isProcessing = true;
+                    
+                    while (this.queue.length > 0) {
+                        const action = this.queue[0];
+                        try {
+                            await window.actions[action.actionName](...action.args);
+                            // Action successful, remove from queue
+                            this.queue.shift();
+                            this.saveQueue();
+                        } catch (error) {
+                            console.error('Failed to process action:', error);
+                            // Stop processing on error
+                            break;
+                        }
+                    }
+                    
+                    this.isProcessing = false;
+                }
+            };
             
-            window.actionManager = [[], async (promise = false)=>{
+            window.actionManager = [async (promise = false)=>{
                 if (!window.navigator.onLine) return window.actionManager[0].push(promise);
                 // Logic to execute all promises
+            }, function(promise) {
+                if (!navigator.onLine) {
+                    const actionName = promise._actionName; // We'll set this below
+                    const args = promise._actionArgs;  // We'll set this below
+                    
+                    if (window.actionQueue.immediateActions.has(actionName)) {
+                        return promise;
+                    }
+
+                    window.actionQueue.add(actionName, args);
+                    return Promise.resolve({ status: true, offline: true, message: 'Action queued' });
+                }
+                return promise;
             }];
-            window.addEventListener('online', ()=>window.actionManager[1]());
-            
+
+            // Initialize when page loads
+            window.addEventListener('load', () => {
+                // Register service worker
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('ServiceWorker registered'))
+                    .catch(error => console.error('ServiceWorker registration failed:', error));
+                }
+                
+                // Load saved queue
+                window.actionQueue.loadQueue();
+            });
+
+            // Handle online/offline events
+            window.addEventListener('online', () => {
+                console.log('Back online');
+                window.actionQueue.processQueue();
+            });
+
+            window.addEventListener('offline', () => {
+                console.log('Gone offline');
+            });
 
             window.actions = {
                 welcomeCreate: function(elThis) {
@@ -380,6 +473,8 @@
                         if (!r.status) return r(alert('Impossibile completare l\'azione!'));
                         re(await window.renderPage(elThis.parentNode.querySelector('input[name=\'uid\']').value));
                     });
+                    promise._actionName = 'welcomeCreate';
+                    promise._actionArgs = [elThis];
                     window.actionManager[1](promise);
                     return promise;
                 },
@@ -391,6 +486,8 @@
                                 : document.getElementById('UID').value;
                         r(await window.renderPage(document.getElementById('UID').value));
                     });
+                    promise._actionName = 'login';
+                    promise._actionArgs = [elThis];
                     window.actionManager[1](promise);
                     return promise;
                 },
@@ -398,6 +495,8 @@
                     const promise = new Promise(async (r)=>{
                         r(await window.renderPage(''));
                     });
+                    promise._actionName = 'changeUser';
+                    promise._actionArgs = [elThis];
                     window.actionManager[1](promise);
                     return promise;
                 },
@@ -405,6 +504,8 @@
                     const promise = new Promise(async (r)=>{
                         r(await window.renderPage(undefined, undefined, profile));
                     });
+                    promise._actionName = 'changeProfile';
+                    promise._actionArgs = [profile];
                     window.actionManager[1](promise);
                     return promise;
                 },
@@ -412,6 +513,8 @@
                     const promise = new Promise(async (r)=>{
                         r(await window.renderPage(undefined, subject));
                     });
+                    promise._actionName = 'changeSubject';
+                    promise._actionArgs = [subject];
                     window.actionManager[1](promise);
                     return promise;
                 },
@@ -419,6 +522,8 @@
                     const promise = new Promise(async (r)=>{
                         r(await window.renderPage());
                     });
+                    promise._actionName = 'changeDay';
+                    promise._actionArgs = [];
                     window.actionManager[1](promise);
                     return promise;
                 },
@@ -433,6 +538,8 @@
                         if (res.message === "Invalid Day!") r(CHANGESEC("dayunavailable"));
                         return r(CHANGESEC("schedulefailed"));
                     });
+                    promise._actionName = 'scheduleDay';
+                    promise._actionArgs = [day];
                     window.actionManager[1](promise);
                     return promise;
                 }
