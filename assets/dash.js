@@ -768,6 +768,7 @@ class AdminDashboard {
             dayDividedAnswers[answerData.date] ??= [];
             dayDividedAnswers[answerData.date].push({UUID, answerData});
         });
+        dayDividedAnswers["Esclusi"] ??= [];
         const dayList = Object.entries(currentFile.data.days);
         dayList.forEach(([day, data])=>{
             dayDividedAnswers[day] ??= [];
