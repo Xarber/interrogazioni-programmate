@@ -14,6 +14,7 @@ self.addEventListener('install', event => {
                 '/assets/dash.js',
                 '/assets/manifest.php',
                 '/push-service-worker.js',
+                '/manager.php?scope=loadPageData'
             ]);
         })
     );
