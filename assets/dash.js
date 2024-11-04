@@ -1476,7 +1476,7 @@ class AdminDashboard {
         const answerPriority = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber;
         
         if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
-        if (this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+        if (day != "Esclusi" && this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
             var index = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
             if (index != -1) {
                 this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
@@ -1490,14 +1490,15 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
 
         delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
-        this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
-        this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
-        
-        const objEntries = Object.entries(this.jsonFiles[this.currentFileIndex].data.answers);
-        objEntries.forEach(([userUUID, userData]) => {
-            if (userData.answerNumber > answerPriority) this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = userData.answerNumber - 1;
-        });
-
+        if (day != "Esclusi") {
+            this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
+            this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
+            
+            const objEntries = Object.entries(this.jsonFiles[this.currentFileIndex].data.answers);
+            objEntries.forEach(([userUUID, userData]) => {
+                if (userData.answerNumber > answerPriority) this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = userData.answerNumber - 1;
+            });
+        }
 
         await this.updateJSON();
         this.render();
@@ -1553,18 +1554,20 @@ class AdminDashboard {
 
     async moveUserToDate(userUUID, date, force) {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
-        if (!force && !confirm(Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) > 0 ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
+        if (!force && !confirm((date != "Esclusi" && Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) > 0) ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
         
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
         if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
         if (!!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) await this.removeUserAnswer(userUUID, true);
 
-        this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName] ??= [];
-        let oldUserAnswerIndex = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==date);
-        if (oldUserAnswerIndex > -1) this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName][oldUserAnswerIndex] = date;
-        else this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].push(date);
-        if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
+        if (date != "Esclusi") {
+            this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName] ??= [];
+            let oldUserAnswerIndex = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==date);
+            if (oldUserAnswerIndex > -1) this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName][oldUserAnswerIndex] = date;
+            else this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].push(date);
+            if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
+        }
 
         var tmpIndex = this.currentFileIndex;
         this.currentFileIndex = -1;
@@ -1575,11 +1578,14 @@ class AdminDashboard {
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID] ??= {};
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date = date;
-        this.jsonFiles[this.currentFileIndex].data.answerCount++;
-        this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = this.jsonFiles[this.currentFileIndex].data.answerCount;
+        if (date != "Esclusi") this.jsonFiles[this.currentFileIndex].data.answerCount++;
+        else this.jsonFiles[this.currentFileIndex].data.answers[userUUID].name = date;
+        this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = date === "Esclusi" ? "-" : this.jsonFiles[this.currentFileIndex].data.answerCount;
 
-        const newAvailability = Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[0]) - 1;
-        this.jsonFiles[this.currentFileIndex].data.days[date].availability = `${newAvailability > -1 ? newAvailability.toString() : "0"}/${this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[1]}`;
+        if (date != "Esclusi") {
+            const newAvailability = Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[0]) - 1;
+            this.jsonFiles[this.currentFileIndex].data.days[date].availability = `${newAvailability > -1 ? newAvailability.toString() : "0"}/${this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[1]}`;    
+        }
 
         await this.updateJSON();
         this.render();

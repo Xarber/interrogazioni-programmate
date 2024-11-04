@@ -616,8 +616,8 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                 let date = datiMateria.answers[utente].date;
                 listaPrenotazioni[datiMateria.answers[utente].date] ??= {
                     header: options.minimal 
-                        ? `${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`
-                        : `[??] ${new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
+                        ? `${datiMateria.answers[utente].name ?? new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`
+                        : `[-] ${datiMateria.answers[utente].name ?? new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
                     answers: []
                 };
                 listaPrenotazioni[datiMateria.answers[utente].date].answers.push(
