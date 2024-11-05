@@ -19,4 +19,3 @@ Per creare il primo utente, basta semplicemente accedere all'interno della pagin
  - Più tipi di sezioni (Materia, Sondaggio e simili)
  - Risposte illimitate con -1
  - Aggiungere la prenotazione al calendario di sistema
- - Account "spettatore" in modo da non notificare la risposta

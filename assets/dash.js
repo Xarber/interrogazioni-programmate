@@ -698,8 +698,12 @@ class AdminDashboard {
                 return returnNumber;
             })(userData.answers);
             userElement.className = 'admin-day-item';
+            var userFlags = [];
+            userData.admin && userFlags.push("A");
+            userData.watcherAcc && userFlags.push("W");
+            userFlags = userFlags.length > 0 ? `[${userFlags.join(" | ")}] ` : "";
             userElement.innerHTML = `
-                <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userData.admin ? '[A] ' : ''}${userData.name}</span>
+                <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userFlags}${userData.name}</span>
                 <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-invite-btn ${!userData.pushSubscriptions ? '' : 'admin-notify-user-btn'}" data-user="${userUUID}" title="Copia Invito">
