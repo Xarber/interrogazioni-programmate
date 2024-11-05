@@ -811,6 +811,7 @@ class AdminDashboard {
             answerList.appendChild(dayDividerElement);
             dayData.forEach(e=>{
                 const {UUID, answerData} = e;
+                if (!this.userData[UUID]) return this.removeUserAnswer(UUID, true);
                 const answerElement = document.createElement('div');
                 answerElement.className = 'admin-day-item';
                 answerElement.innerHTML = `
@@ -1480,19 +1481,21 @@ class AdminDashboard {
         const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
         const answerPriority = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber;
         
-        if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
-        if (day != "Esclusi" && this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
-            var index = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
-            if (index != -1) {
-                this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
-                if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
+        if (!!this.userData[userUUID]) {
+            if (Array.isArray(this.userData[userUUID].answers) && this.userData[userUUID].answers.length === 0) this.userData[userUUID].answers = {};
+            if (day != "Esclusi" && this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName]) {
+                var index = this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==day);
+                if (index != -1) {
+                    this.userData[userUUID].answers[this.jsonFiles[this.currentFileIndex].fileName].splice(index, 1);
+                    if (!this.userEditList.includes(userUUID)) this.userEditList.push(userUUID);
+                }
             }
-        }
         
-        var tmpIndex = this.currentFileIndex;
-        this.currentFileIndex = -1;
-        await this.updateJSON(undefined, false, true);
-        this.currentFileIndex = tmpIndex;
+            var tmpIndex = this.currentFileIndex;
+            this.currentFileIndex = -1;
+            await this.updateJSON(undefined, false, true);
+            this.currentFileIndex = tmpIndex;
+        }
 
         delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
         if (day != "Esclusi") {
