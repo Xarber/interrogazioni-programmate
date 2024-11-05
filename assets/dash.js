@@ -1810,18 +1810,17 @@ class AdminDashboard {
             this.userData[uuid].admin = !this.userData[uuid].admin;
             this.userData[uuid].watcherAcc = this.userData[uuid].admin === true && !!confirm(`Vuoi rendere ${this.userData[uuid].name} un account spettatore? Verrà aggiunto agli utenti esclusi di default per ogni materia.\n(Annulla = No)`);
 
-            if (this.userData[uuid].watcherAcc && !!confirm(`Vuoi modificare le vecchie risposte di ${this.userData[uuid].name} per escluderlo?`)) {
-                var tmpIndex = this.currentFileIndex;
-                for (var i = 0; i < this.jsonFiles.length; i++) {
-                    this.currentFileIndex = i;
-                    await this.moveUserToDate(uuid, "Esclusi", true);
-                }
-                this.currentFileIndex = tmpIndex;
-            }
-
             if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
             await this.updateJSON();
             this.renderUsers();
+        }
+        if (this.userData[uuid].watcherAcc && !!confirm(`Vuoi modificare le vecchie risposte di ${this.userData[uuid].name} per escluderlo?`)) {
+            var tmpIndex = this.currentFileIndex;
+            for (var i = 0; i < this.jsonFiles.length; i++) {
+                this.currentFileIndex = i;
+                await this.moveUserToDate(uuid, "Esclusi", true);
+            }
+            this.currentFileIndex = tmpIndex;
         }
     }
   
