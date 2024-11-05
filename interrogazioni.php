@@ -685,7 +685,7 @@ foreach ($subjectJSONs as $subjectNameTMP) {
                             subjects: r,
                             updateCallback: async (type, fullData, fileData, forceBlockRefresh = false)=>{
                                 console.log(fullData, fileData);
-                                const r = fetch("?UID=<?php echo $userID; ?>&scope=updateSettings&type="+type, {
+                                const r = await fetch("?UID=<?php echo $userID; ?>&scope=updateSettings&type="+type, {
                                     method: "POST",
                                     body: JSON.stringify([fileData])
                                 }).then(r=>r.json());
