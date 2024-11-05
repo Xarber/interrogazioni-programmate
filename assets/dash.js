@@ -1474,7 +1474,7 @@ class AdminDashboard {
     }
 
     async removeUserAnswer(userUUID, force = false) {
-        if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
+        if (!this.userData[userUUID] && !this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questo utente non esiste!`);
         if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questa risposta non esiste!`);
         if (!force && !confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
         
@@ -1507,8 +1507,11 @@ class AdminDashboard {
                 if (userData.answerNumber > answerPriority) this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = userData.answerNumber - 1;
             });
         }
-
-        await this.updateJSON();
+        
+        var tmpIndex = this.currentFileIndex;
+        this.currentFileIndex = -1;
+        await this.updateJSON(undefined, false, true);
+        this.currentFileIndex = tmpIndex;
         this.render();
         this.dashboardStayOnAnswers = true;
     }
