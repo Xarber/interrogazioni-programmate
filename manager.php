@@ -120,7 +120,9 @@ if ($_GET["scope"] === "loadPageData") {
         ) : (
             (isset($_GET["changeProfile"])) ? "changeprofile" : (
                 ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) ? "schedule-subject" : (
-                    (isset($subjectData["answers"][$userID])) ? "alreadyscheduled" : (
+                    (isset($subjectData["answers"][$userID])) ? (
+                        $subjectData["answers"][$userID] === "Esclusi" ? "alreadyscheduled-excluded" : "alreadyscheduled" 
+                    ) : (
                         ((isset($_GET["day"])) && (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0)) ? "dayunavailable" : (
                             (count($subjectData["days"] ?? array()) === 0 || $subjectData["lock"] === true) ? "nodays" : "schedule-day"
                         )

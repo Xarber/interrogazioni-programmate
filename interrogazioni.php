@@ -60,6 +60,11 @@
         <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span></p>
         <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
+    <div class="mainDiv hided" id="alreadyscheduled-excluded">
+        <h1>Sei stato escluso da questa interrogazione!</h1>
+        <p>Se è un errore, contatta un admin, altrimenti non dovrai preoccuparti di questa interrogazione!</p>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
+    </div>
     <div class="mainDiv hided" id="scheduleconfirmed">
         <h1>Ti sei prenotato!</h1>
         <p>Ti sei prenotato a <span class="dummy" id="javascript-change-schedule-data">$SUBJECTNAME</span> per il <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span>!</p>
