@@ -20,4 +20,3 @@ Per creare il primo utente, basta semplicemente accedere all'interno della pagin
  - Risposte illimitate con -1
  - Aggiungere la prenotazione al calendario di sistema
  - Account "spettatore" in modo da non notificare la risposta
- - Sezione "Nessuna Risposta" per escludere una persona dalla domanda
