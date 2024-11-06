@@ -155,7 +155,7 @@ class UserDashboard {
                 </div>
                 <div class="inline">
                     ${this.notificationClass ? `<button onclick="" id="dash-notifications-btn" ${this.notificationClass.available() ? "" : 'style="display: none"'} title="Notification Settings">Notifiche</button>` : ""}
-                    <button onclick="window.open(\`webcal://${location.hostname}/manager.php?scope=syncICal&UID=${window.UID}\`)" id="dash-calendar-btn" title="Add Calendar">Calendario</button>
+                    <button onclick="window.open(\`webcal://${location.hostname}/manager.php?scope=syncICal&UID=${window.UID}\`)" id="dash-calendar-btn" title="Add Calendar">Aggiungi Calendario</button>
                     ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
                 </div>
             </div>
