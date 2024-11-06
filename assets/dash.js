@@ -23,6 +23,14 @@ class PushNotifications {
         return outputArray;
     }
 
+    async clearCache() {
+        // Clear cache
+        await caches.keys().then(cacheNames => Promise.all(cacheNames.map(async cacheName => {
+            await caches.delete(cacheName);
+            console.log(`Cache ${cacheName} deleted.`);
+        })));
+    }
+
     async subscribe() {
         // Check if service worker and push messaging is supported
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
