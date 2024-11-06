@@ -54,6 +54,9 @@ button {cursor: pointer;}
 }
 div.inline {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: right;
+    gap: 15px;
 }
 div select, div input {
     background-color: inherit;
@@ -83,10 +86,7 @@ button {
 div:not(.inline) > button {
     margin-left: auto;
 }
-div.inline > button:first-child {
-    margin-left: auto;
-}
-div.inline > button:first-child:not(:only-child) {margin-right: 15px;}
+div.inline > button {margin-top: unset !important;}
 @media (max-width: 680px) {
     .mainDiv {
         width: calc(90% - 50px);
