@@ -96,6 +96,5 @@ div.inline > button {margin-top: unset !important;}
 }
 @media (max-width: 600px) {
     .mainDiv {padding: 10px;width: calc(100% - 40px)}
-    div.inline > button:first-child {margin-right: 5px;}
     div h1 {font-size: 20px;}
 }
