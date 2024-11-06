@@ -163,7 +163,10 @@ class UserDashboard {
                 </div>
                 <div class="inline">
                     ${this.notificationClass ? `<button onclick="" id="dash-notifications-btn" ${this.notificationClass.available() ? "" : 'style="display: none"'} title="Notification Settings">Notifiche</button>` : ""}
-                    ${/Android/i.test(navigator.userAgent) ? `<button onclick="window.open(\`webcal://${location.hostname}/manager.php?scope=syncICal&UID=${window.UID}\`)" id="dash-calendar-btn" title="Add Calendar">Aggiungi Calendario</button>` : ""}
+                    <button onclick="window.open(${/Android/i.test(navigator.userAgent) 
+                        ? `\`webcal://\${location.hostname}/manager.php?scope=syncICal&UID=\${window.UID}\`` 
+                        : `\`https://calendar.google.com/calendar/u/0?cid=\${encodeURIComponent(\`webcal://\${location.hostname}/manager.php?scope=syncICal&UID=\${window.UID}\`)}\``
+                    })" id="dash-calendar-btn" title="Add Calendar">Aggiungi Calendario</button>
                     ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
                 </div>
             </div>
