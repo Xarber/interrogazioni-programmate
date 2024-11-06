@@ -54,6 +54,33 @@ function deleteFolder($dir) {
     }
     rmdir($dir);
 }
+function generateICSFile($calendarMetaData, $events) {
+    $icsContent = "BEGIN:VCALENDAR\n"
+        . "VERSION:2.0\n"
+        . "PRODID:-//ical.marudot.com//EN\n"
+        . "CALSCALE:GREGORIAN\n"
+        . "METHOD:PUBLISH\n"
+        . "X-WR-CALNAME:" . $calendarMetaData['name'] . "\n"
+        . "X-WR-TIMEZONE:" . ($calendarMetaData['timezone'] ?? 'Etc/GMT') . "\n";
+
+    foreach ($events as $event) {
+        $icsContent .= "BEGIN:VEVENT\n"
+            . "SUMMARY:" . $event['title'] . "\n"
+            . "DTSTART;VALUE=DATE:" . $event['start']->format('Ymd') . "\n"
+            . "DTEND;VALUE=DATE:" . $event['end']->format('Ymd') . "\n"
+            . "LOCATION:" . $event['location'] . "\n"
+            . "DESCRIPTION:" . $event['description'] . "\n"
+            . "UID:" . $event['id'] . "@ical.marudot.com\n"
+            . "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\n"
+            . "STATUS:CONFIRMED\n"
+            . "TRANSP:TRANSPARENT\n"
+            . "SEQUENCE:0\n"
+            . "END:VEVENT\n";
+    }
+
+    $icsContent .= "END:VCALENDAR";
+    return $icsContent;
+}
 
 $subjectJSONs = array_diff(scandir("./JSON{$PROFILE}/"), array('.', '..'));
 $userID = $_GET["UID"] ?? NULL;
@@ -396,4 +423,29 @@ if ($_GET["scope"] === "loadPageData") {
     array_push($userList[$userID]["answers"][$subjectName], $_GET["day"]);
     $success = file_put_contents("./JSON{$PROFILE}/".$subject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
     die(json_encode(array("status" =>!!$success, "message" => null)));
+} else if ($_GET["scope"] === "syncICal") {
+    if (!$userData) {
+        header('Content-Type: application/json');
+        die(json_encode(array("status" => false, "message" => "Not Authorized!")));
+    }
+    $calendarMetaData = array(
+        "name" => "Calendario Interrogazioni Programmate"
+    );
+    $userEvents = array();
+    foreach ($userData["answers"] as $answerSubjectName => $answers) {
+        foreach ($answers as $answer) {
+            $explodedDate = explode("-", $answer);
+            $date = $explodedDate[2]."-".$explodedDate[1]."-".$explodedDate[0];
+            array_push($userEvents, array(
+                "title" => "Interrogazione: ".$answerSubjectName,
+                "start" => new DateTime($date . " 00:00:00"),
+                "end" => new DateTime($date . " 23:59:59"),
+                "location" => "Scuola",
+                "description" => "Interrogazione programmata per la materia ".$answerSubjectName.", il giorno ".$answer,
+                "id" => "Interrogazione-".$answer."-".$answerSubjectName
+            ));
+        }
+    }
+    $response = generateICSFile($calendarMetaData, $userEvents);
+    die($response);
 }
