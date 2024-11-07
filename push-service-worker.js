@@ -24,7 +24,8 @@ self.addEventListener('fetch', event => {
             }
             
             // Clone the response because it can only be used once
-            if (event.request.method === "GET") {
+            console.log(event.request, event.request.method);
+            if (event.request.method.toUpperCase() == "GET") {
                 console.log("Cached response");
                 const responseToCache = response.clone();
                 
