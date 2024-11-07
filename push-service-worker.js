@@ -1,10 +1,14 @@
-const CACHE_NAME = 'pwa-cache-v1';
+self.addEventListener('activate', event => {
+    clients.claim();
+    console.log('Service Worker Ready!');
+});
+
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
+        caches.open("pwa-cache-v1").then(cache => {
             return cache.addAll([
-                '/',
-                '/client.html',
+                //'/',
+                '/interrogazioni.php',
                 '/assets/app.css',
                 '/assets/dash.js',
                 '/assets/manifest.php',
@@ -29,7 +33,7 @@ self.addEventListener('fetch', event => {
                 console.log("Cached response");
                 const responseToCache = response.clone();
                 
-                caches.open(CACHE_NAME).then(cache => {
+                caches.open("pwa-cache-v1").then(cache => {
                     cache.put(event.request, responseToCache);
                 });
             }
@@ -46,11 +50,6 @@ self.addEventListener('fetch', event => {
         })
         
     );
-});
-
-self.addEventListener('activate', event => {
-    clients.claim();
-    console.log('Service Worker Ready!');
 });
 
 self.addEventListener('message', event => {
@@ -75,7 +74,6 @@ self.addEventListener('message', event => {
         console.error('IndexedDB error');
     };
 });
-  
 
 self.addEventListener('push', function(event) {
     if (!event.data) return;
