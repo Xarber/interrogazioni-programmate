@@ -40,7 +40,7 @@ class PushNotifications {
     
         try {
             // Register service worker
-            const registration = await navigator.serviceWorker.register('push-service-worker.js');
+            const registration = await navigator.serviceWorker.getRegistration() ?? await navigator.serviceWorker.register('/push-service-worker.js');
             while (!navigator.serviceWorker.controller) await new Promise(r=>setTimeout(r, 1000));
             navigator.serviceWorker.controller.postMessage({
                 pathname: window.location.pathname,

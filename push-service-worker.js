@@ -13,7 +13,7 @@ self.addEventListener('install', event => {
                 '/assets/app.css',
                 '/assets/dash.js',
                 '/assets/manifest.php',
-                '/push-service-worker.js',
+                //'/push-service-worker.js',
                 //'/manager.php?scope=loadPageData'
             ]);
         })
