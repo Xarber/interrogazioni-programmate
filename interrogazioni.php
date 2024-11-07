@@ -451,7 +451,7 @@
                 // Register service worker
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('/push-service-worker.js')
-                    .then(registration => console.log('ServiceWorker registered'))
+                    .then(registration => console.log('ServiceWorker registered', registration))
                     .catch(error => console.error('ServiceWorker registration failed:', error));
                 }
                 
