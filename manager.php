@@ -448,4 +448,14 @@ if ($_GET["scope"] === "loadPageData") {
     }
     $response = generateICSFile($calendarMetaData, $userEvents);
     die($response);
+} else if ($_GET["scope"] == "redirectToCalendar") {
+    if (!$userData) {
+        header('Content-Type: application/json');
+        die(json_encode(array("status" => false, "message" => "Not Authorized!")));
+    }
+    $ical = rawurlencode("webcal://{$_SERVER["HTTP_HOST"]}/manager.php?scope=syncICal&UID={$userID}");
+    $calUrl = "https://calendar.google.com/calendar/u/0?cid={$ical}";
+    header("HTTP/1.1 301 Moved Permanently");
+    header("Location: $calUrl");
+    die();
 }
