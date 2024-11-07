@@ -18,4 +18,3 @@ Per creare il primo utente, basta semplicemente accedere all'interno della pagin
  - Titoli custom per le interrogazioni (Al posto di "Che giorno vuoi farti interrogare?" e "Sarai interrogato in data ...")
  - Più tipi di sezioni (Materia, Sondaggio e simili)
  - Risposte illimitate con -1
- - Aggiungere la prenotazione al calendario di sistema
