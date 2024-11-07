@@ -1,12 +1,6 @@
 const CACHE_NAME = 'pwa-cache-v1';
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open('v1').then(cache => {
-            return cache.addAll([]);
-        })
-    );
-    /*
-    event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             return cache.addAll([
                 '/',
@@ -18,7 +12,7 @@ self.addEventListener('install', event => {
                 //'/manager.php?scope=loadPageData'
             ]);
         })
-    );*/
+    );
 });
 
 self.addEventListener('fetch', event => {
@@ -50,17 +44,6 @@ self.addEventListener('fetch', event => {
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME && cacheName != "v1") {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
     clients.claim();
     console.log('Service Worker Ready!');
 });
