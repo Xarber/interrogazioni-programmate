@@ -454,7 +454,7 @@ if ($_GET["scope"] === "loadPageData") {
         die(json_encode(array("status" => false, "message" => "Not Authorized!")));
     }
     $ical = rawurlencode("webcal://{$_SERVER["HTTP_HOST"]}/manager.php?scope=syncICal&UID={$userID}");
-    $calUrl = "https://calendar.google.com/calendar/u/0?cid={$ical}";
+    $calUrl = "https://calendar.google.com/calendar/r?cid={$ical}";
     header("HTTP/1.1 301 Moved Permanently");
     header("Location: $calUrl");
     die();
