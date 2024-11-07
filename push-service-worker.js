@@ -5,6 +5,7 @@ self.addEventListener('install', event => {
             return cache.addAll([]);
         })
     );
+    /*
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             return cache.addAll([
@@ -17,7 +18,7 @@ self.addEventListener('install', event => {
                 //'/manager.php?scope=loadPageData'
             ]);
         })
-    );
+    );*/
 });
 
 self.addEventListener('fetch', event => {
