@@ -17,29 +17,33 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request).then(response => {
-            // Return cached response if found
-            if (response) return response;
+        fetch(event.request).then(response => {
+            // Don't cache if not a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+                return response;
+            }
             
-            // Clone the request because it can only be used once
-            const fetchRequest = event.request.clone();
-            
-            return fetch(fetchRequest).then(response => {
-                // Don't cache if not a valid response
-                if (!response || response.status !== 200 || response.type !== 'basic') {
-                    return response;
-                }
-                
-                // Clone the response because it can only be used once
+            // Clone the response because it can only be used once
+            if (event.request.method === "GET") {
+                console.log("Cached response");
                 const responseToCache = response.clone();
                 
                 caches.open(CACHE_NAME).then(cache => {
                     cache.put(event.request, responseToCache);
                 });
+            }
+            
+            return response;
+        }).catch(e=>{
+            caches.match(event.request).then(response => {
+                console.warn("Fetch error encountered, returning cached response.", e);
+                // Return cached response if found
+                if (response) return response;
                 
-                return response;
-            });
+                return e;
+            })
         })
+        
     );
 });
 
