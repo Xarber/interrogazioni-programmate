@@ -199,7 +199,7 @@
                     document.querySelector('select.id-select-subjectlist').innerHTML += `<option value="${subject}">${subject}</option>`;
                 }
                 for (var day in window.pageData.subject.days) {
-                    document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability === "-1/-1" ? "∞" : window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName} ${day}</option>`;
+                    document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability === "-1/-1" ? "∞" : window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName == "-" ? "" : `${window.pageData.subject.days[day].dayName} `}${day}</option>`;
                 }
 
                 document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.innerHTML = window.userData.name);
@@ -243,8 +243,8 @@
                     for (var data in datiMateria.days ?? []) {
                         listaPrenotazioni[data] ??= {
                             header: options.minimal 
-                                ? `${datiMateria.days[data].dayName} ${data}`
-                                : `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName} ${data}`,
+                                ? `${datiMateria.days[data].dayName == "-" ? "" : `${datiMateria.days[data].dayName} `}${data}`
+                                : `[${datiMateria.days[data].availability}] ${datiMateria.days[data].dayName == "-" ? "" : `${datiMateria.days[data].dayName} `}${data}`,
                             answers: []
                         }
                     }

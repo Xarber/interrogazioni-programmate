@@ -672,7 +672,7 @@ class AdminDashboard {
             const dayElement = document.createElement('div');
             dayElement.className = 'admin-day-item';
             dayElement.innerHTML = `
-                <span>${date} (${dayData.dayName})</span>
+                <span>${date}${dayData.dayName != "-" ? ` ${dayData.dayName}` : ""}</span>
                 <span class="admin-availability">Posti liberi: ${dayData.availability === "-1/-1" ? "∞" : dayData.availability}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-edit-day-btn" data-date="${date}" title="Sposta Giorno">
@@ -1144,6 +1144,73 @@ class AdminDashboard {
         `;
         document.head.appendChild(style);
     }
+
+    async richPrompt(text, options = {}) {
+        options.type ??= "input";
+        options.textOverride ??= text;
+        options.isTitleDesc ??= false;
+        options.descText ??= false;
+        options.confirmText ??= "Confirm";
+        options.cancelText ??= "Cancel";
+        options.inputPlaceholder ??= "Write text here";
+        options.awaitClose ??= false;
+        options.pickAnswers ??= [];
+        var {type, descText, confirmText, cancelText, inputPlaceholder, textOverride, isTitleDesc, awaitClose, pickAnswers} = options;
+        if (isTitleDesc) {
+            descText = text;
+            if (textOverride === text) textOverride = "Notification";
+        }
+        text = textOverride;
+        return new Promise(async function(resolve, reject) {
+            try {
+                text ??= type === "pick" ? "Select an option" : (type === "confirm" ? "Confirm the action" : "Input some text...");
+                var backgroundDiv = document.createElement('div');
+                backgroundDiv.style = "background-color: rgba(0, 0, 0, 0.5);position: fixed;top: 0;left: 0;z-index: 999;width: 100%;height: 100%;";
+                var promptDiv = document.createElement('div');
+                promptDiv.style = "background-color: rgba(40, 40, 40);position: relative;top: 50%;left: 50%;transform: translate(-50%, -50%);border-radius: 5px;padding: 10px;max-width: calc(90% - 25px);max-height: calc(90% - 25px);overflow-y: auto;";
+                var promptTitle = document.createElement('h1');
+                promptTitle.style = "";
+                promptTitle.innerText = text;
+                var promptDesc = document.createElement('p');
+                promptDesc.style = "margin: 10px 5px;";
+                promptDesc.innerText = descText;
+                if (type === "pick") {
+                    var promptInput = document.createElement('select');
+                    for (var ans of pickAnswers) {
+                        var option = document.createElement('option');
+                        option.value = ans.value;
+                        option.innerText = ans.text;
+                        promptInput.appendChild(option);
+                    }
+                    promptInput.style = "color: white;border: 1px solid gray;border-radius: 5px;padding: 5px 10px;";
+                } else {
+                    var promptInput = document.createElement('input');
+                    promptInput.style = "color: white;border: 1px solid gray;border-radius: 5px;padding: 5px 10px;";
+                    promptInput.placeholder = inputPlaceholder ?? "Write text here";
+                }
+                var promptActionDiv = document.createElement('div');
+                promptActionDiv.style = "display: block;margin-left: auto;";
+                var promptConfirm = document.createElement('button');
+                promptConfirm.style = "background-color: rgba(0, 70, 170);border-radius: 5px;border: 1px solid gray;color: white;margin: 5px;";
+                promptConfirm.innerText = confirmText;
+                promptConfirm.addEventListener('click', ()=>{backgroundDiv.remove();resolve(type != "confirm" ? promptInput.value : true)});
+                var promptCancel = document.createElement('button');
+                promptCancel.style = "background-color: rgba(20, 20, 20);border-radius: 5px;border: 1px solid gray;color: white;margin: 5px;";
+                promptCancel.innerText = cancelText;
+                promptCancel.addEventListener('click', ()=>{backgroundDiv.remove();resolve(false);});
+            
+                promptDiv.appendChild(promptTitle);
+                if (!!descText && descText.length > 0) promptDiv.appendChild(promptDesc);
+                if (type != "confirm") promptDiv.appendChild(promptInput);
+                if (cancelText !== false) promptActionDiv.appendChild(promptCancel);
+                if (confirmText !== false) promptActionDiv.appendChild(promptConfirm);
+                if (cancelText !== false || confirmText !== false) promptDiv.appendChild(promptActionDiv)
+                backgroundDiv.appendChild(promptDiv);
+                document.body.appendChild(backgroundDiv);
+                if (!!awaitClose && typeof awaitClose.then === "function") {await awaitClose;promptConfirm.click();}
+            }catch(e){reject(e)}
+        });
+    }
   
     attachEventListeners() {
         const closeBtn = this.dashboard.querySelector('.admin-close-btn');
@@ -1358,14 +1425,15 @@ class AdminDashboard {
     }
   
     async addDay() {
-        const date = prompt('Inserisci la data (DD-MM-YYYY):');
+        const notUseDates = this.jsonFiles[this.currentFileIndex].data.usesDays === false;
+        const date = prompt(notUseDates ? "Inserisci il nome dell'opzione:" : 'Inserisci la data (DD-MM-YYYY):');
         if (date) {
             if (this.jsonFiles[this.currentFileIndex].data.days[date]) {
-                alert(`Questa data è già esistente!`);
+                alert(`Questa opzione è già esistente!`);
                 return await this.addDay();
             }
             const formattedDate = `${date.split("-")[1]}/${date.split("-")[0]}/${date.split("-")[2]}`;
-            let dayName = (new Date(formattedDate)).toLocaleString("it-IT", {weekday: "long"});
+            let dayName = notUseDates ? "-" : (new Date(formattedDate)).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
             let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):\n(-1 = Nessun Limite)');
             if (dayName && availability) {
@@ -1515,7 +1583,7 @@ class AdminDashboard {
         delete this.jsonFiles[this.currentFileIndex].data.answers[userUUID];
         if (day != "Esclusi") {
             this.jsonFiles[this.currentFileIndex].data.answerCount = this.jsonFiles[this.currentFileIndex].data.answerCount - 1;
-            this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
+            if (this.jsonFiles[this.currentFileIndex].data.days[day].availability != "-1/-1") this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${Number(this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[0]) + 1}/${this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/")[1]}`;
             
             const objEntries = Object.entries(this.jsonFiles[this.currentFileIndex].data.answers);
             objEntries.forEach(([userUUID, userData]) => {
@@ -1577,7 +1645,7 @@ class AdminDashboard {
 
     async moveUserToDate(userUUID, date, force) {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
-        if (!force && !confirm((date != "Esclusi" && Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) > 0) ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
+        if (!force && !confirm((date != "Esclusi" && Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) != 0) ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
         
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
@@ -1606,8 +1674,9 @@ class AdminDashboard {
         this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = date === "Esclusi" ? "-" : this.jsonFiles[this.currentFileIndex].data.answerCount;
 
         if (date != "Esclusi") {
-            const newAvailability = Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[0]) - 1;
-            this.jsonFiles[this.currentFileIndex].data.days[date].availability = `${newAvailability > -1 ? newAvailability.toString() : "0"}/${this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[1]}`;    
+            const tmpCurrentAvailability = Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[0]);
+            const newAvailability = tmpCurrentAvailability != -1 ? tmpCurrentAvailability - 1 : tmpCurrentAvailability;
+            this.jsonFiles[this.currentFileIndex].data.days[date].availability = `${(newAvailability > -2) ? newAvailability.toString() : "0"}/${this.jsonFiles[this.currentFileIndex].data.days[date].availability.split("/")[1]}`;    
         }
 
         await this.updateJSON();
@@ -1628,7 +1697,7 @@ class AdminDashboard {
         for (let day in this.jsonFiles[this.currentFileIndex].data.days) {
             let [current, max] = this.jsonFiles[this.currentFileIndex].data.days[day].availability.split("/").map(Number);
     
-            while (current > 0 && availableUsers.length > 0) {
+            while ((current > 0 || current == -1) && availableUsers.length > 0) {
                 const randomIndex = Math.floor(Math.random() * availableUsers.length);
                 const userUUID = availableUsers[randomIndex];
     
@@ -1640,7 +1709,7 @@ class AdminDashboard {
                 this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber = "F";
 
                 // Update counters
-                current--;
+                if (current != -1) current--;
                 this.jsonFiles[this.currentFileIndex].data.answerCount++;
                 this.jsonFiles[this.currentFileIndex].data.days[day].availability = `${current}/${max}`;
                 await this.updateJSON(undefined, false, true);
@@ -1673,24 +1742,27 @@ class AdminDashboard {
     }
 
     async editDay(oldDate) {
-        const date = prompt('Inserisci la data (DD-MM-YYYY):');
+        const notUseDates = this.jsonFiles[this.currentFileIndex].data.usesDays === false;
+        const date = prompt(notUseDates ? "Inserisci il nome dell'opzione:" : 'Inserisci la data (DD-MM-YYYY):');
         if (date) {
             if (this.jsonFiles[this.currentFileIndex].data.days[date] && oldDate != date) {
-                alert(`Questa data è già esistente!`);
+                alert(`Questa opzione è già esistente!`);
                 return await this.editDay(oldDate);
             }
-            let dayName = new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"});
+            let dayName = notUseDates ? "-" : new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
-            let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):');
+            let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):\n(-1 = Nessun Limite)');
             if (dayName && availability) {
                 if (availability.length < 1) availability = "3";
                 var oldUsedSpots = this.jsonFiles[this.currentFileIndex].data.days[oldDate].availability.split("/")[1] - this.jsonFiles[this.currentFileIndex].data.days[oldDate].availability.split("/")[0];
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
-                if (availability < oldUsedSpots && !confirm(`La disponibilità scelta (${availability}) è più bassa dei posti occupati (${oldUsedSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
-                else if (availability < oldUsedSpots) {
+                if ((availability < oldUsedSpots && availability != "-1") && !confirm(`La disponibilità scelta (${availability}) è più bassa dei posti occupati (${oldUsedSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
+                else if ((availability < oldUsedSpots && availability != "-1")) {
                     await this.clearDayAnswers(oldDate, true);
                     availability = `${availability}/${availability}`;
+                } else if (availability == "-1") {
+                    availability = "-1/-1";
                 } else {
                     availability = `${availability - oldUsedSpots}/${availability}`;
                 }
@@ -1866,7 +1938,7 @@ class AdminDashboard {
         }
     }
   
-    async addFile(fileN = prompt('Inserisci il nome della materia:'), customData) {
+    async addFile(fileN = prompt('Inserisci il nome della materia:'), customData, fileType = "subject") {
         const fileName = fileN;
         if (fileName) {
             if (!this.isSubjectNameAvailable(fileName)) {
@@ -1880,7 +1952,9 @@ class AdminDashboard {
                     hide: false,
                     answerCount: 0,
                     answers: {},
-                    days: {}
+                    days: {},
+                    type: fileType,
+                    usesDays: ["subject"].includes(fileType)
                 }
             };
             this.jsonFiles.push(newFile);

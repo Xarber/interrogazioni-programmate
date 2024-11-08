@@ -17,3 +17,4 @@ Per creare il primo utente, basta semplicemente accedere all'interno della pagin
 # TODO (Work In Progress)
  - Titoli custom per le interrogazioni (Al posto di "Che giorno vuoi farti interrogare?" e "Sarai interrogato in data ...")
  - Più tipi di sezioni (Materia, Sondaggio e simili)
+ - > ! Attenzione a rimuovere la prenotazione dal calendario per tipi di sezioni diverse da materie!
