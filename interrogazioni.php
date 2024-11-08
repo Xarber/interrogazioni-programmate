@@ -125,11 +125,6 @@
         window.SUBJECT = new URLSearchParams(location.search).get('subject');
         window.PROFILE = new URLSearchParams(location.search).get('profile') ?? false;
 
-        var link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = `/assets/manifest.php?UID=${window.UID}`;
-        document.head.appendChild(link);
-
         function CHANGESEC(section) {
             if (!document.querySelector('.mainDiv#'+section)) return false;
             document.querySelectorAll('.mainDiv').forEach(e=>e.classList.add('hided'));
@@ -366,6 +361,14 @@
                     }
                     if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
                 document.documentElement.appendChild(btnDiv);
+
+                if (window.pageData.section != "login-account-not-found") {
+                    if (window.ManifestLink != null) window.ManifestLink.remove();
+                    window.ManifestLink = document.createElement('link');
+                    window.ManifestLink.rel = 'manifest';
+                    window.ManifestLink.href = `/assets/manifest.php?UID=${window.UID}`;
+                    document.head.appendChild(window.ManifestLink);
+                }
             }
 
             window.actionQueue = {

@@ -1,9 +1,4 @@
 <?php
-// Image Background Color: #452100
-// Padding: 40%
-// Used Image: original-app-hd.jpeg
-// Downloaded sizes: 
-// ( for https://maskable.app/editor )
 header("Content-Type: application/json");
 session_start();
 $startUrl = ($_SESSION["lastAccessID"] ?? "/interrogazioni.php");
