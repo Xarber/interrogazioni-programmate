@@ -492,11 +492,11 @@
                 },
                 login: function(elThis) {
                     const promise = new Promise(async (r)=>{
-                        document.getElementById('UID').value =
-                            document.getElementById('UID').value.indexOf('UID=') != -1
-                                ? (new URLSearchParams(`?${document.getElementById('UID').value.split('?', 2)[1]}`)).get('UID')
-                                : document.getElementById('UID').value;
-                        r(await window.renderPage(document.getElementById('UID').value));
+                        elThis.parentNode.getElementById('UID').value =
+                            elThis.parentNode.getElementById('UID').value.indexOf('UID=') != -1
+                                ? (new URLSearchParams(`?${elThis.parentNode.getElementById('UID').value.split('?', 2)[1]}`)).get('UID')
+                                : elThis.parentNode.getElementById('UID').value;
+                        r(await window.renderPage(elThis.parentNode.getElementById('UID').value));
                     });
                     promise._actionName = 'login';
                     promise._actionArgs = [elThis];
