@@ -257,7 +257,7 @@
                                 : `[-] ${datiMateria.answers[utente].name ?? new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"})} ${datiMateria.answers[utente].date}`,
                             answers: []
                         };
-                        listaPrenotazioni[datiMateria.answers[utente].date].answers.push(
+                        if (!utenti[utente].watcherAcc || date != "Esclusi") listaPrenotazioni[datiMateria.answers[utente].date].answers.push(
                             options.minimal
                                 ? `${utenti[utente].name}`
                                 : `[${datiMateria.answers[utente].answerNumber}] ${utenti[utente].name}`
