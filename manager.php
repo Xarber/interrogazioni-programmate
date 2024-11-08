@@ -150,7 +150,7 @@ if ($_GET["scope"] === "loadPageData") {
                     (isset($subjectData["answers"][$userID])) ? (
                         $subjectData["answers"][$userID]["date"] == "Esclusi" ? "alreadyscheduled-excluded" : "alreadyscheduled" 
                     ) : (
-                        ((isset($_GET["day"])) && (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") <= 0)) ? "dayunavailable" : (
+                        ((isset($_GET["day"])) && (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") == 0)) ? "dayunavailable" : (
                             (count($subjectData["days"] ?? array()) === 0 || $subjectData["lock"] === true) ? "nodays" : "schedule-day"
                         )
                     )
@@ -416,7 +416,7 @@ if ($_GET["scope"] === "loadPageData") {
     if (!$subjectData || !$subjectData["days"][$_GET["day"]]) die(json_encode(array("status" => false, "message" => "Invalid Day!")));
     $availability = explode("/", $subjectData["days"][$_GET["day"]]["availability"], 2);
     if ($availability[0] == "0") die(json_encode(array("status" => false, "message" => "Invalid Day!")));
-    $subjectData["days"][$_GET["day"]]["availability"] = ($availability[0] - 1) . "/" . $availability[1];
+    if ($availability[1] != "-1") $subjectData["days"][$_GET["day"]]["availability"] = ($availability[0] - 1) . "/" . $availability[1];
     $subjectData["answerCount"] = $subjectData["answerCount"] + 1;
     $subjectData["answers"][$userID] = array("date" => $_GET["day"], "answerNumber" => $subjectData["answerCount"]);
     $userList[$userID]["answers"][$subjectName] ??= array();

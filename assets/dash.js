@@ -1364,7 +1364,7 @@ class AdminDashboard {
             const formattedDate = `${date.split("-")[1]}/${date.split("-")[0]}/${date.split("-")[2]}`;
             let dayName = (new Date(formattedDate)).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
-            let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):');
+            let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):\n(-1 = Nessun Limite)');
             if (dayName && availability) {
                 if (availability.length < 1) availability = "3";
                 availability = `${availability}/${availability}`;
