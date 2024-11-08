@@ -34,7 +34,8 @@ self.addEventListener('fetch', event => {
                 const responseToCache = response.clone();
                 
                 caches.open("pwa-cache-v1").then(cache => {
-                    cache.put(event.request, responseToCache);
+                    try {cache.put(event.request, responseToCache);}
+                    catch(e) {console.warn("Failed to cache response.", e)}
                 });
             }
             
