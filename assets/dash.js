@@ -1818,11 +1818,14 @@ class AdminDashboard {
         for (var day in this.jsonFiles[customIndex].data.days) {
             let availabilityForDay = Number(this.jsonFiles[customIndex].data.days[day].availability.split("/")[1]);
             if (availabilityForDay == -1) continue;
-            let currentAvailability = 0;
+            let currentAvailability = availabilityForDay;
             for (var answer in this.jsonFiles[customIndex].data.answers) {
                 if (this.jsonFiles[customIndex].data.answers[answer].date == day) {
-                    currentAvailability++;
-                    if (currentAvailability > availabilityForDay) availabilityForDay = currentAvailability;
+                    currentAvailability--;
+                    if (currentAvailability < 0) {
+                        availabilityForDay++;
+                        currentAvailability = 0;
+                    }
                 }
             }
             this.jsonFiles[customIndex].data.days[day].availability = `${currentAvailability}/${availabilityForDay}`;
