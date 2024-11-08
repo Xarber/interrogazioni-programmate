@@ -1811,6 +1811,27 @@ class AdminDashboard {
         this.currentFileIndex = tmpIndex;
     }
 
+    async fixSubjectAvailability(force = false, customIndex = this.currentFileIndex) {
+        if (!force && !confirm(`Sicuro di voler provare a correggere le disponibilità dei giorni per questa materia?\nSe ci sono più prenotazioni della disponibilità, quest'ultima verrà aumentata.`)) return;
+        if (customIndex < 0) return;
+        
+        for (var day in this.jsonFiles[customIndex].data.days) {
+            let availabilityForDay = Number(this.jsonFiles[customIndex].data.days[day].availability.split("/")[1]);
+            if (availabilityForDay == -1) continue;
+            let currentAvailability = 0;
+            for (var answer in this.jsonFiles[customIndex].data.answers) {
+                if (this.jsonFiles[customIndex].data.answers[answer].date == day) {
+                    currentAvailability++;
+                    if (currentAvailability > availabilityForDay) availabilityForDay = currentAvailability;
+                }
+            }
+            this.jsonFiles[customIndex].data.days[day].availability = `${currentAvailability}/${availabilityForDay}`;
+        }
+
+        await this.updateJSON();
+        this.render();
+    }
+
     async deleteUser(uuid) {
         if (confirm(`Sicuro di voler cancellare ${this.userData[uuid].name}?`)) {
             delete this.userData[uuid];
