@@ -1222,7 +1222,10 @@ class AdminDashboard {
         addDayBtn.addEventListener('click', async () => await this.addDay());
 
         const fixAnswersBtn = this.dashboard.querySelector('#fixAnswersBtn');
-        fixAnswersBtn.addEventListener('click', async () => await this.fixUserDataAnswers());
+        fixAnswersBtn.addEventListener('click', async () => {
+            await this.fixUserDataAnswers();
+            await this.fixSubjectAvailability(true);
+        });
 
         const addProfileBtn = this.dashboard.querySelector('#addProfileBtn');
         addProfileBtn.addEventListener('click', async () => await this.addProfile());
