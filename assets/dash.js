@@ -673,7 +673,7 @@ class AdminDashboard {
             dayElement.className = 'admin-day-item';
             dayElement.innerHTML = `
                 <span>${date} (${dayData.dayName})</span>
-                <span class="admin-availability">Posti liberi: ${dayData.availability}</span>
+                <span class="admin-availability">Posti liberi: ${dayData.availability === "-1/-1" ? "∞" : dayData.availability}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-edit-day-btn" data-date="${date}" title="Sposta Giorno">
                         ${this.icons.edit}

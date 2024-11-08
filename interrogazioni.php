@@ -544,7 +544,7 @@
                             document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
                             return r(CHANGESEC("scheduleconfirmed"));
                         }
-                        if (res.message === "Invalid Day!") r(CHANGESEC("dayunavailable"));
+                        if (res.message === "Invalid Day!") return r(CHANGESEC("dayunavailable"));
                         return r(CHANGESEC("schedulefailed"));
                     });
                     promise._actionName = 'scheduleDay';
