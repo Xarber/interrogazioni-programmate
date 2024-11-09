@@ -132,6 +132,7 @@
         }
 
         window.renderPage = (async (UID = window.UID, subject = window.SUBJECT, profile = window.PROFILE)=>{
+            window.prevUID = window.UID;
             window.UID = UID;
             window.SUBJECT = subject;
             window.PROFILE = profile;
@@ -367,7 +368,7 @@
                 document.documentElement.appendChild(btnDiv);
 
                 if (window.ManifestLink != null) window.ManifestLink.remove();
-                if (window.pageData.section != "login-account-not-found" && window.pageData.section != "login") {
+                if (window.prevUID != window.UID && window.pageData.section != "login-account-not-found" && window.pageData.section != "login") {
                     window.ManifestLink = document.createElement('link');
                     window.ManifestLink.rel = 'manifest';
                     window.ManifestLink.href = `/assets/manifest.php?UID=${window.UID}`;
