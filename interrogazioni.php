@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
-    <title>Prenota Interrogazioni</title>
+    <title>Interrogazioni Programmate</title>
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
@@ -52,38 +52,38 @@
         </div>
     </div>
     <div class="mainDiv hided" id="dayunavailable">
-        <h1>Non puoi prenotarti per questo giorno!</h1>
-        <button onclick="window.actions.changeDay();">Cambia giorno</button>
+        <h1>Questa scelta non è disponibile!</h1>
+        <button onclick="window.actions.changeDay();">Cambia scelta</button>
     </div>
     <div class="mainDiv hided" id="alreadyscheduled">
-        <h1>Ti sei già prenotato! Non puoi cambiare la tua scelta.</h1>
-        <p>Sarai interrogato in data: <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span></p>
+        <h1>Hai già scelto la tua opzione!</h1>
+        <p>Solo un admin può cambiare la tua scelta.<br><span class="dummy" id="javascript-change-schedule-alreadychosen-text">Sarai interrogato in data: </span><span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span></p>
         <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="alreadyscheduled-excluded">
-        <h1>Sei stato escluso da questa interrogazione!</h1>
-        <p>Se è un errore, contatta un admin, altrimenti non dovrai preoccuparti di questa interrogazione!</p>
+        <h1>Sei stato escluso da questa risposta!</h1>
+        <p>Se è un errore, contatta un admin, altrimenti non dovrai preoccuparti di rispondere!</p>
         <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="scheduleconfirmed">
-        <h1>Ti sei prenotato!</h1>
-        <p>Ti sei prenotato a <span class="dummy" id="javascript-change-schedule-data">$SUBJECTNAME</span> per il <span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span>!</p>
+        <h1>Hai scelto la tua opzione!</h1>
+        <p><span class="dummy" id="javascript-change-schedule-confirmed1-text">Ti sei prenotato a </span><span class="dummy" id="javascript-change-schedule-data">$SUBJECTNAME</span><span class="dummy" id="javascript-change-schedule-confirmed2-text"> per il </span><span class="dummy" id="javascript-change-schedule-data-day">$SUBJECTDATE</span>!</p>
         <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedulefailed">
         <h1>Whoops! :( </h1>
-        <p>C'è stato un problema mentre provavi a prenotarti, per favore riprova o cambia giorno.</p>
-        <button onclick="window.actions.changeDay();">Cambia giorno</button>
+        <p>C'è stato un problema mentre provavi a rispondere, per favore riprova o cambia la tua scelta.</p>
+        <button onclick="window.actions.changeDay();">Cambia opzione</button>
     </div>
     <div class="mainDiv hided" id="nodays">
-        <h1>Questa materia è bloccata o non ha interrogazioni!</h1>
+        <h1>Questa materia è bloccata o non ha possibili risposte!</h1>
         <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedule-day">
-        <h1>Che giorno vuoi farti interrogare?</h1>
+        <h1 id="javascript-change-schedule-text">Che giorno vuoi farti interrogare?</h1>
         <p>Non potrai cambiare la tua scelta.</p>
         <select name="day" id="day" class="id-select-daylist">
-            <option value="" selected disabled>Scegli un giorno</option>
+            <option value="" selected disabled>Scegli un opzione</option>
         </select>
         <div class="inline">
             <button id="changeSubjectButton" onclick="window.actions.changeSubject('');">Cambia Materia</button>
@@ -205,7 +205,11 @@
                 document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.innerHTML = window.userData.name);
                 document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
                 document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = window.userData.subjectData.day);
-            
+                document.querySelectorAll('#javascript-change-schedule-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? "Che giorno vuoi farti interrogare?" : "Come vuoi rispondere?");
+                document.querySelectorAll('#javascript-change-schedule-alreadychosen-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? "Sarai interrogato in data: " : "Hai risposto con: ");
+                document.querySelectorAll('#javascript-change-schedule-confirmed1-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? "Ti sei prenotato a " : "Hai già risposto a ");
+                document.querySelectorAll('#javascript-change-schedule-confirmed2-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? " per il " : " con ");
+
                 await window.notifications.status().then(async r=>{
                     if (r != true) return;
                     const sw = await navigator.serviceWorker.getRegistration();

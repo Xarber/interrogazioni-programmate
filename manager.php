@@ -88,8 +88,9 @@ $userList = file_exists("./JSON{$PROFILE}/users.json") ? file_get_contents("./JS
 $userList = strlen($userList) > 1 ? json_decode($userList, true) : array();
 $subjectName = $_GET["subject"];
 $subject = $subjectName.".json";
+$safeSubject = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $subjectName).".json";
 $userData = $userList[$userID] ?? NULL;
-$subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true) : false;
+$subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON{$PROFILE}/".$safeSubject), true) : false;
 
 $profileListRAW = array_diff(scandir("."), array('.', '..'));
 $profileListRAW = array_filter($profileListRAW, function($item) {
@@ -121,7 +122,12 @@ if ($_GET["scope"] === "loadPageData") {
         "day" => isset($subjectData["answers"][$userID]) ? $subjectData["answers"][$userID]["date"] : false
     )));
 
-    $result["subject"] = $subjectData ? array("name" => $subjectName, "days" => $subjectData["days"], "lock" => $subjectData["lock"]) : false;
+    $result["subject"] = $subjectData ? array(
+        "name" => $subjectName,
+        "days" => $subjectData["days"],
+        "lock" => $subjectData["lock"],
+        "type" => $subjectData["type"] ?? "subject",
+    ) : false;
 
     $result["users"] = $userData["admin"] ? $userList : array();
     $result["profiled"] = $PROFILE == "" ? false : str_replace("-", "", $PROFILE);
@@ -421,7 +427,7 @@ if ($_GET["scope"] === "loadPageData") {
     $subjectData["answers"][$userID] = array("date" => $_GET["day"], "answerNumber" => $subjectData["answerCount"]);
     $userList[$userID]["answers"][$subjectName] ??= array();
     array_push($userList[$userID]["answers"][$subjectName], $_GET["day"]);
-    $success = file_put_contents("./JSON{$PROFILE}/".$subject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+    $success = file_put_contents("./JSON{$PROFILE}/".$safeSubject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
     die(json_encode(array("status" =>!!$success, "message" => null)));
 } else if ($_GET["scope"] === "syncICal") {
     if (!$userData) {
@@ -433,9 +439,15 @@ if ($_GET["scope"] === "loadPageData") {
     );
     $userEvents = array();
     foreach ($userData["answers"] as $answerSubjectName => $answers) {
+        $safeSubjectName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $answerSubjectName);
+        $txtSubjectData = file_exists("./JSON{$PROFILE}/{$safeSubjectName}.json") ? file_get_contents("./JSON{$PROFILE}/{$safeSubjectName}.json") : "{}";
+        $subjectData = json_decode($txtSubjectData, true);
+        $subjectData["type"] ??= "subject";
+        if ($subjectData["type"] != "subject") continue;
         foreach ($answers as $answer) {
             $explodedDate = explode("-", $answer);
             $date = $explodedDate[2]."-".$explodedDate[1]."-".$explodedDate[0];
+            if (!strtotime($date)) continue;
             array_push($userEvents, array(
                 "title" => "Interrogazione: ".$answerSubjectName,
                 "start" => new DateTime($date . " 00:00:00"),

@@ -196,14 +196,14 @@ class UserDashboard {
         const output = Object.entries(this.userData.answers)
         .map(([subject, dates]) => {
             const dateOut = dates.map(date => `<li>${this.formatDate(date)}</li>`).join('');
-            return `
+            return dateOut.length > 0 ? `
                 <div class="user-appointment-group">
                     <h4>${subject}</h4>
                     <ul>
-                        ${dateOut.length > 0 ? dateOut : `<li>Nessun interrogazione per questa materia!</li>`}
+                        ${dateOut /* dateOut.length > 0 ? dateOut : `<li>Nessun interrogazione per questa materia!</li>` */}
                     </ul>
                 </div>
-            `;
+            ` : "";
         })
         .join('');
         return output.length > 0 ? output : `
@@ -506,20 +506,26 @@ class AdminDashboard {
                             </div>
                         </div>
                     </div>
+                    <div class="admin-subject-text-prompts-container" style="display: none">
+                        <h3>Domande</h3>
+                        <input type="text" name="subjectTextPromptBeforeAnswering" id="subjectTextPromptBeforeAnswering" placeholder="Testo prima di scegliere un opzione: 'Quale opzione vuoi scegliere?'">
+                        <input type="text" name="subjectTextPromptAfterAnswering" id="subjectTextPromptAfterAnswering" placeholder="Testo dopo aver scelto l'opzione: 'Hai scelto la tua opzione!'">
+                        <input type="text" name="subjectTextPromptAlreadyAnswered" id="subjectTextPromptAlreadyAnswered" placeholder="Testo se l'utente ha già scelto l'opzione: 'Hai già scelto la tua opzione, e non puoi cambiarla!'">
+                    </div>
                     <div class="admin-days-container">
-                        <h3>Giorni</h3>
+                        <h3>Scelte</h3>
                         <div id="daysList"></div>
                         <div class="admin-inline inline">
                             <button id="fixAnswersBtn" class="admin-action-button" title="Aggiusta risposte utente">
                                 ${this.icons.fix}
                             </button>
-                            <button id="addDayBtn" class="admin-action-button" title="Aggiungi Giorno">
+                            <button id="addDayBtn" class="admin-action-button" title="Aggiungi">
                                 ${this.icons.plus}
                             </button>
                         </div>
                     </div>
                     <div class="admin-dashboard-subject-answers-section">
-                        <span class="admin-dashboard-subject-answers-header clickable-span" id="editAnswersLeaveBtn">&lt; Giorni</span>
+                        <span class="admin-dashboard-subject-answers-header clickable-span" id="editAnswersLeaveBtn">&lt; Scelte</span>
                         <div class="admin-days-container">
                             <div id="subjectAnswerList"></div>
                         </div>
@@ -675,13 +681,13 @@ class AdminDashboard {
                 <span>${date}${dayData.dayName != "-" ? ` ${dayData.dayName}` : ""}</span>
                 <span class="admin-availability">Posti liberi: ${dayData.availability === "-1/-1" ? "∞" : dayData.availability}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn" data-date="${date}" title="Sposta Giorno">
+                    <button class="admin-edit-day-btn" data-date="${date}" title="Sposta">
                         ${this.icons.edit}
                     </button>
                     ${dayData.availability.split('/')[0] < dayData.availability.split('/')[1] ? `<button class="admin-clear-day-btn" data-date="${date}" title="Svuota Risposte">
                         ${this.icons.clear}
                     </button>` : ""}
-                    <button class="admin-delete-day-btn" data-date="${date}" title="Elimina Giorno">
+                    <button class="admin-delete-day-btn" data-date="${date}" title="Elimina">
                         ${this.icons.trash}
                     </button>
                 </div>
@@ -691,7 +697,7 @@ class AdminDashboard {
         if (objEntries.length === 0) {
             daysList.innerHTML = `
                 <div class="admin-day-item">
-                    <span>Non ci sono giornate d'interrogazione per questa materia!</span>
+                    <span>Non ci sono ancora possibili risposte in questo file!</span>
                 </div>
             `;
         }
@@ -1645,7 +1651,7 @@ class AdminDashboard {
 
     async moveUserToDate(userUUID, date, force) {
         if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
-        if (!force && !confirm((date != "Esclusi" && Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) != 0) ? `Sei sicuro di voler spostare questa risposta?` : `Il giorno selezionato è pieno, sei sicuro di voler spostare questa risposta?`)) return;
+        if (!force && !confirm((date != "Esclusi" && Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) != 0) ? `Sei sicuro di voler spostare questa risposta?` : `L'opzione selezionata è piena, sei sicuro di voler spostare questa risposta?`)) return;
         
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
@@ -1887,7 +1893,7 @@ class AdminDashboard {
     }
 
     async fixSubjectAvailability(force = false, customIndex = this.currentFileIndex) {
-        if (!force && !confirm(`Sicuro di voler provare a correggere le disponibilità dei giorni per questa materia?\nSe ci sono più prenotazioni della disponibilità, quest'ultima verrà aumentata.`)) return;
+        if (!force && !confirm(`Sicuro di voler provare a correggere le disponibilità delle risposte per questa materia?\nSe ci sono più prenotazioni della disponibilità, quest'ultima verrà aumentata.`)) return;
         if (customIndex < 0) return;
         
         for (var day in this.jsonFiles[customIndex].data.days) {
@@ -2032,13 +2038,13 @@ class AdminDashboard {
         if (users.length < 1) return alert("Non ci sono notifiche da inviare!");
 
         const result = await this.notificationClass.requestSend(users, {
-            title: data.title ?? "Nuova interrogazione!",
+            title: data.title ?? ((this.jsonFiles[customIndex].data.type ?? "subject") === "subject" ? "Nuova interrogazione!" : "Nuova votazione!"),
             tag: data.tag,
             body: data.desc ?? (
                 (this.jsonFiles[customIndex].data.hide ||
                     this.jsonFiles[customIndex].data.lock) 
-                    ? `Questo è un promemoria per rispondere alle interrogazioni di ${this.jsonFiles[customIndex].fileName}. La votazione non è ancora possibile, ma sarà attivata a breve.` :
-                    `Controlla il sito, c'è una nuova interrogazione per ${this.jsonFiles[customIndex].fileName} a cui non hai risposto!`
+                    ? `Questo è un promemoria per ${(this.jsonFiles[customIndex].data.type ?? "subject") === "subject" ? "prenotarti per l'interrogazione di" : "rispondere per"} ${this.jsonFiles[customIndex].fileName}. La votazione non è ancora possibile, ma sarà attivata a breve.` :
+                    `Controlla il sito, ${(this.jsonFiles[customIndex].data.type ?? "subject") === "subject" ? "c'è una nuova interrogazione per" : "è stata aperta una votazione per"} ${this.jsonFiles[customIndex].fileName} a cui non hai risposto!`
                 ),
             lang: data.lang,
             badge: data.badge,
