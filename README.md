@@ -15,6 +15,4 @@ Questa app non ha bisogno di nessuna configurazione esterna da parte dell'utente
 Per creare il primo utente, basta semplicemente accedere all'interno della pagina interrogazioni.php una singola volta, e l'app chiederà di creare un utente. Questo utente avrà i permessi di admin, e sarà possibile modificare ogni configurazione direttamente dalla parte web (Dati utente -> Dashboard).
 
 # TODO (Work In Progress)
- - Titoli custom per le interrogazioni (Al posto di "Che giorno vuoi farti interrogare?" e "Sarai interrogato in data ...")
- - Più tipi di sezioni (Materia, Sondaggio e simili)
- - > ! Attenzione a rimuovere la prenotazione dal calendario per tipi di sezioni diverse da materie!
+ - BACKEND OK - Più tipi di sezioni (Materia, Sondaggio e simili)
