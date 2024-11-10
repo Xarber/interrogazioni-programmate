@@ -35,6 +35,12 @@ $manifestFull = array(
       "type" => "image/png",
       "purpose" => "monochrome"
     ),
+    array(
+      "src" => "/images/maskable_icon_monochrome_x512.png",
+      "sizes" => "512x512",
+      "type" => "image/png",
+      "purpose" => "monochrome"
+    ),
   ),
   "id" => "atxarber-interrogazioni-programmate",
   "lang" => "it",
