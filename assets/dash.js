@@ -56,7 +56,7 @@ class PushNotifications {
             }
     
             // Get push subscription
-            if (!'pushManager' in registration) {
+            if (!('pushManager' in registration)) {
                 console.error('Push notifications not supported');
                 return {status: false, userError: true, message: "Unsupported Device!"};
             }
@@ -92,7 +92,7 @@ class PushNotifications {
         */
         return new Promise((resolve, reject) => {
             navigator.serviceWorker.ready.then(d=>{
-                if (!'pushManager' in d) return resolve({status: true, message: null});
+                if (!('pushManager' in d)) return resolve({status: true, message: null});
                 d.pushManager.getSubscription().then(async sub => {
                     const subscription = sub;
                     if (!subscription) resolve({status: true, message: null});
@@ -146,7 +146,7 @@ class PushNotifications {
                     return !!subscription;
                 */
                 navigator.serviceWorker.ready.then(d=>{
-                    if (!'pushManager' in d) return resolve(false);
+                    if (!('pushManager' in d)) return resolve(false);
                     d.pushManager.getSubscription().then(sub => {
                         resolve(!!sub);
                     });
