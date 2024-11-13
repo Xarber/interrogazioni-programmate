@@ -216,6 +216,7 @@
                     if (r != true) return;
                     const sw = await navigator.serviceWorker.getRegistration();
                     if (!window.userData.pushSubscriptions || !sw) return window.notifications.unsubscribe();
+                    if (!'pushManager' in sw) return;
                     const sub = await sw.pushManager.getSubscription();
                     const userSubscriptions = new Set();
                     for (var rsub of window.userData.pushSubscriptions) userSubscriptions.add(JSON.stringify(rsub));

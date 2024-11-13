@@ -56,6 +56,10 @@ class PushNotifications {
             }
     
             // Get push subscription
+            if (!'pushManager' in registration) {
+                console.error('Push notifications not supported');
+                return {status: false, userError: true, message: "Unsupported Device!"};
+            }
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: this.urlBase64ToUint8Array((await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
@@ -82,12 +86,13 @@ class PushNotifications {
     }
 
     async unsubscribe(sendRequestToServer = true) {
-        if (!(await this.status())) return true;
+        if (!(await this.status())) return {status: true, message: null};
         /*
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         */
         return new Promise((resolve, reject) => {
             navigator.serviceWorker.ready.then(d=>{
+                if (!'pushManager' in d) return resolve({status: true, message: null});
                 d.pushManager.getSubscription().then(async sub => {
                     const subscription = sub;
                     if (!subscription) resolve({status: true, message: null});
@@ -141,6 +146,7 @@ class PushNotifications {
                     return !!subscription;
                 */
                 navigator.serviceWorker.ready.then(d=>{
+                    if (!'pushManager' in d) return resolve(false);
                     d.pushManager.getSubscription().then(sub => {
                         resolve(!!sub);
                     });
