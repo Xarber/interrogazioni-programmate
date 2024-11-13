@@ -83,24 +83,33 @@ class PushNotifications {
 
     async unsubscribe(sendRequestToServer = true) {
         if (!(await this.status())) return true;
+        /*
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
-        if (!subscription) return {status: true, message: null};
-
-        const response = (!!sendRequestToServer) ? await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({subscription, action: "unsubscribe"})
-        }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}}) : {status: true, message: null};
-        subscription.unsubscribe();
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (const registration of registrations) {
-                registration.unregister();
-            } 
+        */
+        return new Promise((resolve, reject) => {
+            navigator.serviceWorker.ready.then(d=>{
+                d.pushManager.getSubscription().then(async sub => {
+                    const subscription = sub;
+                    if (!subscription) resolve({status: true, message: null});
+    
+                    const response = (!!sendRequestToServer) ? await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({subscription, action: "unsubscribe"})
+                    }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}}) : {status: true, message: null};
+                    subscription.unsubscribe();
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        for (const registration of registrations) {
+                            registration.unregister();
+                        } 
+                    });
+            
+                    return response;
+                })
+            });
         });
-
-        return response;
     }
 
     async update() {
@@ -124,9 +133,21 @@ class PushNotifications {
     }
 
     async status() {
-        if ((await navigator.serviceWorker.getRegistrations()).length === 0) return false;
-        const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
-        return !!subscription;
+        return new Promise(async (resolve, reject) => {
+            navigator.serviceWorker.getRegistrations().then(r=>{
+                if (r.length === 0) resolve(false);
+                /*
+                    const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
+                    return !!subscription;
+                */
+                navigator.serviceWorker.ready.then(d=>{
+                    d.pushManager.getSubscription().then(sub => {
+                        resolve(!!sub);
+                    });
+                })
+            });
+
+        })
     }
 
     available() {
