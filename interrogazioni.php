@@ -131,7 +131,12 @@
             document.querySelector('.mainDiv#'+section).classList.remove('hided');
         }
 
-        window.renderPage = (async (UID = window.UID, subject = window.SUBJECT, profile = window.PROFILE)=>{
+        window.renderPage = async (...arguments)=>{
+            var UID = arguments[0] ?? window.UID;
+            var subject = arguments[1] ?? window.SUBJECT;
+            var profile = arguments[2] ?? window.PROFILE;
+            console.log(subject);
+
             window.firstRender = window.firstRender === undefined;
             window.prevUID = window.UID;
             window.UID = UID;
@@ -565,7 +570,7 @@
             };
 
             CHANGESEC(window.pageData.section);
-        });
+        };
         window.renderPage();
 
         window.addEventListener("beforeinstallprompt", (e)=>{
