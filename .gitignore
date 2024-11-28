@@ -1,0 +1,6 @@
+JSON/*
+node_modules
+package-lock.json
+vapidkeys.json
+
+#.gitignore

@@ -25,10 +25,13 @@ class PushNotifications {
 
     async clearCache() {
         // Clear cache
-        await caches.keys().then(cacheNames => Promise.all(cacheNames.map(async cacheName => {
-            await caches.delete(cacheName);
-            console.log(`Cache ${cacheName} deleted.`);
-        })));
+        return new Promise(async (resolve, reject) => {
+            caches.keys().then(cacheNames => Promise.all(cacheNames.map(async cacheName => {
+                caches.delete(cacheName).then(()=>{
+                    console.log(`Cache ${cacheName} deleted.`);
+                });
+            }))).then(resolve);
+        });
     }
 
     async subscribe() {
