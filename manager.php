@@ -84,6 +84,7 @@ function generateICSFile($calendarMetaData, $events) {
 
 $subjectJSONs = array_diff(scandir("./JSON{$PROFILE}/"), array('.', '..'));
 $userID = $_GET["UID"] ?? NULL;
+$_SESSION["lastUserID"] = $userID ?? $_SESSION["lastUserID"] ?? NULL;
 $userList = file_exists("./JSON{$PROFILE}/users.json") ? file_get_contents("./JSON{$PROFILE}/users.json") : "";
 $userList = strlen($userList) > 1 ? json_decode($userList, true) : array();
 $subjectName = $_GET["subject"];

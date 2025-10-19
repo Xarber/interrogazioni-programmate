@@ -6,7 +6,8 @@
 // ( for https://maskable.app/editor )
 header("Content-Type: application/json");
 session_start();
-$startUrl = ($_SESSION["lastAccessID"] ?? "/interrogazioni.php");
+if ($_SESSION["lastUserID"]) $startUrl = ("/interrogazioni.php?UID=".$_SESSION["lastUserID"]);
+else $startUrl = ("/interrogazioni.php?UID=".$_SESSION["userID"]);
 if (!str_contains($startUrl, "UID=")) $startUrl = $startUrl."?".$_SERVER["QUERY_STRING"];
 $manifestFull = array(
   "name" => "Interrogazioni Programmate",
