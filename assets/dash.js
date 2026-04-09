@@ -359,6 +359,9 @@ class UserDashboard {
     }
   
     attachEventListeners() {
+        if (this._listenersAttached) return;
+        this._listenersAttached = true;
+
         const closeBtn = this.dashboard.querySelector('.user-close-btn');
         closeBtn.addEventListener('click', () => this.close());
     
@@ -1249,6 +1252,9 @@ class AdminDashboard {
     }
   
     attachEventListeners() {
+        if (this._listenersAttached) return;
+        this._listenersAttached = true;
+
         const closeBtn = this.dashboard.querySelector('.admin-close-btn');
         closeBtn.addEventListener('click', () => this.close());
     
