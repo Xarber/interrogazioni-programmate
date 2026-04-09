@@ -876,7 +876,7 @@ class AdminDashboard {
                 `;
                 answerList.appendChild(answerElement);
                 dayDividedAnswers[day] = dayDividedAnswers[day] || [];
-                dayDividedAnswers[day].push(...dayData);
+                dayDividedAnswers[day].push(e);
             });
             if (dayData.length === 0) dayDividerElement.classList.add('admin-day-divider-empty-day');
             answerList.innerHTML += `
