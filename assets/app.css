@@ -1,15 +1,15 @@
 :root {
     color-scheme: dark;
-    --bg: #0c0b0a;
-    --surface: rgba(30, 27, 23, 0.78);
-    --surface-strong: rgba(38, 34, 29, 0.96);
+    --bg: #12100e;
+    --surface: rgba(31, 28, 25, 0.84);
+    --surface-strong: rgba(39, 34, 29, 0.97);
     --border: rgba(255, 255, 255, 0.12);
     --border-hover: rgba(255, 255, 255, 0.24);
     --text: #fffaf2;
     --muted: #bdb4a7;
-    --accent: #f59e0b;
-    --accent-strong: #d97706;
-    --accent-soft: rgba(245, 158, 11, 0.14);
+    --accent: #d99a45;
+    --accent-strong: #b87529;
+    --accent-soft: rgba(217, 154, 69, 0.14);
     --danger: #ef4444;
     --radius-lg: 28px;
     --radius-md: 16px;
@@ -32,9 +32,9 @@ html {
 body {
     color: var(--text);
     background:
-        radial-gradient(circle at 12% 15%, rgba(245, 158, 11, 0.18), transparent 34rem),
-        radial-gradient(circle at 88% 86%, rgba(180, 83, 9, 0.15), transparent 30rem),
-        linear-gradient(145deg, #17130f 0%, #0c0b0a 58%, #15100b 100%);
+        radial-gradient(circle at 8% 14%, rgba(86, 47, 14, 0.22), transparent 38rem),
+        radial-gradient(circle at 92% 88%, rgba(56, 31, 10, 0.16), transparent 34rem),
+        linear-gradient(155deg, rgba(41, 20, 0, 0.52) 0%, #151413 44%, #11100f 100%);
     overflow-x: hidden;
 }
 
@@ -43,7 +43,7 @@ body::before {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    opacity: 0.24;
+    opacity: 0.14;
     background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
     background-size: 42px 42px;
 }
@@ -132,6 +132,21 @@ body::before {
     text-transform: uppercase;
 }
 
+.eyebrow-danger { color: #fca5a5; }
+
+.form-error {
+    margin: 9px 2px 0 !important;
+    color: #fecaca !important;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.4 !important;
+}
+
+.mainDiv input[aria-invalid="true"] {
+    border-color: rgba(239, 68, 68, 0.76);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
 input, select, button {
     font: inherit;
 }
@@ -185,6 +200,60 @@ button:active:not(:disabled) { transform: translateY(0); }
 button:focus-visible { outline: 3px solid rgba(251, 191, 36, 0.52); outline-offset: 3px; }
 button:disabled { opacity: 0.48; cursor: not-allowed; }
 
+.app-quick-actions {
+    position: fixed;
+    z-index: 30;
+    top: max(58px, calc(env(safe-area-inset-top) + 52px));
+    right: max(18px, env(safe-area-inset-right));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.active-class-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    max-width: 260px;
+    min-height: 46px;
+    padding: 7px 13px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    color: var(--text);
+    background: rgba(24, 21, 18, 0.82);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.24);
+    backdrop-filter: blur(18px);
+}
+
+.active-class-badge > span:last-child { min-width: 0; }
+.active-class-badge small,
+.active-class-badge strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.active-class-badge small { color: var(--muted); font-size: 0.64rem; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+.active-class-badge strong { margin-top: 1px; font-size: .86rem; }
+.active-class-dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: #65c98b; box-shadow: 0 0 0 4px rgba(101, 201, 139, .12); }
+
+.quick-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 46px;
+    min-height: 46px;
+    margin: 0;
+    padding: 10px 13px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: rgba(36, 32, 28, .88);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .24);
+    backdrop-filter: blur(18px);
+}
+
+.quick-action-button svg { width: 20px; height: 20px; fill: currentColor; }
+.quick-action-primary { color: #1d1308; border-color: transparent; background: linear-gradient(135deg, #e6ad61, var(--accent)); }
+.quick-action-secondary.is-complete { color: #baf7cd; border-color: rgba(101, 201, 139, .35); background: rgba(30, 90, 50, .46); }
+
 .button-secondary,
 .mainDiv .notInlineBtn,
 .mainDiv button[id="changeSubjectButton"] {
@@ -229,20 +298,41 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
 }
 
 @media (max-width: 600px) {
-    .flow-progress { top: max(10px, env(safe-area-inset-top)); font-size: 0; }
-    .flow-progress span { gap: 0; }
-    .mainDiv {
-        top: auto;
-        bottom: max(12px, env(safe-area-inset-bottom));
-        transform: translateX(-50%);
-        width: calc(100% - 20px);
-        max-height: calc(100dvh - 24px - env(safe-area-inset-top));
-        padding: 26px 22px;
-        border-radius: 24px;
-        animation-name: card-in-mobile;
+    .flow-progress { top: max(10px, env(safe-area-inset-top)); width: calc(100% - 24px); font-size: .66rem; }
+    .flow-progress span { gap: 5px; }
+    .flow-progress b { width: 21px; height: 21px; font-size: .65rem; }
+    .flow-progress i { margin: 0 7px; }
+    .app-quick-actions {
+        top: max(43px, calc(env(safe-area-inset-top) + 38px));
+        left: 10px;
+        right: 10px;
+        justify-content: flex-end;
     }
+    .active-class-badge { margin-right: auto; max-width: calc(100% - 58px); min-height: 42px; padding: 6px 10px; border-radius: 13px; }
+    .quick-action-button { width: 42px; min-width: 42px; min-height: 42px; padding: 9px; border-radius: 13px; }
+    .quick-action-button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .mainDiv {
+        top: 50%;
+        bottom: auto;
+        transform: translate(-50%, -50%);
+        width: calc(100% - 20px);
+        max-height: calc(100dvh - 118px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        padding: 22px 19px;
+        border-radius: 22px;
+        animation-name: card-in;
+    }
+    .mainDiv::before { width: 36px; height: 4px; margin-bottom: 18px; }
+    .mainDiv h1 { font-size: clamp(1.45rem, 7vw, 1.9rem); }
+    .mainDiv p { margin-bottom: 17px; line-height: 1.5; }
+    .mainDiv input, .mainDiv select { min-height: 50px; }
     .inline { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .inline > button { width: 100%; padding-inline: 12px; }
+}
+
+@media (max-width: 355px) {
+    .flow-progress { font-size: 0; }
+    .inline { grid-template-columns: 1fr; }
+    .active-class-badge small { display: none; }
 }
 
 @keyframes card-in-mobile {

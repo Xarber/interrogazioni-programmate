@@ -1,13 +1,13 @@
 self.addEventListener('activate', event => {
     event.waitUntil(Promise.all([
         clients.claim(),
-        caches.keys().then(keys => Promise.all(keys.filter(key => key !== 'pwa-cache-v2').map(key => caches.delete(key))))
+        caches.keys().then(keys => Promise.all(keys.filter(key => key !== 'pwa-cache-v3').map(key => caches.delete(key))))
     ]));
 });
 
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open("pwa-cache-v2").then(cache => {
+        caches.open("pwa-cache-v3").then(cache => {
             return cache.addAll([
                 //'/',
                 '/interrogazioni.php',
@@ -35,7 +35,7 @@ self.addEventListener('fetch', event => {
                 console.log("Cached response");
                 const responseToCache = response.clone();
                 
-                caches.open("pwa-cache-v2").then(cache => {
+                caches.open("pwa-cache-v3").then(cache => {
                     try {cache.put(event.request, responseToCache);}
                     catch(e) {console.warn("Failed to cache response.", e)}
                 });

@@ -180,25 +180,30 @@ class UserDashboard {
         this.dashboard.innerHTML = `
             <div class="user-dashboard-content">
                 <div class="user-dashboard-header">
-                    <h2>${this.userData.name}</h2>
-                    <button class="user-close-btn" title="Chiudi">&times;</button>
+                    <div>
+                        <span class="dashboard-kicker">Dati utente</span>
+                        <h2>${this.userData.name}</h2>
+                        ${this.userData.className ? `<span class="dashboard-class-name" title="Classe attiva">${this.userData.className}</span>` : ''}
+                    </div>
+                    <button class="user-close-btn dashboard-icon-btn" title="Chiudi" aria-label="Chiudi">&times;</button>
                 </div>
                 <h3>Prenotazioni</h3>
                 <div class="user-dashboard-appointments">
                     ${this.renderAppointments()}
                 </div>
-                <div class="inline">
-                    ${this.notificationClass ? `<button onclick="" id="dash-notifications-btn" ${this.notificationClass.available() ? "" : 'style="display: none"'} title="Notification Settings">Notifiche</button>` : ""}
-                    <button onclick="window.open(${/Android/i.test(navigator.userAgent) 
+                <div class="user-dashboard-actions">
+                    ${this.notificationClass ? `<button onclick="" id="dash-notifications-btn" class="dashboard-action-btn" ${this.notificationClass.available() ? "" : 'style="display: none"'} title="Gestisci notifiche"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6v-5a7 7 0 0 0-5-6.71V3a2 2 0 1 0-4 0v1.29A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Notifiche</span></button>` : ""}
+                    <button class="dashboard-action-btn" onclick="window.open(${/Android/i.test(navigator.userAgent)
                         ? `\`manager.php?scope=redirectToCalendar&UID=\${window.UID}&class=\${window.CLASS}\`, '_blank'`
                         : `\`webcal://\${location.hostname}/manager.php?scope=syncICal&UID=\${window.UID}&class=\${window.CLASS}\``
-                    })" id="dash-calendar-btn" title="Add Calendar">Aggiungi Calendario</button>
-                    ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
+                    })" id="dash-calendar-btn" title="Aggiungi al calendario"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2Zm13 8H4v10h16V10ZM4 8h16V6h-3v1h-2V6H9v1H7V6H4v2Z"/></svg><span>Calendario</span></button>
+                    ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" class="dashboard-action-btn dashboard-action-primary" title="Apri dashboard amministratore"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3Zm10 0h8v5h-8V3ZM3 13h8v8H3v-8Zm10-3h8v11h-8V10Z"/></svg><span>Dashboard</span></button>' : ""}
                 </div>
             </div>
         `;
 
         this.applyStyles();
+        this._listenersAttached = false;
         this.attachEventListeners();
         if (!this.appended) this.container.appendChild(this.dashboard);
         this.appended = true;
@@ -206,10 +211,12 @@ class UserDashboard {
         (async ()=>{
             if (!this.notificationClass) return;
             const status = await this.notificationClass.status();
-            if (!status) document.querySelector("button#dash-notifications-btn").innerHTML = "Attiva Notifiche";
-            else document.querySelector("button#dash-notifications-btn").innerHTML = "Disattiva Notifiche";
-            document.querySelector("button#dash-notifications-btn").onclick = async ()=>{
-                document.querySelector("button#dash-notifications-btn").innerHTML = "Attendi...";
+            const notificationButton = this.dashboard.querySelector("button#dash-notifications-btn");
+            if (!notificationButton) return;
+            notificationButton.querySelector('span').textContent = status ? "Disattiva notifiche" : "Attiva notifiche";
+            notificationButton.onclick = async ()=>{
+                notificationButton.disabled = true;
+                notificationButton.querySelector('span').textContent = "Attendi...";
                 const response = !status ? await this.notificationClass.subscribe() : await this.notificationClass.unsubscribe();
                 if (!response.status) alert(!!response.userError ? response.message : `Impossibile attivare le notifiche! Ricarica la pagina e riprova.`);
                 this.render();
@@ -251,126 +258,182 @@ class UserDashboard {
   
     applyStyles() {
         const style = document.createElement('style');
+        document.getElementById('user-dashboard-styles')?.remove();
+        style.id = 'user-dashboard-styles';
         style.textContent = `
             .user-dashboard {
                 position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background-color: rgba(40, 40, 40, 0.9);
-                backdrop-filter: blur(10px);
-                border-radius: 8px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                padding: 20px;
-                width: 90%;
-                min-height: 250px;
-                max-width: 700px;
-                max-height: calc(80vh${this.userData.admin ? ' - 40px' : ""});
-                overflow-y: hidden;
-                font-family: Arial, sans-serif;
+                inset: 0;
                 z-index: 1000;
+                display: grid;
+                place-items: center;
+                padding: 24px;
+                color: var(--text, #fffaf2);
+                background: rgba(8, 8, 8, .66);
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
             }
-            .user-dashboard * {color: white;}
             .user-dashboard-content {
                 position: relative;
+                width: min(720px, 100%);
+                max-height: min(780px, calc(100dvh - 48px));
                 display: flex;
-                flex-flow: column;
+                flex-direction: column;
+                overflow: hidden;
+                padding: clamp(20px, 4vw, 34px);
+                border: 1px solid rgba(255,255,255,.12);
+                border-radius: 24px;
+                background: linear-gradient(145deg, rgba(48, 40, 32, .97), rgba(24, 23, 22, .98));
+                box-shadow: 0 28px 90px rgba(0, 0, 0, .52);
             }
             .user-dashboard-header {
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
+                align-items: flex-start;
+                gap: 16px;
+                margin-bottom: 24px;
             }
             .user-dashboard-header h2 {
-                margin: 0;
-                font-size: 24px;
-                color: #D7D7D8;
+                margin: 3px 0 6px;
+                color: var(--text, #fffaf2);
+                font-size: clamp(1.55rem, 5vw, 2.2rem);
+                letter-spacing: -.025em;
+            }
+            .dashboard-kicker {
+                color: #e4ad68;
+                font-size: .7rem;
+                font-weight: 800;
+                letter-spacing: .13em;
+                text-transform: uppercase;
+            }
+            .dashboard-class-name {
+                display: inline-flex;
+                align-items: center;
+                max-width: 100%;
+                padding: 5px 9px;
+                overflow: hidden;
+                color: #d9d1c7;
+                border: 1px solid rgba(255,255,255,.11);
+                border-radius: 999px;
+                background: rgba(255,255,255,.055);
+                font-size: .78rem;
+                font-weight: 700;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .user-close-btn {
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #999;
-                position: absolute;
-                padding: 0;
+                position: static;
+                min-width: 42px;
+                min-height: 42px;
                 margin: 0;
-                top: 0;
-                right: 0;
+                padding: 0;
+                color: #d9d1c7;
+                border: 1px solid rgba(255,255,255,.11);
+                border-radius: 13px;
+                background: rgba(255,255,255,.055);
+                box-shadow: none;
+                font-size: 25px;
             }
             .user-dashboard-content h3 {
-                font-size: 18px;
-                color: #fff;
-                margin-bottom: 15px;
+                margin: 0 0 12px;
+                color: #efe8df;
+                font-size: .95rem;
             }
             .user-dashboard-appointments {
                 flex-grow: 1;
-                max-height: calc(80vh - 140px${this.userData.admin ? ' - 20px' : ""});
-                border: 1px solid gray;
-                border-radius: 5px;
-                padding: 10px;
-                overflow-y: auto
+                min-height: 130px;
+                padding: 14px;
+                overflow-y: auto;
+                border: 1px solid rgba(255,255,255,.1);
+                border-radius: 17px;
+                background: rgba(7, 7, 7, .2);
             }
             .user-appointment-group {
-                margin-bottom: 20px;
+                margin: 0 0 14px;
+                padding: 13px 14px;
+                border: 1px solid rgba(255,255,255,.08);
+                border-radius: 13px;
+                background: rgba(255,255,255,.035);
             }
+            .user-appointment-group:last-child { margin-bottom: 0; }
             .user-appointment-group h4 {
-                font-size: 16px;
-                color: #DBDBDB;
-                margin-bottom: 10px;
-            }
-            .user-appointment-group h4:first-child {
-                margin-top: 0;
+                margin: 0 0 8px;
+                color: #f1e8dd;
+                font-size: .95rem;
             }
             .user-appointment-group ul {
+                margin: 0;
                 list-style-type: none;
                 padding: 0;
             }
             .user-appointment-group li {
-                font-size: 14px;
-                color: #C2C2C2;
                 margin-bottom: 5px;
+                color: #c9c0b5;
+                font-size: .86rem;
             }
+            .user-dashboard-actions {
+                display: grid;
+                grid-template-columns: repeat(${this.userData.admin ? '3' : '2'}, minmax(0, 1fr));
+                gap: 9px;
+                margin-top: 14px;
+            }
+            .dashboard-action-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                min-width: 0;
+                min-height: 48px;
+                margin: 0;
+                padding: 10px 12px;
+                color: #eee5da;
+                border: 1px solid rgba(255,255,255,.11);
+                border-radius: 14px;
+                background: rgba(255,255,255,.06);
+                box-shadow: none;
+                font-size: .83rem;
+            }
+            .dashboard-action-btn svg { width: 19px; height: 19px; flex: 0 0 auto; fill: currentColor; }
+            .dashboard-action-primary { color: #23170b; border-color: transparent; background: linear-gradient(135deg, #e3ad68, #c98a3b); }
+            .dashboard-action-btn:disabled { opacity: .5; }
             @media (max-width: 680px) {
-                .user-dashboard {
-                    width: calc(100% - 40px);
-                    height: calc(100% - 40px);
-                    max-width: none;
-                    max-height: none;
-                    top: 0;
-                    left: 0;
-                    transform: none;
+                .user-dashboard { place-items: stretch; padding: 0; }
+                .user-dashboard-content {
+                    width: 100%;
+                    max-height: 100dvh;
+                    min-height: 100dvh;
+                    padding: max(18px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+                    border: 0;
                     border-radius: 0;
                 }
-                .user-dashboard-content {
-                    max-height: calc(100% - 0px);
-                }
-                .user-dashboard-appointments {
-                    max-height: calc(100% - 140px${this.userData.admin ? ' - 40px' : ""});
-                }
+                .user-dashboard-header { margin-bottom: 18px; }
+                .user-dashboard-appointments { min-height: 0; }
+                .user-dashboard-actions { grid-template-columns: 1fr; }
+                .dashboard-action-btn { justify-content: flex-start; padding-inline: 16px; }
             }
         `;
         document.head.appendChild(style);
     }
   
     attachEventListeners() {
-        if (this._listenersAttached) return;
-        this._listenersAttached = true;
-
         const closeBtn = this.dashboard.querySelector('.user-close-btn');
         closeBtn.addEventListener('click', () => this.close());
     
         // Close the dashboard when clicking outside of it
-        document.addEventListener('click', (event) => {
+        this._outsideClickHandler ??= (event) => {
             if (!this.dashboard.contains(event.target) && this.container === document.body) {
                 this.close();
             }
-        });
+        };
+        if (!this._outsideClickAttached) {
+            document.addEventListener('click', this._outsideClickHandler);
+            this._outsideClickAttached = true;
+        }
+        this._listenersAttached = true;
     }
   
     close() {
-        this.container.removeChild(this.dashboard);
+        if (this.dashboard.isConnected) this.dashboard.remove();
         this.closed = true;
     }
 
@@ -423,6 +486,7 @@ class AdminDashboard {
         this.isCustomProfile = isCustomProfile;
         this.notificationClass = notificationClass;
         this.fetchPrefix = fetchPrefix;
+        this.className = options.className ?? '';
         this.dashboard = null;
         this.render();
     }
@@ -458,6 +522,16 @@ class AdminDashboard {
         `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="m48-144 432-720 432 720H48Zm127-72h610L480-724 175-216Zm304.79-48q15.21 0 25.71-10.29t10.5-25.5q0-15.21-10.29-25.71t-25.5-10.5q-15.21 0-25.71 10.29t-10.5 25.5q0 15.21 10.29 25.71t25.5 10.5ZM444-384h72v-192h-72v192Zm36-86Z"/></svg>`,
         fix: 
         `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e8eaed"><path d="M748-144 531-361l68-68 217 217-68 68Zm-536 0-68-68 268-268-64-64-38 38-52-52v70l-26 26-112-112 26-26h70l-36-37 144-144q17-17 38.5-26t45.5-9q24 0 45.5 9t38.5 26l-87 86 47 47-36 36 64 64 83-83q-5-13-8-26t-3-27q0-55 38.5-93.5T684-816q14 0 27 3t26 8l-87 87 68 68 87-87q6 12 8.5 25.5T816-684q0 55-38.5 93T684-553q-14 0-27-2.5t-26-8.5L212-144Z"/></svg>`,
+        lock:
+        `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M240-96q-30 0-51-21t-21-51v-384q0-30 21-51t51-21h48v-96q0-80 56-136t136-56q80 0 136 56t56 136v96h48q30 0 51 21t21 51v384q0 30-21 51t-51 21H240Zm0-72h480v-384H240v384Zm240-120q30 0 51-21t21-51q0-30-21-51t-51-21q-30 0-51 21t-21 51q0 30 21 51t51 21ZM360-624h240v-96q0-50-35-85t-85-35q-50 0-85 35t-35 85v96ZM240-168v-384 384Z"/></svg>`,
+        visibility:
+        `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M480-312q75 0 127.5-52.5T660-492q0-75-52.5-127.5T480-672q-75 0-127.5 52.5T300-492q0 75 52.5 127.5T480-312Zm0-72q-45 0-76.5-31.5T372-492q0-45 31.5-76.5T480-600q45 0 76.5 31.5T588-492q0 45-31.5 76.5T480-384Zm0 216q-146 0-264-82.5T48-492q50-126 168-208.5T480-783q146 0 264 82.5T912-492q-50 126-168 208.5T480-168Zm0-72q113 0 207.5-61T831-492q-49-130-143.5-191.5T480-745q-113 0-207.5 61.5T129-492q49 130 143.5 191T480-240Zm0-252Z"/></svg>`,
+        schedule:
+        `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M612-168q-70 0-119-49t-49-119q0-70 49-119t119-49q70 0 119 49t49 119q0 70-49 119t-119 49Zm56-80 40-40-68-68v-100h-56v124l84 84ZM216-96q-30 0-51-21t-21-51v-528q0-30 21-51t51-21h72v-96h72v96h240v-96h72v96h72q30 0 51 21t21 51v231q-18-17-34.5-28T744-514v-38H216v384h191q12 21 27 38.5t34 33.5H216Zm0-528h528v-72H216v72Zm0 0v-72 72Z"/></svg>`,
+        play:
+        `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M320-203v-554l435 277-435 277Zm72-277Zm0 146 228-146-228-146v292Z"/></svg>`,
+        close:
+        `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>`,
     }
   
     render() {
@@ -466,27 +540,34 @@ class AdminDashboard {
         this.dashboard.innerHTML = `
             <div class="admin-dashboard-sidebar">
                 <div class="admin-inline admin-dashboard-main-header">
-                    <h3>Dashboard</h3>
-                    <button class="admin-dashboardMenuBtn" title="Menu">
+                    <div>
+                        <span class="admin-kicker">Amministrazione</span>
+                        <h3>Dashboard</h3>
+                    </div>
+                    <button class="admin-dashboardMenuBtn admin-icon-button" title="Apri il menu" aria-label="Apri il menu">
                         ${this.icons.menu}
                     </button>
                 </div>
+                <div class="admin-active-class" title="Classe attualmente selezionata">
+                    <span></span>
+                    <div><small>Classe attiva</small><strong>${this.className || 'Non disponibile'}</strong></div>
+                </div>
                 <div class="admin-dashboard-sidebar-content">
                     <ul class="admin-json-file-list">
-                        <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
+                        <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">👥 <span>Utenti</span></li>
                         ${!Array.isArray(this.profiles) ? "" : `
-                            <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Classi</li>
+                            <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">🏫 <span>Classi</span></li>
                         `}
                         ${this.jsonFiles.map((file, index) => `
-                            <li data-index="${index}" class="${index === this.currentFileIndex ? 'admin-active' : ''}">${file.fileName}</li>
+                            <li data-index="${index}" class="${index === this.currentFileIndex ? 'admin-active' : ''}">📚 <span>${file.fileName}</span></li>
                         `).join('')}
                         ${this.jsonFiles.length === 0 ? "<li data-index=\"-1\" class=\"\">Nessuna materia!</li>" : ""}
                     </ul>
                     <div class="inline admin-json-file-list-actions">
-                        <button id="addFileBtn" class="admin-action-button" title="Nuovo File">
-                            ${this.icons.plus}
+                        <button id="addFileBtn" class="admin-action-button is-primary" title="Crea una nuova materia" aria-label="Crea una nuova materia">
+                            ${this.icons.plus}<span>Materia</span>
                         </button>
-                        <button id="removeFileBtn" style="background-color: red" class="admin-action-button" title="Elimina File Attuale">
+                        <button id="removeFileBtn" class="admin-action-button is-danger is-icon" title="Elimina la materia selezionata" aria-label="Elimina la materia selezionata">
                             ${this.icons.trash}
                         </button>
                     </div>
@@ -494,54 +575,49 @@ class AdminDashboard {
             </div>
             <div class="admin-dashboard-content">
                 <div class="admin-dashboard-header">
-                    <h2 id="admin-dashboard-header-title" title="Clicca per rinominare la sezione." style="cursor: pointer;">Dashboard</h2>
-                    <button class="admin-close-btn" title="Chiudi">&times;</button>
+                    <div>
+                        <span class="admin-kicker">${this.className || 'Dashboard classe'}</span>
+                        <h2 id="admin-dashboard-header-title" title="Clicca per rinominare la materia">Dashboard</h2>
+                    </div>
+                    <button class="admin-close-btn admin-icon-button" title="Chiudi la dashboard" aria-label="Chiudi la dashboard">${this.icons.close}</button>
                 </div>
                 <div class="admin-dashboard-subject-section" data-section="${this.dashboardStayOnAnswers ? "answers" : "days"}">
                     <div class="admin-dashboard-controls">
-                        <div class="admin-control-row">
-                            <div class="admin-switch-container">
-                                <label class="admin-switch">
-                                    <input type="checkbox" id="lockSwitch">
-                                    <span class="admin-slider admin-round"></span>
-                                </label>
-                                <span>Blocca</span>
-                            </div>
-                            <div class="admin-switch-container">
-                                <label class="admin-switch">
-                                    <input type="checkbox" id="hideSwitch">
-                                    <span class="admin-slider admin-round"></span>
-                                </label>
-                                <span>Nascondi</span>
-                            </div>
-                            <div class="admin-inline admin-user-actions">
-                                <button id="scheduleCampaignBtn" style="background-color: #7c3aed;" class="admin-action-button" title="Programma Apertura">
-                                    Programma
-                                </button>
-                                <button id="startCampaignBtn" style="background-color: #059669;" class="admin-action-button" title="Apri ora con priorità">
-                                    Apri ora
-                                </button>
-                                <button id="cancelCampaignBtn" style="background-color: #b91c1c;" class="admin-action-button" title="Annulla automazione">
-                                    Annulla
-                                </button>
-                                ${typeof this.dataAnalysis === "function" ? `
-                                    <button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Copia Risposte">
-                                        ${this.icons.copy}
-                                    </button>
-                                ` : ""}
-                                <button id="editAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Modifica Risposte">
-                                    ${this.icons.swap}
-                                </button>
-                                <button id="filloutAnswersBtn" style="background-color: red;" class="admin-action-button" title="Riempi Risposte">
-                                    ${this.icons.shuffle}
-                                </button>
-                                <button id="clearAnswersBtn" style="background-color: red;" class="admin-action-button" title="Svuota Risposte">
-                                    ${this.icons.clear}
-                                </button>
-                            </div>
+                        <div class="admin-state-grid">
+                            <label id="lockControl" class="admin-state-control" title="Impedisce temporaneamente nuove risposte">
+                                <input type="checkbox" id="lockSwitch">
+                                <span class="admin-state-icon">${this.icons.lock}</span>
+                                <span class="admin-state-copy"><strong>Blocco voti</strong><small id="lockHint">Caricamento…</small></span>
+                                <span class="admin-toggle" aria-hidden="true"></span>
+                            </label>
+                            <label id="hideControl" class="admin-state-control" title="Nasconde una materia vuota agli utenti">
+                                <input type="checkbox" id="hideSwitch">
+                                <span class="admin-state-icon">${this.icons.visibility}</span>
+                                <span class="admin-state-copy"><strong>Visibilità</strong><small id="hideHint">Caricamento…</small></span>
+                                <span class="admin-toggle" aria-hidden="true"></span>
+                            </label>
                         </div>
                     </div>
-                    <div id="campaignStatus" class="admin-day-item admin-static-element"></div>
+                    <section class="admin-automation-card">
+                        <div class="admin-section-heading">
+                            <span class="admin-section-icon">${this.icons.schedule}</span>
+                            <div><span class="admin-kicker">Promemoria e priorità</span><h3>Automazione</h3></div>
+                        </div>
+                        <div id="campaignStatus" class="admin-campaign-status admin-static-element"></div>
+                        <div class="admin-inline admin-toolbar admin-automation-actions">
+                            <button id="scheduleCampaignBtn" class="admin-action-button is-primary" title="Programma apertura, priorità e promemoria">${this.icons.schedule}<span>Programma</span></button>
+                            <button id="startCampaignBtn" class="admin-action-button is-success" title="Apri subito la fase per gli utenti prioritari">${this.icons.play}<span>Apri ora</span></button>
+                            <button id="cancelCampaignBtn" class="admin-action-button is-danger" title="Annulla l’automazione attiva">${this.icons.close}<span>Annulla</span></button>
+                        </div>
+                    </section>
+                    <div class="admin-inline admin-toolbar admin-answer-actions" aria-label="Azioni sulle risposte">
+                        ${typeof this.dataAnalysis === "function" ? `
+                            <button id="copyAnswersBtn" class="admin-action-button is-primary" title="Copia l’elenco delle risposte">${this.icons.copy}<span>Copia</span></button>
+                        ` : ""}
+                        <button id="editAnswersBtn" class="admin-action-button is-primary" title="Visualizza e modifica le risposte">${this.icons.swap}<span>Risposte</span></button>
+                        <button id="filloutAnswersBtn" class="admin-action-button is-warning" title="Assegna automaticamente gli utenti mancanti">${this.icons.shuffle}<span>Compila</span></button>
+                        <button id="clearAnswersBtn" class="admin-action-button is-danger" title="Cancella tutte le risposte della materia">${this.icons.clear}<span>Svuota</span></button>
+                    </div>
                     <div class="admin-subject-text-prompts-container" style="display: none">
                         <h3>Domande</h3>
                         <input type="text" name="subjectTextPromptBeforeAnswering" id="subjectTextPromptBeforeAnswering" placeholder="Testo prima di scegliere un opzione: 'Quale opzione vuoi scegliere?'">
@@ -551,12 +627,12 @@ class AdminDashboard {
                     <div class="admin-days-container">
                         <h3>Scelte</h3>
                         <div id="daysList"></div>
-                        <div class="admin-inline inline">
-                            <button id="fixAnswersBtn" class="admin-action-button" title="Aggiusta risposte utente">
+                        <div class="admin-inline inline admin-toolbar">
+                            <button id="fixAnswersBtn" class="admin-action-button is-muted is-icon" title="Correggi le risposte e le disponibilità" aria-label="Correggi le risposte e le disponibilità">
                                 ${this.icons.fix}
                             </button>
-                            <button id="addDayBtn" class="admin-action-button" title="Aggiungi">
-                                ${this.icons.plus}
+                            <button id="addDayBtn" class="admin-action-button is-primary" title="Aggiungi una scelta">
+                                ${this.icons.plus}<span>Aggiungi scelta</span>
                             </button>
                         </div>
                     </div>
@@ -570,8 +646,8 @@ class AdminDashboard {
                 <div class="admin-dashboard-user-section">
                     <div class="admin-days-container">
                         <div id="userList"></div>
-                        <button id="addUserBtn" class="admin-action-button" title="Aggiungi Utente">
-                            ${this.icons.plus}
+                        <button id="addUserBtn" class="admin-action-button is-primary" title="Aggiungi un utente">
+                            ${this.icons.plus}<span>Aggiungi utente</span>
                         </button>
                     </div>
                 </div>
@@ -579,12 +655,12 @@ class AdminDashboard {
                     <p>Per entrare in una classe, clicca il suo nome.</p>
                     <div class="admin-days-container">
                         <div id="profileList"></div>
-                        <div class="admin-inline inline">
-                            <button id="uploadProfileBtn" class="admin-action-button" style="background-color: dodgerblue" title="Importa Classe">
-                                ${this.icons.upload}
+                        <div class="admin-inline inline admin-toolbar">
+                            <button id="uploadProfileBtn" class="admin-action-button is-muted" title="Importa una classe">
+                                ${this.icons.upload}<span>Importa</span>
                             </button>
-                            <button id="addProfileBtn" class="admin-action-button" title="Crea Classe">
-                                ${this.icons.plus}
+                            <button id="addProfileBtn" class="admin-action-button is-primary" title="Crea una nuova classe">
+                                ${this.icons.plus}<span>Nuova classe</span>
                             </button>
                         </div>
                     </div>
@@ -593,6 +669,7 @@ class AdminDashboard {
         `;
     
         this.applyStyles();
+        this._listenersAttached = false;
         this.attachEventListeners();
         if (!this.appended) this.container.appendChild(this.dashboard);
         this.appended = true;
@@ -646,6 +723,21 @@ class AdminDashboard {
         }
         this.userEditList = [];
     }
+
+    getSubjectControlState(customIndex = this.currentFileIndex) {
+        const file = this.jsonFiles[customIndex];
+        const data = file?.data ?? {};
+        const answers = Array.isArray(data.answers) ? {} : (data.answers ?? {});
+        const days = Array.isArray(data.days) ? {} : (data.days ?? {});
+        const eligibleUsers = Object.keys(this.userData).filter(uuid => !this.userData[uuid]?.watcherAcc);
+        const answeredUsers = eligibleUsers.filter(uuid => Object.prototype.hasOwnProperty.call(answers, uuid));
+        const answerCount = answeredUsers.length;
+        const totalUsers = eligibleUsers.length;
+        const allAnswered = totalUsers > 0 && answerCount >= totalUsers;
+        const partiallyAnswered = answerCount > 0 && !allAnswered;
+        const empty = Object.keys(days).length === 0 && Object.keys(answers).length === 0;
+        return {answerCount, totalUsers, allAnswered, partiallyAnswered, empty};
+    }
   
     updateDashboard() {
         this.dashboardStayOnAnswers ??= false;
@@ -655,7 +747,7 @@ class AdminDashboard {
         const currentFile = useSubjects ? this.jsonFiles[this.currentFileIndex] : this.userData;
         this.updateHeader();
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
-        this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`).classList.add("admin-active");
+        this.dashboard.querySelector(`li[data-index="${this.currentFileIndex}"]`)?.classList.add("admin-active");
         this.dashboard.querySelector(".admin-dashboard-subject-section").dataset.section = this.dashboardStayOnAnswers ? "answers" : "days";
         this.dashboardStayOnAnswers = false;
         if (useSubjects) {
@@ -667,20 +759,61 @@ class AdminDashboard {
             const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
             const copyAnswersBtn = this.dashboard.querySelector('#copyAnswersBtn');
             const editAnswersBtn = this.dashboard.querySelector('#editAnswersBtn');
+            const lockControl = this.dashboard.querySelector('#lockControl');
+            const hideControl = this.dashboard.querySelector('#hideControl');
+            const lockHint = this.dashboard.querySelector('#lockHint');
+            const hideHint = this.dashboard.querySelector('#hideHint');
 
-            lockSwitch.checked = currentFile.data.lock;
-            hideSwitch.checked = currentFile.data.hide;
+            lockSwitch.checked = Boolean(currentFile.data.lock);
+            hideSwitch.checked = Boolean(currentFile.data.hide);
+            const state = this.getSubjectControlState();
+            lockControl.classList.remove('is-warning', 'is-error', 'is-active');
+            lockControl.classList.toggle('is-active', lockSwitch.checked);
+            lockSwitch.disabled = state.allAnswered && !lockSwitch.checked;
+            if (state.allAnswered) {
+                lockControl.classList.add('is-error');
+                lockHint.textContent = lockSwitch.checked
+                    ? 'Tutti hanno risposto: puoi solo sbloccare'
+                    : 'Tutti hanno risposto: blocco non necessario';
+                lockControl.title = lockHint.textContent;
+            } else if (state.partiallyAnswered) {
+                lockControl.classList.add('is-warning');
+                lockHint.textContent = `${state.answerCount} su ${state.totalUsers} hanno già risposto: bloccare può interrompere la votazione`;
+                lockControl.title = lockHint.textContent;
+            } else {
+                lockHint.textContent = lockSwitch.checked ? 'Nuove risposte bloccate' : 'Nessuna risposta: puoi bloccare in sicurezza';
+                lockControl.title = lockHint.textContent;
+            }
+
+            hideControl.classList.remove('is-error', 'is-active');
+            hideControl.classList.toggle('is-active', hideSwitch.checked);
+            hideSwitch.disabled = !hideSwitch.checked && !state.empty;
+            if (state.empty) {
+                hideHint.textContent = hideSwitch.checked ? 'Materia nascosta agli utenti' : 'Materia vuota: può essere nascosta';
+                hideControl.title = hideHint.textContent;
+            } else {
+                hideControl.classList.add('is-error');
+                hideHint.textContent = hideSwitch.checked
+                    ? 'Materia nascosta: puoi renderla visibile'
+                    : 'Svuota prima tutte le date e le risposte';
+                hideControl.title = hideHint.textContent;
+            }
             const campaign = currentFile.data.campaign ?? {status: "idle", enabled: false};
             const campaignStatus = this.dashboard.querySelector('#campaignStatus');
             const unlockText = campaign.unlockAt ? new Date(campaign.unlockAt * 1000).toLocaleString('it-IT') : "non programmata";
-            campaignStatus.innerHTML = `<span><strong>Automazione:</strong> ${campaign.status ?? "idle"}</span><span class="admin-availability">Apertura: ${unlockText}</span>`;
+            const campaignLabels = {
+                idle: 'Non attiva', scheduled: 'Programmata', priority: 'Fase prioritaria',
+                general: 'Aperta a tutti', paused: 'In pausa', complete: 'Completata', cancelled: 'Annullata'
+            };
+            const campaignLabel = campaignLabels[campaign.status] ?? campaign.status ?? 'Non attiva';
+            campaignStatus.innerHTML = `<span class="admin-status-pill" data-status="${campaign.status ?? 'idle'}">${campaignLabel}</span><span><strong>Apertura:</strong> ${unlockText}</span>`;
             if (Object.keys(Array.isArray(currentFile.data.answers) ? {} : currentFile.data.answers).length > 0) {
                 clearAnswersBtn.classList.remove("hided");
-                copyAnswersBtn.classList.remove("hided");
+                copyAnswersBtn?.classList.remove("hided");
                 editAnswersBtn.classList.remove("hided");
             } else {
                 clearAnswersBtn.classList.add("hided");
-                copyAnswersBtn.classList.add("hided");
+                copyAnswersBtn?.classList.add("hided");
                 editAnswersBtn.classList.add("hided");
             }
             if (this.getMissingAnswers().length > 1) editAnswersBtn.classList.remove("hided");
@@ -705,8 +838,8 @@ class AdminDashboard {
     updateHeader() {
         const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
         const currentFile = useSubjects ? this.jsonFiles[this.currentFileIndex] : this.userData;
-        this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = useSubjects ? currentFile.fileName : 
-        (this.currentFileIndex === -1 ? `Utenti (${Object.keys(this.userData).length})` : `Classi (${this.profiles.length})`);
+        this.dashboard.querySelector('h2#admin-dashboard-header-title').textContent = useSubjects ? currentFile.fileName :
+            (this.currentFileIndex === -1 ? `Utenti (${Object.keys(this.userData).length})` : `Classi (${this.profiles.length})`);
     }
   
     renderDays() {
@@ -721,13 +854,13 @@ class AdminDashboard {
                 <span>${date}${dayData.dayName != "-" ? ` ${dayData.dayName}` : ""}</span>
                 <span class="admin-availability">Posti liberi: ${dayData.availability === "-1/-1" ? "∞" : dayData.availability}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn" data-date="${date}" title="Sposta">
+                    <button class="admin-edit-day-btn is-primary" data-date="${date}" title="Modifica o sposta questa scelta">
                         ${this.icons.edit}
                     </button>
-                    ${dayData.availability.split('/')[0] < dayData.availability.split('/')[1] ? `<button class="admin-clear-day-btn" data-date="${date}" title="Svuota Risposte">
+                    ${dayData.availability.split('/')[0] < dayData.availability.split('/')[1] ? `<button class="admin-clear-day-btn is-warning" data-date="${date}" title="Svuota le risposte per questa scelta">
                         ${this.icons.clear}
                     </button>` : ""}
-                    <button class="admin-delete-day-btn" data-date="${date}" title="Elimina">
+                    <button class="admin-delete-day-btn is-danger" data-date="${date}" title="Elimina questa scelta">
                         ${this.icons.trash}
                     </button>
                 </div>
@@ -765,16 +898,16 @@ class AdminDashboard {
                 <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userFlags}${userData.name}</span>
                 <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-priority-btn" data-user="${userUUID}" title="${userData.priority ? 'Rimuovi Priorità' : 'Rendi Prioritario'}" style="background-color: ${userData.priority ? '#f59e0b' : 'rgba(255, 255, 255, 0.3)'}">
+                    <button class="admin-priority-btn ${userData.priority ? 'is-warning' : 'is-muted'}" data-user="${userUUID}" title="${userData.priority ? 'Rimuovi la priorità' : 'Rendi questo utente prioritario'}">
                         ${userData.priority ? '★' : '☆'}
                     </button>
-                    <button class="admin-invite-btn ${!userData.pushSubscriptions ? '' : 'admin-notify-user-btn'}" data-user="${userUUID}" title="Copia Invito">
+                    <button class="admin-invite-btn ${!userData.pushSubscriptions ? 'is-muted' : 'admin-notify-user-btn is-warning'}" data-user="${userUUID}" title="${!userData.pushSubscriptions ? 'Copia il link di invito' : 'Invia una notifica di accesso'}">
                         ${!userData.pushSubscriptions ? this.icons.invite : this.icons.notification}
                     </button>
-                    <button class="admin-admin-btn" data-user="${userUUID}" title="Rendi/Rimuovi Admin">
+                    <button class="admin-admin-btn is-primary" data-user="${userUUID}" title="Modifica i permessi amministratore">
                         ${this.icons.admin}
                     </button>
-                    <button class="admin-delete-day-btn" data-user="${userUUID}" title="Elimina Utente">
+                    <button class="admin-delete-day-btn is-danger" data-user="${userUUID}" title="Elimina questo utente">
                         ${this.icons.trash}
                     </button>
                 </div>
@@ -803,13 +936,13 @@ class AdminDashboard {
             profileElement.innerHTML = `
                 <span title="Apri questa classe" onclick="if (confirm('Vuoi entrare nella classe ${profileName}?')) location.href = location.href.split('?')[0]+'?class=${profileId}&UID='+window.UID;">${profileName}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-download-file-btn" data-profile="${profileId}" title="Scarica Classe">
+                    <button class="admin-download-file-btn is-muted" data-profile="${profileId}" title="Scarica un backup della classe">
                         ${this.icons.download}
                     </button>
-                    <button class="admin-edit-day-btn" data-profile="${profileId}" data-profile-name="${profileName}" title="Rinomina Classe">
+                    <button class="admin-edit-day-btn is-primary" data-profile="${profileId}" data-profile-name="${profileName}" title="Rinomina la classe">
                         ${this.icons.edit}
                     </button>
-                    <button class="admin-delete-day-btn" data-profile="${profileId}" data-profile-name="${profileName}" title="Elimina Classe">
+                    <button class="admin-delete-day-btn is-danger" data-profile="${profileId}" data-profile-name="${profileName}" title="Elimina la classe">
                         ${this.icons.trash}
                     </button>
                 </div>
@@ -844,7 +977,7 @@ class AdminDashboard {
         const missingUsers = this.getMissingAnswers();
         if (missingUsers.length > 0) answerList.innerHTML += `<div class="admin-inline inline">
             <h2 style="flex: 1;">In attesa di risposta</h2>
-            <button class="admin-edit-day-btn admin-notify-all-btn" data-user="unset" style="margin: 20px 10px;height: 100%;">
+            <button class="admin-edit-day-btn admin-notify-all-btn is-warning" data-user="unset" title="Invia un promemoria a tutti gli utenti mancanti" aria-label="Invia un promemoria a tutti gli utenti mancanti">
                 ${this.icons.notification}
             </button>
         </div>`
@@ -855,10 +988,10 @@ class AdminDashboard {
             answerElement.innerHTML = `
                 <span>${this.userData[userUUID].name}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-edit-day-btn admin-add-answer-btn" data-user="${userUUID}" title="Aggiungi Risposta">
+                    <button class="admin-edit-day-btn admin-add-answer-btn is-primary" data-user="${userUUID}" title="Aggiungi una risposta">
                         ${this.icons.plus}
                     </button>
-                    <button class="admin-edit-day-btn admin-notify-user-btn ${!this.userData[userUUID].pushSubscriptions ? 'admin-disabled' : ''}" ${!this.userData[userUUID].pushSubscriptions ? 'disabled' : ''} data-user="${userUUID}" title="Invia Notifica">
+                    <button class="admin-edit-day-btn admin-notify-user-btn is-warning ${!this.userData[userUUID].pushSubscriptions ? 'admin-disabled' : ''}" ${!this.userData[userUUID].pushSubscriptions ? 'disabled' : ''} data-user="${userUUID}" title="Invia un promemoria">
                         ${!this.userData[userUUID].pushSubscriptions ? 
                             this.icons.warn
                             : this.icons.notification
@@ -882,10 +1015,10 @@ class AdminDashboard {
                     <span>[${answerData.answerNumber}] ${this.userData[UUID].name}</span>
                     <span class="admin-availability">${answerData.date}</span>
                     <div class="admin-inline admin-user-actions">
-                        <button class="admin-edit-day-btn" data-user="${UUID}" title="Modifica Risposta">
+                        <button class="admin-edit-day-btn is-primary" data-user="${UUID}" title="Modifica la risposta">
                             ${this.icons.swap}
                         </button>
-                        <button class="admin-delete-day-btn" data-user="${UUID}" title="Elimina Risposta">
+                        <button class="admin-delete-day-btn is-danger" data-user="${UUID}" title="Elimina la risposta">
                             ${this.icons.trash}
                         </button>
                     </div>
@@ -900,7 +1033,7 @@ class AdminDashboard {
                     <span>Sposta la risposta qui</span>
                     <span class="admin-availability">${day === "Esclusi" ? "Infiniti" : this.jsonFiles[this.currentFileIndex].data.days[day].availability} Posti liberi</span>
                     <div class="admin-inline admin-user-actions">
-                        <button class="admin-edit-day-btn" data-user="0/swapToDate-${day}" title="Modifica Risposta">
+                        <button class="admin-edit-day-btn is-primary" data-user="0/swapToDate-${day}" title="Sposta la risposta qui">
                             ${this.icons.swap}
                         </button>
                     </div>
@@ -918,6 +1051,8 @@ class AdminDashboard {
   
     applyStyles() {
         const style = document.createElement('style');
+        document.getElementById('admin-dashboard-styles')?.remove();
+        style.id = 'admin-dashboard-styles';
         style.textContent = `
             .clickable-span {
                 cursor: pointer;
@@ -1194,6 +1329,247 @@ class AdminDashboard {
                 }
             }
         `;
+        style.textContent += `
+            .admin-dashboard, .admin-dashboard * { box-sizing: border-box; }
+            .admin-dashboard {
+                --admin-bg: #130e0b;
+                --admin-panel: rgba(31, 25, 22, .94);
+                --admin-card: rgba(255, 255, 255, .055);
+                --admin-border: rgba(255, 255, 255, .11);
+                --admin-text: #fffaf5;
+                --admin-muted: #b9afa7;
+                --admin-primary: #6d63e8;
+                --admin-success: #168b63;
+                --admin-warning: #b66b12;
+                --admin-danger: #b83a43;
+                background:
+                    radial-gradient(circle at 18% 8%, rgba(109, 65, 25, .24), transparent 38%),
+                    linear-gradient(145deg, #291400 0%, #18110d 36%, #101011 100%);
+                color: var(--admin-text);
+                font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                overflow: hidden;
+            }
+            .admin-dashboard button, .admin-dashboard input, .admin-dashboard select { font: inherit; }
+            .admin-dashboard button { min-width: 0; }
+            .admin-dashboard-sidebar {
+                width: 270px;
+                flex: 0 0 270px;
+                padding: 24px 18px;
+                background: rgba(15, 13, 12, .78);
+                border-right: 1px solid var(--admin-border);
+                backdrop-filter: blur(24px);
+            }
+            .admin-dashboard-main-header { align-items: center; gap: 12px; }
+            .admin-dashboard-main-header h3,
+            .admin-dashboard-header h2,
+            .admin-section-heading h3 { margin: 2px 0 0; letter-spacing: -.02em; }
+            .admin-dashboard-main-header h3 { font-size: 1.35rem; }
+            .admin-kicker {
+                display: block;
+                color: #d9a66e;
+                font-size: .7rem;
+                font-weight: 750;
+                letter-spacing: .13em;
+                text-transform: uppercase;
+            }
+            .admin-active-class {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin: 20px 0 14px;
+                padding: 11px 12px;
+                min-width: 0;
+                border: 1px solid rgba(217, 166, 110, .24);
+                border-radius: 14px;
+                background: rgba(217, 166, 110, .08);
+            }
+            .admin-active-class > span { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: #45c98d; box-shadow: 0 0 0 5px rgba(69, 201, 141, .12); }
+            .admin-active-class div { min-width: 0; }
+            .admin-active-class small { display: block; color: var(--admin-muted); font-size: .68rem; }
+            .admin-active-class strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .88rem; }
+            .admin-dashboard-sidebar-content { display: flex; min-height: 0; flex-direction: column; }
+            .admin-json-file-list { display: grid; gap: 5px; margin: 0 0 16px; }
+            .admin-json-file-list li {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                padding: 10px 12px;
+                min-width: 0;
+                border: 1px solid transparent;
+                border-radius: 11px;
+                color: var(--admin-muted);
+                transition: background .16s ease, border-color .16s ease, color .16s ease;
+            }
+            .admin-json-file-list li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .admin-json-file-list li:hover { background: rgba(255,255,255,.055); color: var(--admin-text); }
+            .admin-json-file-list li.admin-active { background: rgba(109, 99, 232, .17); border-color: rgba(132, 123, 244, .35); color: #fff; }
+            .admin-json-file-list-actions { display: flex; gap: 8px; margin-top: auto; }
+            .admin-dashboard-content { min-width: 0; padding: 28px clamp(18px, 3vw, 44px) 48px; }
+            .admin-dashboard-content > * { width: min(1100px, 100%); margin-left: auto; margin-right: auto; }
+            .admin-dashboard-header { position: sticky; top: -28px; z-index: 4; margin: 0 -4px 22px; padding: 18px 4px 14px; background: linear-gradient(180deg, rgba(19,14,11,.98) 70%, transparent); }
+            .admin-dashboard-header h2 { max-width: min(70vw, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: clamp(1.55rem, 3vw, 2.3rem); }
+            .admin-icon-button, .admin-dashboard-header > .admin-close-btn, .admin-dashboard-main-header button {
+                display: inline-grid;
+                place-items: center;
+                width: 42px;
+                height: 42px;
+                padding: 0;
+                border: 1px solid var(--admin-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,.06);
+                color: var(--admin-text);
+                cursor: pointer;
+            }
+            .admin-dashboardMenuBtn { display: none; }
+            .admin-state-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .admin-state-control {
+                position: relative;
+                display: grid;
+                grid-template-columns: 44px minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 12px;
+                min-height: 78px;
+                padding: 14px;
+                border: 1px solid var(--admin-border);
+                border-radius: 17px;
+                background: var(--admin-card);
+                cursor: pointer;
+                transition: border-color .18s ease, background .18s ease, transform .18s ease;
+            }
+            .admin-state-control:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.2); }
+            .admin-state-control > input { position: absolute; opacity: 0; pointer-events: none; }
+            .admin-state-control:has(input:disabled) { cursor: not-allowed; opacity: .82; }
+            .admin-state-control.is-active { background: rgba(109, 99, 232, .15); border-color: rgba(132, 123, 244, .38); }
+            .admin-state-control.is-warning { background: rgba(182, 107, 18, .13); border-color: rgba(245, 158, 11, .42); }
+            .admin-state-control.is-error { background: rgba(184, 58, 67, .12); border-color: rgba(239, 68, 68, .42); }
+            .admin-state-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; background: rgba(255,255,255,.07); color: #f2c18d; }
+            .admin-state-control.is-warning .admin-state-icon { color: #f7b955; }
+            .admin-state-control.is-error .admin-state-icon { color: #ff737c; }
+            .admin-state-copy { min-width: 0; }
+            .admin-state-copy strong, .admin-state-copy small { display: block; }
+            .admin-state-copy strong { font-size: .93rem; }
+            .admin-state-copy small { margin-top: 3px; color: var(--admin-muted); line-height: 1.3; }
+            .admin-toggle { position: relative; width: 42px; height: 24px; border-radius: 999px; background: rgba(255,255,255,.18); transition: background .18s ease; }
+            .admin-toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform .18s ease; }
+            .admin-state-control input:checked ~ .admin-toggle { background: var(--admin-primary); }
+            .admin-state-control input:checked ~ .admin-toggle::after { transform: translateX(18px); }
+            .admin-automation-card, .admin-days-container {
+                padding: 18px;
+                border: 1px solid var(--admin-border);
+                border-radius: 18px;
+                background: var(--admin-card);
+            }
+            .admin-automation-card { margin: 14px 0; }
+            .admin-section-heading { display: flex; align-items: center; gap: 12px; }
+            .admin-section-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(109,99,232,.16); color: #b5afff; }
+            .admin-campaign-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 15px 0; color: var(--admin-muted); font-size: .88rem; }
+            .admin-status-pill { padding: 5px 9px; border: 1px solid var(--admin-border); border-radius: 999px; background: rgba(255,255,255,.06); color: var(--admin-text); font-size: .74rem; font-weight: 700; }
+            .admin-status-pill[data-status="priority"], .admin-status-pill[data-status="scheduled"] { border-color: rgba(245,158,11,.4); background: rgba(182,107,18,.18); }
+            .admin-status-pill[data-status="general"], .admin-status-pill[data-status="complete"] { border-color: rgba(69,201,141,.4); background: rgba(22,139,99,.18); }
+            .admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+            .admin-answer-actions { margin: 0 0 16px; }
+            .admin-action-button,
+            .admin-delete-day-btn, .admin-clear-day-btn, .admin-edit-day-btn, .admin-download-file-btn, .admin-admin-btn, .admin-invite-btn, .admin-priority-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                min-height: 42px;
+                padding: 9px 13px;
+                margin: 0;
+                border: 1px solid rgba(255,255,255,.13);
+                border-radius: 11px;
+                background: rgba(255,255,255,.08);
+                color: var(--admin-text);
+                cursor: pointer;
+                transition: filter .15s ease, transform .15s ease, opacity .15s ease;
+            }
+            .admin-action-button:hover:not(:disabled),
+            .admin-user-actions button:hover:not(:disabled) { filter: brightness(1.14); transform: translateY(-1px); }
+            .admin-action-button:disabled, .admin-user-actions button:disabled { cursor: not-allowed; opacity: .48; }
+            .admin-action-button.is-icon { width: 42px; padding: 0; }
+            .admin-action-button.is-primary, .admin-user-actions .is-primary { background: #5750bd; border-color: #7169d8; }
+            .admin-action-button.is-success, .admin-user-actions .is-success { background: var(--admin-success); border-color: #26a77b; }
+            .admin-action-button.is-warning, .admin-user-actions .is-warning { background: #8e5510; border-color: #bd761d; }
+            .admin-action-button.is-danger, .admin-user-actions .is-danger { background: #8f2c34; border-color: #c34750; }
+            .admin-action-button.is-muted, .admin-user-actions .is-muted { background: rgba(255,255,255,.075); }
+            .admin-days-container { margin-top: 14px; }
+            .admin-days-container > h3 { margin-top: 0; }
+            .admin-day-item {
+                display: grid;
+                grid-template-columns: minmax(140px, 1fr) auto auto;
+                align-items: center;
+                gap: 10px;
+                min-width: 0;
+                margin: 0 0 8px;
+                padding: 11px 12px;
+                border: 1px solid rgba(255,255,255,.075);
+                border-radius: 13px;
+                background: rgba(255,255,255,.045);
+            }
+            .admin-day-item > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+            .admin-availability { color: var(--admin-muted); font-size: .84rem; }
+            .admin-availability::before { display: none; }
+            .admin-user-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+            .admin-user-actions > button { width: 40px; min-height: 40px; padding: 0; }
+            .admin-dashboard-subject-answers-section { width: 100%; padding: 0; background: var(--admin-bg); }
+            .clickable-span { display: inline-flex; margin-bottom: 12px; color: #aaa3ff; }
+            .admin-disabled { background: rgba(255,255,255,.05) !important; pointer-events: auto; }
+            .admin-subject-text-prompts-container input { width: 100%; margin: 5px 0; }
+            .hided { display: none !important; }
+            @media (max-width: 819px) {
+                .admin-dashboard { display: block; overflow-x: hidden; overflow-y: auto; }
+                .admin-dashboard-sidebar {
+                    position: fixed;
+                    z-index: 15;
+                    top: max(8px, env(safe-area-inset-top));
+                    left: 10px;
+                    right: 10px;
+                    width: auto;
+                    height: 62px;
+                    padding: 10px 12px;
+                    overflow: hidden;
+                    border: 1px solid var(--admin-border);
+                    border-radius: 16px;
+                    box-shadow: 0 12px 35px rgba(0,0,0,.32);
+                    transition: height .22s ease;
+                }
+                .admin-dashboard-sidebar.extend { height: min(78dvh, 620px); }
+                .admin-dashboard-main-header { height: 40px; }
+                .admin-dashboard-main-header button { display: inline-grid; margin-left: auto; }
+                .admin-dashboard-main-header h3 { font-size: 1.08rem; }
+                .admin-dashboard-main-header .admin-kicker { font-size: .58rem; }
+                .admin-active-class { margin: 14px 0 8px; }
+                .admin-dashboard-sidebar-content { height: calc(100% - 104px); }
+                .admin-json-file-list { flex: 1; overflow-y: auto; }
+                .admin-dashboard-content { width: 100%; height: auto; min-height: 100dvh; margin: 0; padding: calc(84px + env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom)); overflow: visible; }
+                .admin-dashboard-header { top: 0; padding-top: 12px; }
+                .admin-dashboard-header h2 { max-width: 70vw; font-size: 1.55rem; }
+                .admin-state-grid { grid-template-columns: 1fr; }
+                .admin-state-control { min-height: 72px; padding: 11px; }
+                .admin-toolbar { width: 100%; }
+                .admin-automation-actions .admin-action-button { flex: 1 1 calc(50% - 8px); }
+                .admin-answer-actions .admin-action-button { flex: 1 1 calc(50% - 8px); }
+                .admin-day-item { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+                .admin-day-item .admin-availability { grid-column: 1; }
+                .admin-day-item .admin-user-actions { grid-column: 2; grid-row: 1 / span 2; }
+                .admin-day-item button { margin-top: 0; }
+                .admin-days-container { padding: 13px; }
+                .admin-dashboard-subject-answers-section { position: static; }
+            }
+            @media (max-width: 430px) {
+                .admin-state-control { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 9px; }
+                .admin-state-icon { width: 40px; height: 40px; }
+                .admin-toggle { width: 38px; height: 22px; }
+                .admin-toggle::after { width: 16px; height: 16px; }
+                .admin-state-control input:checked ~ .admin-toggle::after { transform: translateX(16px); }
+                .admin-automation-card { padding: 14px; }
+                .admin-action-button span { font-size: .8rem; }
+                .admin-day-item { grid-template-columns: 1fr; align-items: start; }
+                .admin-day-item .admin-availability, .admin-day-item .admin-user-actions { grid-column: 1; grid-row: auto; }
+                .admin-day-item .admin-user-actions { width: 100%; margin-left: 0; justify-content: flex-end; }
+            }
+        `;
         document.head.appendChild(style);
     }
 
@@ -1273,7 +1649,7 @@ class AdminDashboard {
     
         const dashHeader = this.dashboard.querySelector(`h2#admin-dashboard-header-title`);
         dashHeader.addEventListener('click', async ()=>{
-            await this.editSubject();
+            if (this.currentFileIndex > -1) await this.editSubject();
         });
 
         const dashMenuBTN = this.dashboard.querySelector('.admin-dashboardMenuBtn');
@@ -1283,20 +1659,38 @@ class AdminDashboard {
 
         const lockSwitch = this.dashboard.querySelector('#lockSwitch');
         lockSwitch.addEventListener('change', async (e) => {
-            await new Promise((resolve) => setTimeout(async () => {
-                this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
+            const state = this.getSubjectControlState();
+            if (e.target.checked && state.allAnswered) {
+                e.target.checked = false;
+                this.updateDashboard();
+                return alert('Tutti gli utenti hanno già risposto: non è necessario bloccare la materia.');
+            }
+            const previousValue = !e.target.checked;
+            this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
+            try {
                 await this.updateJSON();
-                resolve();
-            }, 500));
+            } catch (error) {
+                this.jsonFiles[this.currentFileIndex].data.lock = previousValue;
+                e.target.checked = previousValue;
+            }
         });
     
         const hideSwitch = this.dashboard.querySelector('#hideSwitch');
         hideSwitch.addEventListener('change', async (e) => {
-            await new Promise((resolve) => setTimeout(async () => {
-                this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
+            const state = this.getSubjectControlState();
+            if (e.target.checked && !state.empty) {
+                e.target.checked = false;
+                this.updateDashboard();
+                return alert('Per nascondere la materia devi prima eliminare tutte le date e tutte le risposte.');
+            }
+            const previousValue = !e.target.checked;
+            this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
+            try {
                 await this.updateJSON();
-                resolve();
-            }, 500));
+            } catch (error) {
+                this.jsonFiles[this.currentFileIndex].data.hide = previousValue;
+                e.target.checked = previousValue;
+            }
         });
     
         const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
@@ -1367,8 +1761,8 @@ class AdminDashboard {
     
         const daysList = this.dashboard.querySelector('#daysList');
         daysList.addEventListener('click', async (e) => {
-            let target = e.target.dataset.date ? e.target : e.target.parentNode;
-            target = target.dataset.date ? target : target.parentNode;
+            const target = e.target.closest('[data-date]');
+            if (!target) return;
             if (target.classList.contains('admin-delete-day-btn')) {
                 await this.deleteDay(target.dataset.date);
             }
@@ -1382,8 +1776,8 @@ class AdminDashboard {
 
         const userList = this.dashboard.querySelector('#userList');
         userList.addEventListener('click', async (e) => {
-            let target = e.target.dataset.user ? e.target : e.target.parentNode;
-            target = target.dataset.user ? target : target.parentNode;
+            const target = e.target.closest('[data-user]');
+            if (!target) return;
             if (target.tagName.toLowerCase() == "span") {
                 await this.editUser(target.dataset.user);
             }
@@ -1417,8 +1811,8 @@ class AdminDashboard {
 
         const answerList = this.dashboard.querySelector('#subjectAnswerList');
         answerList.addEventListener('click', async (e) => {
-            let target = e.target.dataset.user ? e.target : e.target.parentNode;
-            target = target.dataset.user ? target : target.parentNode;
+            const target = e.target.closest('[data-user]');
+            if (!target) return;
             if (target.classList.contains('admin-notify-all-btn')) {
                 if (confirm("Sei sicuro di voler inviare una notifica a TUTTI gli utenti mancanti?")) await this.sendSubjectNotification(this.getMissingAnswers(), undefined, {urgency: "high"});
             } else if (target.classList.contains('admin-notify-user-btn')) {
@@ -1450,8 +1844,8 @@ class AdminDashboard {
 
         const profileList = this.dashboard.querySelector('#profileList');
         profileList.addEventListener('click', async (e) => {
-            let target = e.target.dataset.profile ? e.target : e.target.parentNode;
-            target = target.dataset.profile ? target : target.parentNode;
+            const target = e.target.closest('[data-profile]');
+            if (!target) return;
             if (target.classList.contains('admin-download-file-btn')) {
                 this.downloadProfile(target.dataset.profile);
             }
@@ -1465,10 +1859,11 @@ class AdminDashboard {
     
         const fileList = this.dashboard.querySelector('.admin-json-file-list');
         fileList.addEventListener('click', (e) => {
-            if (e.target.tagName === 'LI' && !e.target.getAttribute('preventDefault')) {
-                this.currentFileIndex = parseInt(e.target.dataset.index);
+            const target = e.target.closest('li[data-index]');
+            if (target && !target.getAttribute('preventDefault')) {
+                this.currentFileIndex = parseInt(target.dataset.index);
                 fileList.querySelectorAll('li').forEach(li => li.classList.remove('admin-active'));
-                e.target.classList.add('admin-active');
+                target.classList.add('admin-active');
                 this.dashboard.querySelector(".admin-dashboard-sidebar").classList.remove("extend");
                 this.updateDashboard();
             }
@@ -2183,25 +2578,30 @@ class AdminDashboard {
         }
         this.updating = true;
 
-        // Here you would typically send the updated JSON to the server
-        if (customData.data && customData.data.days) {
-            if (Array.isArray(customData.data.days) && customData.data.days.length === 0) customData.data.days = {};
-            if (Array.isArray(customData.data.answers) && customData.data.answers.length === 0) customData.data.answers = {};
-            customData.data.days = this.sortSubjectDates(customData.data.days);
-        } else {
-            await this.mergeUserEdits();
-            for (var usr in customData) {
-                if (Array.isArray(customData[usr].answers) && customData[usr].answers.length === 0) customData[usr].answers = {};
-                for (var subj in customData[usr].answers) {
-                    customData[usr].answers[subj] = this.sortUserDates(customData[usr].answers[subj]);
+        try {
+            if (customData.data && customData.data.days) {
+                if (Array.isArray(customData.data.days) && customData.data.days.length === 0) customData.data.days = {};
+                if (Array.isArray(customData.data.answers) && customData.data.answers.length === 0) customData.data.answers = {};
+                customData.data.days = this.sortSubjectDates(customData.data.days);
+            } else {
+                await this.mergeUserEdits();
+                for (var usr in customData) {
+                    if (Array.isArray(customData[usr].answers) && customData[usr].answers.length === 0) customData[usr].answers = {};
+                    for (var subj in customData[usr].answers) {
+                        customData[usr].answers[subj] = this.sortUserDates(customData[usr].answers[subj]);
+                    }
                 }
             }
-        }
-        
-        if (!skipUpdateFunction) await this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData, forceSkipUpdateRefresh);
-        this.updating = false;
 
-        return [(this.currentFileIndex > -1 ? "subject" : "users"), this.jsonFiles, customData];
+            if (!skipUpdateFunction) await this.onJsonUpdate(this.currentFileIndex > -1 ? "subject" : "users", this.jsonFiles, customData, forceSkipUpdateRefresh);
+            return [(this.currentFileIndex > -1 ? "subject" : "users"), this.jsonFiles, customData];
+        } catch (error) {
+            console.error('Errore durante il salvataggio della dashboard:', error);
+            if (!error?.reported) alert('Il salvataggio non è riuscito. I comandi restano disponibili: riprova tra poco.');
+            throw error;
+        } finally {
+            this.updating = false;
+        }
     }
   
     close() {
@@ -2222,6 +2622,7 @@ class AdminDashboard {
         var refreshProfiles = options.refreshProfiles;
         var notificationClass = options.notificationClass;
         var fetchPrefix = options.fetchPrefix;
+        var className = options.className;
         this.jsonFiles = jsonFiles || this.jsonFiles;
         this.userData = userData || this.userData;
         this.profiles = profiles || this.profiles;
@@ -2231,6 +2632,7 @@ class AdminDashboard {
         this.refreshProfiles = refreshProfiles || this.refreshProfiles;
         this.notificationClass = notificationClass || this.notificationClass;
         this.fetchPrefix = fetchPrefix || this.fetchPrefix;
+        this.className = className || this.className;
         if (this.currentFileIndex > this.jsonFiles.length - 1) this.currentFileIndex = -1;
         // this.dashboard.remove();
         // this.dashboard = null;

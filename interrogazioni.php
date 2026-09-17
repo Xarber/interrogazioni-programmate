@@ -25,18 +25,24 @@
         <button onclick="window.actions.welcomeCreate(this);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="login">
+        <div class="eyebrow">Accesso classe</div>
         <h1>Ciao! Accedi per continuare.</h1>
         <p>Inserisci un ID oppure usa un link diretto se ne hai uno a disposizione.</p>
-        <input type="text" name="UID" id="UID">
+        <label for="login-uid">ID o link di accesso</label>
+        <input type="text" name="UID" id="login-uid" class="login-uid-input" autocomplete="off" aria-describedby="login-error">
+        <p class="form-error hided" id="login-error" role="alert">Inserisci un ID valido.</p>
         <div class="inline">
             <button class="button-secondary" onclick="CHANGESEC('create-class');">Crea una classe</button>
             <button onclick="window.actions.login(this);">Accedi</button>
         </div>
     </div>
     <div class="mainDiv hided" id="login-account-not-found">
-        <h1>Il tuo account non esiste!</h1>
-        <p>Inserisci un nuovo ID oppure usa un link diretto se ne hai uno a disposizione.</p>
-        <input type="text" name="UID" id="UID">
+        <div class="eyebrow eyebrow-danger">ID non riconosciuto</div>
+        <h1>Non troviamo questo account</h1>
+        <p>Controlla l’ID o incolla di nuovo il link completo. Se stai creando un nuovo gruppo, puoi aprire una classe separata.</p>
+        <label for="retry-login-uid">ID o link di accesso</label>
+        <input type="text" name="UID" id="retry-login-uid" class="login-uid-input" autocomplete="off" aria-invalid="true" aria-describedby="retry-login-error">
+        <p class="form-error" id="retry-login-error" role="alert">L’ID inserito non appartiene a nessuna classe.</p>
         <div class="inline">
             <button class="button-secondary" onclick="CHANGESEC('create-class');">Crea una classe</button>
             <button onclick="window.actions.login(this);">Accedi</button>
@@ -79,7 +85,10 @@
     </div>
     <div class="mainDiv hided" id="dayunavailable">
         <h1>Questa scelta non è disponibile!</h1>
-        <button onclick="window.actions.changeDay();">Cambia scelta</button>
+        <div class="inline">
+            <button class="button-secondary" onclick="window.actions.changeSubject('');">← Torna alle materie</button>
+            <button onclick="window.actions.changeDay();">Cambia scelta</button>
+        </div>
     </div>
     <div class="mainDiv hided" id="alreadyscheduled">
         <h1>Hai già scelto la tua opzione!</h1>
@@ -99,12 +108,15 @@
     <div class="mainDiv hided" id="schedulefailed">
         <h1>Whoops! :( </h1>
         <p>C'è stato un problema mentre provavi a rispondere, per favore riprova o cambia la tua scelta.</p>
-        <button onclick="window.actions.changeDay();">Cambia opzione</button>
+        <div class="inline">
+            <button class="button-secondary" onclick="window.actions.changeSubject('');">← Torna alle materie</button>
+            <button onclick="window.actions.changeDay();">Cambia opzione</button>
+        </div>
     </div>
     <div class="mainDiv hided" id="nodays">
         <h1 id="nodays-title">Questa materia è bloccata o non ha possibili risposte!</h1>
         <p id="nodays-message"></p>
-        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">← Torna alle materie</button>
     </div>
     <div class="mainDiv hided" id="priority-wait">
         <div class="eyebrow">Accesso prioritario in corso</div>
@@ -120,7 +132,7 @@
             <option value="" selected disabled>Scegli un opzione</option>
         </select>
         <div class="inline">
-            <button id="changeSubjectButton" onclick="window.actions.changeSubject('');">Cambia Materia</button>
+            <button id="changeSubjectButton" class="button-secondary" onclick="window.actions.changeSubject('');">← Materie</button>
             <button onclick="window.actions.scheduleDay(document.getElementById('day').value)">Conferma</button>
         </div>
     </div>
@@ -188,15 +200,30 @@
             window.isAdmin = false;
             window.pageData = {section: "login"};
             if (window.UID) {
-                window.pageData = await fetch(`manager.php?scope=loadPageData`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        UID: window.UID,
-                        subject: window.SUBJECT ?? "",
-                        appLoadClass: (!!window.CLASS && window.CLASS != false) ? window.CLASS : undefined,
-                        appLoadProfile: new URLSearchParams(location.search).get('profile') ?? undefined
-                    })
-                }).then(r=>r.json());
+                try {
+                    const pageResponse = await fetch(`manager.php?scope=loadPageData`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            UID: window.UID,
+                            subject: window.SUBJECT ?? "",
+                            appLoadClass: (!!window.CLASS && window.CLASS != false) ? window.CLASS : undefined,
+                            appLoadProfile: new URLSearchParams(location.search).get('profile') ?? undefined
+                        })
+                    });
+                    window.pageData = await pageResponse.json();
+                    if (!pageResponse.ok || window.pageData.status === false) {
+                        throw new Error(window.pageData.message ?? 'Impossibile accedere.');
+                    }
+                } catch (error) {
+                    console.error('Accesso non riuscito:', error);
+                    window.pageData = {
+                        status: false,
+                        section: 'login-account-not-found',
+                        message: error.message ?? 'Impossibile verificare questo ID.',
+                        user: {subjectData: {day: false}}, users: [], profileList: [], profiles: [], subjectList: []
+                    };
+                }
                 if (window.pageData.status === false && window.pageData.message === "This profile does not exist!") {
                     await fetch(`manager.php?profile=default`);
                     location.reload();
@@ -228,6 +255,14 @@
                 window.notifications = new PushNotifications(window.UID, "manager.php", window.CLASS);
                 if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
                 localStorage["lastPathName"] = location.pathname;
+
+                document.querySelectorAll('.login-uid-input').forEach(input => input.value = window.UID ?? '');
+                const retryError = document.querySelector('#retry-login-error');
+                if (retryError && window.pageData.section === 'login-account-not-found') {
+                    retryError.textContent = window.pageData.message && window.pageData.message !== 'Not Authorized!'
+                        ? window.pageData.message
+                        : 'L’ID inserito non appartiene a nessuna classe.';
+                }
 
                 document.querySelector('#changeProfileButton').classList.add("hided");
                 document.querySelector('#changeProfileButton').parentNode.classList.remove("inline");
@@ -376,35 +411,55 @@
                 }
 
                 window.btnDiv = window.btnDiv ?? document.createElement("div");
-                    btnDiv.style.display = "flex";
-                    btnDiv.style.position = "fixed";
-                    btnDiv.style.bottom = "10px";
-                    btnDiv.style.right = "10px";
-                    btnDiv.style.gap = "2.5px";
+                    btnDiv.className = 'app-quick-actions';
                     btnDiv.innerHTML = "";
 
-                if (isAdmin) {
+                const hasActiveClass = Boolean(window.CLASS && window.userData?.name && window.pageData?.className);
+                btnDiv.classList.toggle('hided', !hasActiveClass);
+                if (hasActiveClass) {
+                    const classBadge = document.createElement('div');
+                    classBadge.className = 'active-class-badge';
+                    classBadge.title = `Classe attiva: ${window.pageData.className}`;
+                    classBadge.innerHTML = `<span class="active-class-dot" aria-hidden="true"></span><span><small>Classe attiva</small><strong></strong></span>`;
+                    classBadge.querySelector('strong').textContent = window.pageData.className;
+                    btnDiv.appendChild(classBadge);
+                }
+
+                if (hasActiveClass && isAdmin) {
                     if (analizzaDati() != false) {
                         let btn = document.createElement("button");
-                            btn.innerHTML = "Copia le prenotazioni";
+                            btn.className = 'quick-action-button quick-action-secondary';
+                            btn.title = 'Copia le prenotazioni della materia aperta';
+                            btn.setAttribute('aria-label', 'Copia le prenotazioni');
+                            btn.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2Zm2 0h4a2 2 0 0 1 2 2v6h2V5h-8v2Zm4 2H6v10h8V9Z"/></svg><span>Copia</span>`;
                             btn.onclick = ()=>{
-                                btn.innerHTML = "Prenotazioni copiate!";
-                                setTimeout(()=>btn.innerHTML = "Copia le prenotazioni", 3000);
                                 analizzaDati({
                                     clipboard: true, 
                                     copy: "prenotazioni", 
                                     log: false
                                 });
+                                btn.classList.add('is-complete');
+                                btn.querySelector('span').textContent = 'Copiato';
+                                setTimeout(()=>{
+                                    btn.classList.remove('is-complete');
+                                    btn.querySelector('span').textContent = 'Copia';
+                                }, 2200);
                             };
                         btnDiv.appendChild(btn);
                     }
                 }
                 
                 let btn = document.createElement("button");
-                    btn.innerHTML = "Dati utente";
+                    btn.className = 'quick-action-button quick-action-primary';
+                    btn.title = 'Apri i dati utente';
+                    btn.setAttribute('aria-label', 'Apri i dati utente');
+                    btn.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 5v2h16v-2c0-2.33-2.67-5-8-5Z"/></svg><span>Dati utente</span>`;
+                    btn.disabled = !hasActiveClass;
                     btn.onclick = ()=>{
+                        if (!hasActiveClass) return;
                         window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard(null, {admin: isAdmin, onOpenAdminDash: ()=>{
                             fetch(`manager.php?UID=${window.UID}&class=${window.CLASS}&scope=getAllData`).then(r=>r.json()).then(r=>{
+                                if (!Array.isArray(r)) throw new Error(r.message ?? 'Dati dashboard non disponibili.');
                                 window.adminDash = new AdminDashboard(null, {
                                     fetchPrefix: "manager.php",
                                     subjects: r,
@@ -415,18 +470,26 @@
                                             body: JSON.stringify([fileData])
                                         }).then(r=>r.json());
                                         console.log(r);
-                                        if (r.status != true) alert("Impossibile completare l'azione!");
+                                        if (r.status != true) {
+                                            const error = new Error(r.message ?? "Impossibile completare l'azione!");
+                                            error.reported = true;
+                                            alert(error.message);
+                                            throw error;
+                                        }
                                         else {
                                             // alert("Dati aggiornati con successo!");
                                             !forceBlockRefresh && window.adminDash && window.adminDash.update({
                                                 subjects: r.newData.subjects,
                                                 users: r.newData.users,
-                                                profiles: !!r.newData.profiles ? r.newData.profiles : undefined
+                                                profiles: !!r.newData.profiles ? r.newData.profiles : undefined,
+                                                className: window.pageData.className
                                             });
                                         }
+                                        return r;
                                     },
                                     users: window.users,
                                     profiles: window.profiles,
+                                    className: window.pageData.className,
                                     analysisFunction: analizzaDati,
                                     notificationClass: window.notifications,
                                     refreshUsers: async ()=>{
@@ -442,10 +505,13 @@
                                     },
                                     isCustomProfile: window.isCustomProfile
                                 });
+                            }).catch(error=>{
+                                console.error(error);
+                                alert('Impossibile aprire la dashboard. Riprova tra poco.');
                             });
-                        }, ...window.userData}, window.notifications) : window.dash;
+                        }, className: window.pageData.className, ...window.userData}, window.notifications) : window.dash;
                     }
-                    if (JSON.stringify(userData) != "{}") btnDiv.appendChild(btn);
+                    if (hasActiveClass) btnDiv.appendChild(btn);
                 document.documentElement.appendChild(btnDiv);
 
                 if (window.ManifestLink != null) window.ManifestLink.remove();
@@ -614,8 +680,17 @@
                 },
                 login: function(elThis) {
                     const promise = new Promise(async (r)=>{
-                        const input = elThis.parentNode.querySelector('#UID');
+                        const input = elThis.closest('.mainDiv').querySelector('.login-uid-input');
                         const rawValue = input.value.trim();
+                        const errorElement = elThis.closest('.mainDiv').querySelector('.form-error');
+                        if (!rawValue) {
+                            errorElement?.classList.remove('hided');
+                            input.setAttribute('aria-invalid', 'true');
+                            input.focus();
+                            return r(false);
+                        }
+                        errorElement?.classList.add('hided');
+                        input.removeAttribute('aria-invalid');
                         let loginCode = rawValue;
                         let selectedClass = false;
                         if (rawValue.includes('UID=')) {
