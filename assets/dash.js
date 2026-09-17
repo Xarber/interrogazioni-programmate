@@ -743,7 +743,7 @@ class AdminDashboard {
         this.dashboardStayOnAnswers ??= false;
         const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
         if (this.currentFileIndex > -1 && !this.jsonFiles[this.currentFileIndex]) this.currentFileIndex = this.jsonFiles.length - 1;
-        if (this.jsonFiles.length < 1) this.currentFileIndex = -1;
+        if (this.jsonFiles.length < 1 && this.currentFileIndex > -1) this.currentFileIndex = -1;
         const currentFile = useSubjects ? this.jsonFiles[this.currentFileIndex] : this.userData;
         this.updateHeader();
         if (this.dashboard.querySelector('li.admin-active')) this.dashboard.querySelector('li.admin-active').classList.remove("admin-active");
@@ -1430,7 +1430,7 @@ class AdminDashboard {
                 content: "";
                 position: absolute;
                 z-index: -1;
-                top: 0;
+                top: -28px;
                 bottom: 0;
                 left: 50%;
                 width: 100vw;
@@ -1451,7 +1451,7 @@ class AdminDashboard {
                 color: var(--admin-text);
                 cursor: pointer;
             }
-            .admin-dashboardMenuBtn { display: none; }
+            .admin-dashboard-main-header .admin-dashboardMenuBtn { display: none; }
             .admin-state-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
             .admin-state-control {
                 position: relative;
@@ -1567,7 +1567,7 @@ class AdminDashboard {
                 }
                 .admin-dashboard-sidebar.extend { height: min(78dvh, 620px); }
                 .admin-dashboard-main-header { height: 40px; }
-                .admin-dashboard-main-header button { display: inline-grid; margin-left: auto; }
+                .admin-dashboard-main-header .admin-dashboardMenuBtn { display: inline-grid; margin-left: auto; }
                 .admin-dashboard-main-header h3 { font-size: 1.08rem; }
                 .admin-dashboard-main-header .admin-kicker { font-size: .58rem; }
                 .admin-active-class { margin: 14px 0 8px; }
@@ -1575,6 +1575,7 @@ class AdminDashboard {
                 .admin-json-file-list { flex: 1; overflow-y: auto; }
                 .admin-dashboard-content { width: 100%; height: auto; min-height: 100dvh; margin: 0; padding: calc(84px + env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom)); overflow: visible; }
                 .admin-dashboard-header { top: 0; padding-top: 12px; }
+                .admin-dashboard-header::before { top: 0; }
                 .admin-dashboard-header h2 { max-width: 70vw; font-size: 1.55rem; }
                 .admin-state-grid { grid-template-columns: 1fr; }
                 .admin-state-control { min-height: 72px; padding: 11px; }

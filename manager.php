@@ -162,7 +162,13 @@ if ($scope === 'loadPageData') {
         'profiled' => $classId, 'subject' => false, 'subjectList' => [], 'serverTime' => time(),
     ];
     if ($userData !== null && $classData !== null) {
-        $result['user'] = array_merge($userData, ['subjectData' => ['day' => $subjectData['answers'][$userId]['date'] ?? false]]);
+        $scopedUserData = $userData;
+        $scopedUserData['answers'] = array_filter(
+            is_array($userData['answers'] ?? null) ? $userData['answers'] : [],
+            static fn (string $answerSubject): bool => isset($classData['subjects'][$answerSubject]),
+            ARRAY_FILTER_USE_KEY
+        );
+        $result['user'] = array_merge($scopedUserData, ['subjectData' => ['day' => $subjectData['answers'][$userId]['date'] ?? false]]);
         $result['users'] = (bool) ($userData['admin'] ?? false) ? $classData['users'] : [];
         foreach ($classData['subjects'] as $name => $data) if (!(bool) ($data['hide'] ?? false)) $result['subjectList'][] = $name;
         if ($subjectData !== null && !(bool) ($subjectData['hide'] ?? false)) {
