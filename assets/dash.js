@@ -759,6 +759,10 @@ class AdminDashboard {
             const clearAnswersBtn = this.dashboard.querySelector('#clearAnswersBtn');
             const copyAnswersBtn = this.dashboard.querySelector('#copyAnswersBtn');
             const editAnswersBtn = this.dashboard.querySelector('#editAnswersBtn');
+            const filloutAnswersBtn = this.dashboard.querySelector('#filloutAnswersBtn');
+            const scheduleCampaignBtn = this.dashboard.querySelector('#scheduleCampaignBtn');
+            const startCampaignBtn = this.dashboard.querySelector('#startCampaignBtn');
+            const cancelCampaignBtn = this.dashboard.querySelector('#cancelCampaignBtn');
             const lockControl = this.dashboard.querySelector('#lockControl');
             const hideControl = this.dashboard.querySelector('#hideControl');
             const lockHint = this.dashboard.querySelector('#lockHint');
@@ -807,6 +811,13 @@ class AdminDashboard {
             };
             const campaignLabel = campaignLabels[campaign.status] ?? campaign.status ?? 'Non attiva';
             campaignStatus.innerHTML = `<span class="admin-status-pill" data-status="${campaign.status ?? 'idle'}">${campaignLabel}</span><span><strong>Apertura:</strong> ${unlockText}</span>`;
+            const hasChoices = Object.keys(Array.isArray(currentFile.data.days) ? {} : (currentFile.data.days ?? {})).length > 0;
+            scheduleCampaignBtn.disabled = !hasChoices;
+            startCampaignBtn.disabled = !hasChoices;
+            scheduleCampaignBtn.title = hasChoices ? 'Programma apertura, priorità e promemoria' : 'Aggiungi almeno una scelta prima di programmare';
+            startCampaignBtn.title = hasChoices ? 'Apri subito la fase per gli utenti prioritari' : 'Aggiungi almeno una scelta prima di aprire';
+            cancelCampaignBtn.classList.toggle('hided', !campaign.enabled || ['idle', 'complete', 'cancelled'].includes(campaign.status));
+            filloutAnswersBtn.classList.toggle('hided', !hasChoices || this.getMissingAnswers().length === 0);
             if (Object.keys(Array.isArray(currentFile.data.answers) ? {} : currentFile.data.answers).length > 0) {
                 clearAnswersBtn.classList.remove("hided");
                 copyAnswersBtn?.classList.remove("hided");
