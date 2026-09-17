@@ -1417,7 +1417,27 @@ class AdminDashboard {
             .admin-json-file-list-actions { display: flex; gap: 8px; margin-top: auto; }
             .admin-dashboard-content { min-width: 0; padding: 28px clamp(18px, 3vw, 44px) 48px; }
             .admin-dashboard-content > * { width: min(1100px, 100%); margin-left: auto; margin-right: auto; }
-            .admin-dashboard-header { position: sticky; top: -28px; z-index: 4; margin: 0 -4px 22px; padding: 18px 4px 14px; background: linear-gradient(180deg, rgba(19,14,11,.98) 70%, transparent); }
+            .admin-dashboard-header {
+                position: sticky;
+                top: -28px;
+                z-index: 4;
+                isolation: isolate;
+                margin: 0 -4px 22px;
+                padding: 18px 4px 14px;
+                background: transparent;
+            }
+            .admin-dashboard-header::before {
+                content: "";
+                position: absolute;
+                z-index: -1;
+                top: 0;
+                bottom: 0;
+                left: 50%;
+                width: 100vw;
+                transform: translateX(-50%);
+                pointer-events: none;
+                background: linear-gradient(180deg, rgba(19,14,11,.98) 70%, transparent);
+            }
             .admin-dashboard-header h2 { max-width: min(70vw, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: clamp(1.55rem, 3vw, 2.3rem); }
             .admin-icon-button, .admin-dashboard-header > .admin-close-btn, .admin-dashboard-main-header button {
                 display: inline-grid;

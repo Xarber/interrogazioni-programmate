@@ -6,7 +6,7 @@
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
     <title>Interrogazioni Programmate</title>
-    <link rel="stylesheet" href="/assets/app.css?v=4">
+    <link rel="stylesheet" href="/assets/app.css?v=5">
 </head>
 <body>
     <nav class="flow-progress hided" id="flow-progress" aria-label="Avanzamento prenotazione">
@@ -157,7 +157,7 @@
             document.body.appendChild(toggleBtn);
         }})();
     </script>
-    <script src="/assets/dash.js?v=4"></script>
+    <script src="/assets/dash.js?v=5"></script>
     <script>
         const uid = ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);

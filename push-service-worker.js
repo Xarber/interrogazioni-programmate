@@ -1,18 +1,18 @@
 self.addEventListener('activate', event => {
     event.waitUntil(Promise.all([
         clients.claim(),
-        caches.keys().then(keys => Promise.all(keys.filter(key => key !== 'pwa-cache-v4').map(key => caches.delete(key))))
+        caches.keys().then(keys => Promise.all(keys.filter(key => key !== 'pwa-cache-v5').map(key => caches.delete(key))))
     ]));
 });
 
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open("pwa-cache-v4").then(cache => {
+        caches.open("pwa-cache-v5").then(cache => {
             return cache.addAll([
                 //'/',
                 '/interrogazioni.php',
-                '/assets/app.css?v=4',
-                '/assets/dash.js?v=4',
+                '/assets/app.css?v=5',
+                '/assets/dash.js?v=5',
                 '/assets/manifest.php',
                 //'/push-service-worker.js',
                 //'/manager.php?scope=loadPageData'
@@ -35,7 +35,7 @@ self.addEventListener('fetch', event => {
                 console.log("Cached response");
                 const responseToCache = response.clone();
                 
-                caches.open("pwa-cache-v4").then(cache => {
+                caches.open("pwa-cache-v5").then(cache => {
                     try {cache.put(event.request, responseToCache);}
                     catch(e) {console.warn("Failed to cache response.", e)}
                 });
