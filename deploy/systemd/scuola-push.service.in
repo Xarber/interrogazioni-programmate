@@ -1,0 +1,23 @@
+[Unit]
+Description=Scuola local Web Push gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=@APP_ROOT@
+EnvironmentFile=/etc/scuola/scuola.env
+ExecStart=@NODE_BINARY@ @APP_ROOT@/app-push-server.js
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/scuola
+
+[Install]
+WantedBy=multi-user.target
+

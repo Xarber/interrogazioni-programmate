@@ -4,7 +4,7 @@
   "description": "Registra facilmente interrogazioni programmate (pensato per classi disfunzionali come quella dell'autore :D)",
   "main": "app-push-server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check:js": "node --check app-push-server.js && node --check assets/dash.js && node --check push-service-worker.js"
   },
   "repository": {
     "type": "git",

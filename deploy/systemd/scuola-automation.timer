@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Scuola booking campaign automation every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+AccuracySec=1s
+Unit=scuola-automation.service
+
+[Install]
+WantedBy=timers.target
+

@@ -1,0 +1,18 @@
+[Unit]
+Description=Scuola booking campaign automation
+After=network-online.target scuola-push.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=@APP_ROOT@
+EnvironmentFile=/etc/scuola/scuola.env
+ExecStart=@PHP_BINARY@ @APP_ROOT@/bin/automation-worker.php
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/scuola
+

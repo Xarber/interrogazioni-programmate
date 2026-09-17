@@ -1,7 +1,13 @@
 JSON/*
+JSON-*/
 node_modules
 package-lock.json
 vapidkeys.json
+subscriptions.json
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.key
 books
 
 #.gitignore

@@ -1,0 +1,10 @@
+; Install in the active PHP-FPM pool.d directory after replacing the paths if needed.
+; Repeating [www] extends the existing pool rather than creating a public endpoint.
+[www]
+env[SCUOLA_STORAGE_REGISTRY_DB] = /var/lib/scuola/registry.sqlite3
+env[SCUOLA_CLASS_STORAGE_DIR] = /var/lib/scuola/classes
+env[SCUOLA_STORAGE_KEY_FILE] = /etc/scuola/storage.key
+env[SCUOLA_LEGACY_ARCHIVE_DIR] = /var/lib/scuola/legacy-archive
+env[SCUOLA_ALLOW_CLASS_CREATION] = 1
+env[SCUOLA_PUSH_URL] = http://127.0.0.1:5743
+
