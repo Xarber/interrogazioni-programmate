@@ -214,6 +214,19 @@
             document.querySelectorAll('.saved-users-login-button').forEach(button => button.classList.toggle('hided', !hasSavedUsers));
         }
 
+        function syncLoginUrl(uid, classId, forceClear = false) {
+            const url = new URL(location.href);
+            const hasLoginParameters = url.searchParams.has('UID') || url.searchParams.has('class') || url.searchParams.has('profile');
+            if (!forceClear && !hasLoginParameters) return;
+            if (uid) url.searchParams.set('UID', uid);
+            else url.searchParams.delete('UID');
+            if (classId) url.searchParams.set('class', classId);
+            else url.searchParams.delete('class');
+            url.searchParams.delete('profile');
+            url.searchParams.delete('subject');
+            history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+        }
+
         function renderSavedUsers() {
             const container = document.getElementById('saved-user-list');
             if (!container) return;
@@ -790,6 +803,7 @@
                     const promise = new Promise(async (r)=>{
                         localStorage.removeItem('cachedUID');
                         localStorage.removeItem('cachedClass');
+                        syncLoginUrl('', false, true);
                         window.CLASS = false;
                         window.PROFILE = false;
                         r(await window.renderPage(''));
@@ -813,10 +827,12 @@
                     localStorage.setItem('cachedUID', uid);
                     if (classId) localStorage.setItem('cachedClass', classId);
                     else localStorage.removeItem('cachedClass');
+                    syncLoginUrl(uid, classId);
                     return window.renderPage(uid, '', classId);
                 },
                 changeProfile: function(profile = window.CLASS) {
                     const promise = new Promise(async (r)=>{
+                        syncLoginUrl(window.UID, profile);
                         r(await window.renderPage(undefined, undefined, profile));
                     });
                     promise._actionName = 'changeProfile';
