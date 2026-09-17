@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-app_root=$(cd "$(dirname "$0")/.." && pwd)
+source_root=$(cd "$(dirname "$0")/.." && pwd)
 test_root=$(mktemp -d "${TMPDIR:-/tmp}/scuola-api-test.XXXXXX")
 server_pid=''
 cleanup() {
@@ -10,6 +10,12 @@ cleanup() {
     rm -rf -- "$test_root"
 }
 trap cleanup EXIT
+
+# Exercise an isolated copy so manager.php can never discover or migrate live
+# JSON/JSON-* directories when this suite is launched from a deployment checkout.
+app_root="$test_root/app"
+mkdir -p "$app_root"
+tar -C "$source_root" --exclude='.git' --exclude='JSON' --exclude='JSON-*' -cf - . | tar -C "$app_root" -xf -
 
 php_bin=${PHP_BIN:-php}
 php_options=()
@@ -102,4 +108,3 @@ notification_proxy=$(curl --silent --show-error "$base_url/manager.php?scope=not
 jq -e '.status == false' <<<"$notification_proxy" >/dev/null
 
 echo 'api_smoke: OK'
-
