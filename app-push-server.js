@@ -6,11 +6,19 @@ const fs = fsSync.promises;
 const webpush = require('web-push');
 
 // Generate VAPID keys (do this once and save the keys)
-const vapidKeys = fsSync.existsSync("vapidkeys.json") ? JSON.parse(fsSync.readFileSync("vapidkeys.json")) : (()=>{
-    const keys = webpush.generateVAPIDKeys();
-    fsSync.writeFileSync("vapidkeys.json", JSON.stringify(keys));
-    return keys;
-})();
+const vapidKeyPath = process.env.SCUOLA_VAPID_KEY_FILE;
+const subscriptionPath = process.env.SCUOLA_PUSH_SUBSCRIPTIONS_FILE;
+if (!vapidKeyPath) throw new Error('SCUOLA_VAPID_KEY_FILE must point outside the web root.');
+const applicationRoot = path.resolve(__dirname);
+const isInsideApplication = candidate => {
+    const relative = path.relative(applicationRoot, path.resolve(candidate));
+    return relative === '' || (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative));
+};
+if (isInsideApplication(vapidKeyPath)) throw new Error('The VAPID key file must be outside the web root.');
+if (subscriptionPath && isInsideApplication(subscriptionPath)) throw new Error('Push subscription persistence must be outside the web root.');
+if (!fsSync.existsSync(vapidKeyPath)) throw new Error('The configured VAPID key file does not exist.');
+const vapidKeys = JSON.parse(fsSync.readFileSync(vapidKeyPath, 'utf8'));
+if (!vapidKeys.publicKey || !vapidKeys.privateKey) throw new Error('The configured VAPID key file is invalid.');
 
 
 // Configure web-push with your VAPID keys
@@ -27,7 +35,10 @@ const subscriptions = new Set();
 async function parseBody(req) {
     return new Promise((resolve, reject) => {
         let body = '';
-        req.on('data', chunk => body += chunk);
+        req.on('data', chunk => {
+            body += chunk;
+            if (body.length > 1024 * 1024) req.destroy(new Error('Request body is too large.'));
+        });
         req.on('error', reject);
         req.on('end', () => {
             try {
@@ -109,6 +120,7 @@ const server = http.createServer(async (req, res) => {
 
                 url: bodyData.url,
                 subject: bodyData.subject,
+                classId: bodyData.classId,
                 additionalInfo: bodyData.additionalInfo ?? {},
                 urgency: bodyData.urgency ?? "normal",
                 subscriptions: bodyData.subscriptions
@@ -124,6 +136,7 @@ const server = http.createServer(async (req, res) => {
                 data: {
                     url: data.url,
                     subject: data.subject,
+                    classId: data.classId,
                     ...data.additionalInfo
                 },
                 requireInteraction: data.requireInteraction ?? false,
@@ -165,41 +178,44 @@ const server = http.createServer(async (req, res) => {
         }
 
         // Handle 404
-        res.writeHead(404);
         sendJSON(res, {
             status: false,
             message: "Not Found",
-        });
+        }, 404);
     } catch (error) {
         console.error('Server error:', error);
-        res.writeHead(500);
         sendJSON(res, {
             status: false,
             message: "Internal Server Error",
-        });
+        }, 500);
     }
 });
 
 const PORT = process.env.PORT || 5743;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+const HOST = process.env.HOST || '127.0.0.1';
+server.listen(PORT, HOST, () => {
+    console.log(`Server running on ${HOST}:${PORT}`);
 });
 
 // Save subscriptions to file on server shutdown
-process.on('SIGINT', async () => {
+async function shutdown() {
     try {
-        //! REMOVED: await fs.writeFile('subscriptions.json', JSON.stringify(Array.from(subscriptions)));
-        process.exit(0);
+        if (subscriptionPath) await fs.writeFile(subscriptionPath, JSON.stringify(Array.from(subscriptions)), {mode: 0o600});
+        server.close(() => process.exit(0));
     } catch (error) {
         console.error('Error saving subscriptions:', error);
         process.exit(1);
     }
-});
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 // Load subscriptions from file on server start
 (async () => {
     try {
-        const savedSubscriptions = await fs.readFile('subscriptions.json', 'utf-8');
+        if (!subscriptionPath) return;
+        const savedSubscriptions = await fs.readFile(subscriptionPath, 'utf-8');
         JSON.parse(savedSubscriptions).forEach(sub => subscriptions.add(sub));
         console.log(`Loaded ${subscriptions.size} subscriptions`);
     } catch (error) {

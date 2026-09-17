@@ -1,11 +1,13 @@
 self.addEventListener('activate', event => {
-    clients.claim();
-    console.log('Service Worker Ready!');
+    event.waitUntil(Promise.all([
+        clients.claim(),
+        caches.keys().then(keys => Promise.all(keys.filter(key => key !== 'pwa-cache-v2').map(key => caches.delete(key))))
+    ]));
 });
 
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open("pwa-cache-v1").then(cache => {
+        caches.open("pwa-cache-v2").then(cache => {
             return cache.addAll([
                 //'/',
                 '/interrogazioni.php',
@@ -33,21 +35,16 @@ self.addEventListener('fetch', event => {
                 console.log("Cached response");
                 const responseToCache = response.clone();
                 
-                caches.open("pwa-cache-v1").then(cache => {
+                caches.open("pwa-cache-v2").then(cache => {
                     try {cache.put(event.request, responseToCache);}
                     catch(e) {console.warn("Failed to cache response.", e)}
                 });
             }
             
             return response;
-        }).catch(e=>{
-            caches.match(event.request).then(response => {
-                console.warn("Fetch error encountered, returning cached response.", e);
-                // Return cached response if found
-                if (response) return response;
-                
-                return e;
-            })
+        }).catch(async e=>{
+            console.warn("Fetch error encountered, returning cached response.", e);
+            return (await caches.match(event.request)) || Response.error();
         })
         
     );
@@ -68,7 +65,7 @@ self.addEventListener('message', event => {
         const db = event.target.result;
         const tx = db.transaction('pathUidStore', 'readwrite');
         const store = tx.objectStore('pathUidStore');
-        store.put({ id: '1', pathname: data.pathname, uid: data.uid });
+        store.put({ id: '1', pathname: data.pathname, uid: data.uid, classId: data.classId });
     };
   
     request.onerror = () => {
@@ -101,38 +98,38 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(notificationEvent) {
     notificationEvent.notification.close();
-    
-    // Handle notification click
+
     notificationEvent.waitUntil(
-        clients
-        .matchAll({
-            type: "window",
-        })
-        .then((clientList) => {
+        Promise.all([
+            clients.matchAll({ type: "window", includeUncontrolled: true }),
+            new Promise((resolve) => {
             const request = indexedDB.open('ServiceWorkerDB', 1);
-            return new Promise((resolve)=>{
-                request.onsuccess = event => {
+            request.onerror = () => resolve({});
+            request.onupgradeneeded = () => resolve({});
+            request.onsuccess = event => {
+                try {
                     const db = event.target.result;
-                    const tx = db.transaction('pathUidStore', 'readonly');
-                    const store = tx.objectStore('pathUidStore');
-                    const getRequest = store.get('1');
-            
-                    getRequest.onsuccess = () => {
-                        const data = getRequest.result;
-                        if (data) {
-                            self.pathname = data.pathname;
-                            self.uid = data.uid;
-                            let toOpenUrl = notificationEvent.notification.data.url || `${self.pathname ?? "/"}?UID=${self.uid ?? ""}`;
-                            if (!!notificationEvent.notification.data.subject) toOpenUrl += `${toOpenUrl.indexOf('?') != -1 ? '&' : '?'}subject=${notificationEvent.notification.data.subject}`;
-                            for (const client of clientList) {
-                                if (client.url === toOpenUrl && "focus" in client) return client.focus();
-                            }
-                            if (clients.openWindow) return clients.openWindow(toOpenUrl);
-                        }
-                        resolve();
-                    };
-                };
-            });
-        }),
+                    const getRequest = db.transaction('pathUidStore', 'readonly').objectStore('pathUidStore').get('1');
+                    getRequest.onerror = () => resolve({});
+                    getRequest.onsuccess = () => resolve(getRequest.result || {});
+                } catch (_) {
+                    resolve({});
+                }
+            };
+        })]).then(([clientList, saved]) => {
+            const notificationData = notificationEvent.notification.data || {};
+            const target = new URL(notificationData.url || saved.pathname || '/interrogazioni.php', self.location.origin);
+            if (!target.searchParams.has('UID') && saved.uid) target.searchParams.set('UID', saved.uid);
+            const classId = notificationData.classId || saved.classId;
+            if (classId) target.searchParams.set('class', classId);
+            if (notificationData.subject) target.searchParams.set('subject', notificationData.subject);
+
+            const matchingClient = clientList.find(client => new URL(client.url).pathname === target.pathname);
+            if (matchingClient && 'focus' in matchingClient) {
+                if ('navigate' in matchingClient) return matchingClient.navigate(target.href).then(() => matchingClient.focus());
+                return matchingClient.focus();
+            }
+            return clients.openWindow ? clients.openWindow(target.href) : undefined;
+        })
     );
 });

@@ -6,8 +6,12 @@
 // ( for https://maskable.app/editor )
 header("Content-Type: application/json");
 session_start();
-$startUrl = ("/interrogazioni.php?UID=".($_GET["UID"] ?? $_SESSION["userID"]));
-if (!str_contains($startUrl, "UID=")) $startUrl = $startUrl."?".$_SERVER["QUERY_STRING"];
+$startParameters = [];
+$uid = $_GET["UID"] ?? $_SESSION["userID"] ?? null;
+$classId = $_GET["class"] ?? $_SESSION["classId"] ?? null;
+if (is_string($uid) && $uid !== '') $startParameters['UID'] = $uid;
+if (is_string($classId) && $classId !== '') $startParameters['class'] = $classId;
+$startUrl = "/interrogazioni.php" . ($startParameters === [] ? '' : '?' . http_build_query($startParameters));
 $manifestFull = array(
   "name" => "Interrogazioni Programmate",
   "short_name" => "Interrogazioni",
@@ -57,7 +61,4 @@ $manifestFull = array(
     "client_mode" => "auto"
   )
 );
-$manifest = $manifestFull;
-$manifest["start_url"] = explode("?", $startUrl, 2)[0];
-echo json_encode($manifestFull);
-file_put_contents("manifest.json", json_encode($manifest, JSON_PRETTY_PRINT));
+echo json_encode($manifestFull, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

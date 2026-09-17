@@ -3,9 +3,10 @@ class PushNotifications {
      * Initializes a PushNotifications object.
      * @param {string} identifier - Unique identifier, e.g. a username.
      */
-    constructor(identifier, fetchPrefix) {
+    constructor(identifier, fetchPrefix, classId) {
         this.id = identifier;
         this.fetchPrefix = fetchPrefix ?? "";
+        this.classId = classId ?? "";
     }
 
     urlBase64ToUint8Array(base64String) {
@@ -44,10 +45,11 @@ class PushNotifications {
         try {
             // Register service worker
             const registration = await navigator.serviceWorker.getRegistration() ?? await navigator.serviceWorker.register('/push-service-worker.js');
-            while (!navigator.serviceWorker.controller) await new Promise(r=>setTimeout(r, 1000));
-            navigator.serviceWorker.controller.postMessage({
+            const readyRegistration = await navigator.serviceWorker.ready;
+            (navigator.serviceWorker.controller ?? readyRegistration.active)?.postMessage({
                 pathname: window.location.pathname,
-                uid: new URLSearchParams(window.location.search).get('UID')
+                uid: this.id,
+                classId: this.classId
             });
             console.log('Service Worker registered');
     
@@ -65,7 +67,7 @@ class PushNotifications {
             }
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: this.urlBase64ToUint8Array((await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+                applicationServerKey: this.urlBase64ToUint8Array((await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id, class: this.classId}).toString()}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -75,7 +77,7 @@ class PushNotifications {
             });
             
             // Send subscription to your server
-            const response = await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+            const response = await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id, class: this.classId}).toString()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -93,30 +95,24 @@ class PushNotifications {
         /*
         const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
         */
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             navigator.serviceWorker.ready.then(d=>{
                 if (!('pushManager' in d)) return resolve({status: true, message: null});
                 d.pushManager.getSubscription().then(async sub => {
                     const subscription = sub;
-                    if (!subscription) resolve({status: true, message: null});
+                    if (!subscription) return resolve({status: true, message: null});
     
-                    const response = (!!sendRequestToServer) ? await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+                    const response = (!!sendRequestToServer) ? await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id, class: this.classId}).toString()}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({subscription, action: "unsubscribe"})
                     }).then(r=>r.json()).catch(e=>{return {status: false, message: e.toString()}}) : {status: true, message: null};
-                    subscription.unsubscribe();
-                    navigator.serviceWorker.getRegistrations().then(registrations => {
-                        for (const registration of registrations) {
-                            registration.unregister();
-                        } 
-                    });
-            
-                    return response;
-                })
-            });
+                    await subscription.unsubscribe();
+                    resolve(response);
+                }).catch(error => resolve({status: false, message: error.toString()}));
+            }).catch(error => resolve({status: false, message: error.toString()}));
         });
     }
 
@@ -129,7 +125,7 @@ class PushNotifications {
     }
 
     async requestSend(users, data) {
-        const response = await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id}).toString()}`, {
+        const response = await fetch(`${this.fetchPrefix}?${new URLSearchParams({scope: "notifications", UID: this.id, class: this.classId}).toString()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -143,7 +139,7 @@ class PushNotifications {
     async status() {
         return new Promise(async (resolve, reject) => {
             navigator.serviceWorker.getRegistrations().then(r=>{
-                if (r.length === 0) resolve(false);
+                if (r.length === 0) return resolve(false);
                 /*
                     const subscription = (await (await navigator.serviceWorker.ready).pushManager.getSubscription());
                     return !!subscription;
@@ -194,8 +190,8 @@ class UserDashboard {
                 <div class="inline">
                     ${this.notificationClass ? `<button onclick="" id="dash-notifications-btn" ${this.notificationClass.available() ? "" : 'style="display: none"'} title="Notification Settings">Notifiche</button>` : ""}
                     <button onclick="window.open(${/Android/i.test(navigator.userAgent) 
-                        ? `\`manager.php?scope=redirectToCalendar&UID=\${window.UID}\`, '_blank'` // https://calendar.google.com/calendar/r?cid=\${encodeURIComponent(\`webcal://\${location.hostname}/manager.php?scope=syncICal&UID=\${window.UID}\`)}
-                        : `\`webcal://\${location.hostname}/manager.php?scope=syncICal&UID=\${window.UID}\``
+                        ? `\`manager.php?scope=redirectToCalendar&UID=\${window.UID}&class=\${window.CLASS}\`, '_blank'`
+                        : `\`webcal://\${location.hostname}/manager.php?scope=syncICal&UID=\${window.UID}&class=\${window.CLASS}\``
                     })" id="dash-calendar-btn" title="Add Calendar">Aggiungi Calendario</button>
                     ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" title="Dashboard Admin">Dashboard</button>' : ""}
                 </div>
@@ -477,12 +473,9 @@ class AdminDashboard {
                 </div>
                 <div class="admin-dashboard-sidebar-content">
                     <ul class="admin-json-file-list">
-                        ${!this.isCustomProfile ? "" : `
-                            <li preventDefault="true" onclick="if (confirm('Vuoi tornare al profilo principale?')) location.href = '?profile=default&UID='+(new URLSearchParams(location.search).get('UID'))">&lt; Esci dal profilo</li>
-                        `}
                         <li data-index="-1" class="${this.currentFileIndex === -1 ? 'admin-active' : ''}">Utenti</li>
                         ${!Array.isArray(this.profiles) ? "" : `
-                            <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Profili</li>
+                            <li data-index="-2" class="${this.currentFileIndex === -2 ? 'admin-active' : ''}">Classi</li>
                         `}
                         ${this.jsonFiles.map((file, index) => `
                             <li data-index="${index}" class="${index === this.currentFileIndex ? 'admin-active' : ''}">${file.fileName}</li>
@@ -522,6 +515,15 @@ class AdminDashboard {
                                 <span>Nascondi</span>
                             </div>
                             <div class="admin-inline admin-user-actions">
+                                <button id="scheduleCampaignBtn" style="background-color: #7c3aed;" class="admin-action-button" title="Programma Apertura">
+                                    Programma
+                                </button>
+                                <button id="startCampaignBtn" style="background-color: #059669;" class="admin-action-button" title="Apri ora con priorità">
+                                    Apri ora
+                                </button>
+                                <button id="cancelCampaignBtn" style="background-color: #b91c1c;" class="admin-action-button" title="Annulla automazione">
+                                    Annulla
+                                </button>
                                 ${typeof this.dataAnalysis === "function" ? `
                                     <button id="copyAnswersBtn" style="background-color: dodgerblue;" class="admin-action-button" title="Copia Risposte">
                                         ${this.icons.copy}
@@ -539,6 +541,7 @@ class AdminDashboard {
                             </div>
                         </div>
                     </div>
+                    <div id="campaignStatus" class="admin-day-item admin-static-element"></div>
                     <div class="admin-subject-text-prompts-container" style="display: none">
                         <h3>Domande</h3>
                         <input type="text" name="subjectTextPromptBeforeAnswering" id="subjectTextPromptBeforeAnswering" placeholder="Testo prima di scegliere un opzione: 'Quale opzione vuoi scegliere?'">
@@ -573,14 +576,14 @@ class AdminDashboard {
                     </div>
                 </div>
                 <div class="admin-dashboard-profile-section">
-                    <p>Per entrare in un profilo, clicca il suo nome.</p>
+                    <p>Per entrare in una classe, clicca il suo nome.</p>
                     <div class="admin-days-container">
                         <div id="profileList"></div>
                         <div class="admin-inline inline">
-                            <button id="uploadProfileBtn" class="admin-action-button" style="background-color: dodgerblue" title="Carica Profilo">
+                            <button id="uploadProfileBtn" class="admin-action-button" style="background-color: dodgerblue" title="Importa Classe">
                                 ${this.icons.upload}
                             </button>
-                            <button id="addProfileBtn" class="admin-action-button" title="Crea Profilo">
+                            <button id="addProfileBtn" class="admin-action-button" title="Crea Classe">
                                 ${this.icons.plus}
                             </button>
                         </div>
@@ -667,6 +670,10 @@ class AdminDashboard {
 
             lockSwitch.checked = currentFile.data.lock;
             hideSwitch.checked = currentFile.data.hide;
+            const campaign = currentFile.data.campaign ?? {status: "idle", enabled: false};
+            const campaignStatus = this.dashboard.querySelector('#campaignStatus');
+            const unlockText = campaign.unlockAt ? new Date(campaign.unlockAt * 1000).toLocaleString('it-IT') : "non programmata";
+            campaignStatus.innerHTML = `<span><strong>Automazione:</strong> ${campaign.status ?? "idle"}</span><span class="admin-availability">Apertura: ${unlockText}</span>`;
             if (Object.keys(Array.isArray(currentFile.data.answers) ? {} : currentFile.data.answers).length > 0) {
                 clearAnswersBtn.classList.remove("hided");
                 copyAnswersBtn.classList.remove("hided");
@@ -699,7 +706,7 @@ class AdminDashboard {
         const useSubjects = (this.currentFileIndex > -1 && this.jsonFiles[this.currentFileIndex]);
         const currentFile = useSubjects ? this.jsonFiles[this.currentFileIndex] : this.userData;
         this.dashboard.querySelector('h2#admin-dashboard-header-title').innerHTML = useSubjects ? currentFile.fileName : 
-        (this.currentFileIndex === -1 ? `Utenti (${Object.keys(this.userData).length})` : `Profili (${this.profiles.length})`);
+        (this.currentFileIndex === -1 ? `Utenti (${Object.keys(this.userData).length})` : `Classi (${this.profiles.length})`);
     }
   
     renderDays() {
@@ -752,11 +759,15 @@ class AdminDashboard {
             var userFlags = [];
             userData.admin && userFlags.push("A");
             userData.watcherAcc && userFlags.push("W");
+            userData.priority && userFlags.push("P");
             userFlags = userFlags.length > 0 ? `[${userFlags.join("] [")}] ` : "";
             userElement.innerHTML = `
                 <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userFlags}${userData.name}</span>
                 <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
+                    <button class="admin-priority-btn" data-user="${userUUID}" title="${userData.priority ? 'Rimuovi Priorità' : 'Rendi Prioritario'}" style="background-color: ${userData.priority ? '#f59e0b' : 'rgba(255, 255, 255, 0.3)'}">
+                        ${userData.priority ? '★' : '☆'}
+                    </button>
                     <button class="admin-invite-btn ${!userData.pushSubscriptions ? '' : 'admin-notify-user-btn'}" data-user="${userUUID}" title="Copia Invito">
                         ${!userData.pushSubscriptions ? this.icons.invite : this.icons.notification}
                     </button>
@@ -785,18 +796,20 @@ class AdminDashboard {
         const currentFile = this.profiles;
         profileList.innerHTML = '';
         currentFile.forEach((e) => {
+            const profileId = typeof e === "string" ? e : e.id;
+            const profileName = typeof e === "string" ? e : e.name;
             const profileElement = document.createElement('div');
             profileElement.className = 'admin-day-item';
             profileElement.innerHTML = `
-                <span title="Clicca per spostarti su questo profilo" onclick="if (confirm('Sei sicuro di voler cambiare il profilo su ${e}?')) location.href = location.href.split('?')[0]+'?profile=${e}&UID='+(new URLSearchParams(location.search).get('UID'));">${e}</span>
+                <span title="Apri questa classe" onclick="if (confirm('Vuoi entrare nella classe ${profileName}?')) location.href = location.href.split('?')[0]+'?class=${profileId}&UID='+window.UID;">${profileName}</span>
                 <div class="admin-inline admin-user-actions">
-                    <button class="admin-download-file-btn" data-profile="${e}" title="Scarica Profilo">
+                    <button class="admin-download-file-btn" data-profile="${profileId}" title="Scarica Classe">
                         ${this.icons.download}
                     </button>
-                    <button class="admin-edit-day-btn" data-profile="${e}" title="Rinomina Profilo">
+                    <button class="admin-edit-day-btn" data-profile="${profileId}" data-profile-name="${profileName}" title="Rinomina Classe">
                         ${this.icons.edit}
                     </button>
-                    <button class="admin-delete-day-btn" data-profile="${e}" title="Elimina Profilo">
+                    <button class="admin-delete-day-btn" data-profile="${profileId}" data-profile-name="${profileName}" title="Elimina Classe">
                         ${this.icons.trash}
                     </button>
                 </div>
@@ -1097,7 +1110,7 @@ class AdminDashboard {
                 margin-left: auto;
                 gap: 5px;
             }
-            .admin-delete-day-btn, .admin-clear-day-btn, .admin-edit-day-btn, .admin-download-file-btn, .admin-admin-btn, .admin-invite-btn {
+            .admin-delete-day-btn, .admin-clear-day-btn, .admin-edit-day-btn, .admin-download-file-btn, .admin-admin-btn, .admin-invite-btn, .admin-priority-btn {
                 padding: 5px 10px;
                 background-color: #f44336;
                 color: white;
@@ -1296,6 +1309,16 @@ class AdminDashboard {
             await this.filloutAnswers();
         });
 
+        const scheduleCampaignBtn = this.dashboard.querySelector('#scheduleCampaignBtn');
+        scheduleCampaignBtn.addEventListener('click', async () => await this.configureCampaign(false));
+        const startCampaignBtn = this.dashboard.querySelector('#startCampaignBtn');
+        startCampaignBtn.addEventListener('click', async () => await this.configureCampaign(true));
+        const cancelCampaignBtn = this.dashboard.querySelector('#cancelCampaignBtn');
+        cancelCampaignBtn.addEventListener('click', async () => {
+            if (!confirm('Vuoi annullare questa automazione? Le risposte non verranno cancellate.')) return;
+            await this.campaignRequest('cancel');
+        });
+
         if (typeof this.dataAnalysis === "function") {
             const copyAnswersBtn = this.dashboard.querySelector('#copyAnswersBtn');
             copyAnswersBtn.addEventListener('click', () => {
@@ -1370,6 +1393,12 @@ class AdminDashboard {
             if (target.classList.contains('admin-admin-btn')) {
                 await this.toggleAdminUser(target.dataset.user);
             }
+            if (target.classList.contains('admin-priority-btn')) {
+                this.userData[target.dataset.user].priority = !this.userData[target.dataset.user].priority;
+                if (!this.userEditList.includes(target.dataset.user)) this.userEditList.push(target.dataset.user);
+                await this.updateJSON();
+                this.renderUsers();
+            }
             if (target.classList.contains('admin-invite-btn')) {
                 const name = this.userData[target.dataset.user].name.split(' ');
                 if (target.classList.contains('admin-notify-user-btn')) {
@@ -1381,7 +1410,7 @@ class AdminDashboard {
                     return;
                 }
                 if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
-                navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
+                navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}&class=${window.CLASS}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
                 alert(`Il testo con il link d'accesso di ${name.join(" ")} è stato copiato!`);
             }
         });
@@ -1465,6 +1494,46 @@ class AdminDashboard {
         }
         return true;
     }
+
+    async campaignRequest(action, settings) {
+        const subject = this.jsonFiles[this.currentFileIndex].fileName;
+        const response = await fetch(`${this.fetchPrefix}?scope=campaign&UID=${window.UID}&class=${window.CLASS}&subject=${encodeURIComponent(subject)}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action, settings})
+        }).then(r=>r.json()).catch(error=>({status: false, message: error.toString()}));
+        if (!response.status) return alert(response.message ?? 'Impossibile aggiornare l’automazione.');
+        this.jsonFiles[this.currentFileIndex].data.campaign = response.campaign;
+        if (action === 'start') this.jsonFiles[this.currentFileIndex].data.lock = false;
+        if (action === 'configure') this.jsonFiles[this.currentFileIndex].data.lock = true;
+        this.updateDashboard();
+        return response;
+    }
+
+    async configureCampaign(startNow = false) {
+        if (startNow) {
+            if (!confirm('Aprire ora la fase prioritaria e inviare le notifiche previste?')) return;
+            return await this.campaignRequest('start');
+        }
+        const defaultDate = new Date(Date.now() + 60 * 60 * 1000);
+        const localDefault = new Date(defaultDate.getTime() - defaultDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        const unlockAt = prompt('Data e ora di apertura (YYYY-MM-DDTHH:MM):', localDefault);
+        if (!unlockAt) return;
+        const priorityWindowMinutes = Number(prompt('Durata massima della fase prioritaria in minuti:', '180'));
+        const priorityReminderMinutes = Number(prompt('Ogni quanti minuti ricordare agli utenti prioritari?', '60'));
+        const regularReminderMinutes = Number(prompt('Ogni quanti minuti ricordare agli altri utenti?', '180'));
+        const settings = {
+            unlockAt,
+            timezone: 'Europe/Rome',
+            preNoticeMinutes: 60,
+            priorityWindowMinutes,
+            priorityReminderMinutes,
+            regularReminderMinutes,
+            notifyCoordinator: confirm('Vuoi ricevere una notifica quando finiscono i prioritari e quando finiscono tutti?')
+        };
+        const response = await this.campaignRequest('configure', settings);
+        if (response?.status) alert('Apertura programmata. La materia è stata bloccata fino all’orario scelto.');
+    }
   
     async addDay() {
         const notUseDates = this.jsonFiles[this.currentFileIndex].data.usesDays === false;
@@ -1503,31 +1572,32 @@ class AdminDashboard {
     }
 
     async addProfile(customName) {
-        const profile = customName ?? prompt(`Inserisci il nome del profilo:`);
+        const profile = customName ?? prompt(`Inserisci il nome della classe:`);
         if (profile) {
-            if (profile === "default" || profile === "" || this.profiles.includes(profile)) {
+            if (profile === "default" || profile === "" || this.profiles.some(e=>(typeof e === "string" ? e : e.name) === profile)) {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${new URLSearchParams(location.search).get("UID")}`, {
+            const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${window.UID}&class=${window.CLASS}`, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "newprofile",
-                    method: confirm("Vuoi importare i dati da questo profilo? (Annulla = No)") ? "import" : "new",
+                    method: confirm("Vuoi copiare in questa classe i dati della classe attuale? (Annulla = No)") ? "import" : "new",
                     profile
                 })
             }).then(r=>r.json());
             if (!r.status) return alert('Impossibile completare l\'azione!');
-            this.profiles.push(profile);
-            this.profiles.sort();
+            this.profiles.push({id: r.classId, name: profile, admin: true});
+            this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
             this.renderProfiles();
         }
     }
 
     async deleteProfile(profile, force = false) {
-        if (profile === "default" || profile === "" || !this.profiles.includes(profile)) return alert("Non puoi cancellare questo profilo!");
-        if (!force && !confirm(`Sicuro di voler eliminare il profilo ${profile}?`)) return;
-        const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${new URLSearchParams(location.search).get("UID")}`, {
+        const profileEntry = this.profiles.find(e=>(typeof e === "string" ? e : e.id) === profile);
+        if (!profileEntry) return alert("Non puoi cancellare questa classe!");
+        if (!force && !confirm(`Sicuro di voler eliminare la classe ${profileEntry.name ?? profileEntry}?`)) return;
+        const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${window.UID}&class=${window.CLASS}`, {
             method: "POST",
             body: JSON.stringify({
                 action: "deleteprofile",
@@ -1535,8 +1605,8 @@ class AdminDashboard {
             })
         }).then(r=>r.json());
         if (!r.status) return alert('Impossibile completare l\'azione!');
-        this.profiles.splice(this.profiles.indexOf(profile), 1);
-        this.profiles.sort();
+        this.profiles.splice(this.profiles.indexOf(profileEntry), 1);
+        this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
         this.renderProfiles();
     }
   
@@ -1881,13 +1951,15 @@ class AdminDashboard {
     }
 
     async editProfile(profile, customName) {
-        const newName = customName ?? prompt(`Come vuoi rinominare ${profile}?`);
+        const profileEntry = this.profiles.find(e=>(typeof e === "string" ? e : e.id) === profile);
+        const oldName = profileEntry?.name ?? profile;
+        const newName = customName ?? prompt(`Come vuoi rinominare ${oldName}?`);
         if (newName) {
-            if (newName === "default" || newName === "" || this.profiles.includes(newName)) {
+            if (newName === "default" || newName === "" || this.profiles.some(e=>(e.name ?? e) === newName)) {
                 alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
-            const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${new URLSearchParams(location.search).get("UID")}`, {
+            const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${window.UID}&class=${window.CLASS}`, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "renameprofile",
@@ -1896,9 +1968,8 @@ class AdminDashboard {
                 })
             }).then(r=>r.json());
             if (!r.status) return alert('Impossibile completare l\'azione!');
-            this.profiles.splice(this.profiles.indexOf(profile), 1);
-            this.profiles.push(newName);
-            this.profiles.sort();
+            if (profileEntry) profileEntry.name = newName;
+            this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
             this.renderProfiles();
         }
     }
@@ -2030,8 +2101,8 @@ class AdminDashboard {
     }
 
     downloadProfile(profileName) {
-        if (!confirm(`Vuoi scaricare il profilo ${profileName}?`)) return;
-        window.open("?scope=downloadProfile&UID="+(new URLSearchParams(location.search).get("UID"))+"&profileName="+profileName, "_blank");
+        if (!confirm(`Vuoi scaricare questa classe?`)) return;
+        window.open(`${this.fetchPrefix}?scope=downloadProfile&UID=${window.UID}&class=${profileName}`, "_blank");
     }
     
     uploadProfile() {
@@ -2043,7 +2114,7 @@ class AdminDashboard {
         fileInput.accept = ".zip";
         form.appendChild(fileInput);
 
-        form.action = `${this.fetchPrefix}?scope=uploadProfile&UID=${new URLSearchParams(location.search).get("UID")}`;
+        form.action = `${this.fetchPrefix}?scope=uploadProfile&UID=${window.UID}&class=${window.CLASS}`;
         form.method = "post";
         form.setAttribute("onsubmit", "return false")
         form.enctype = "multipart/form-data";
@@ -2059,7 +2130,7 @@ class AdminDashboard {
                 if (!r.status) alert("Impossibile completare l'azione!");
                 else {
                     this.profiles = await this.refreshProfiles();
-                    this.profiles.sort();
+                    this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
                     this.renderProfiles();
                     form.remove();
                 }

@@ -1,474 +1,399 @@
 <?php
+
+declare(strict_types=1);
+
 error_reporting(E_ERROR | E_PARSE);
 session_start();
-$_SESSION["profile"] ??= "";
-$_SESSION["lastAccessID"] = $_SERVER["REQUEST_URI"];
-$body = strlen(file_get_contents("php://input")) > 1 ? json_decode(file_get_contents("php://input"), true) : array();
-$_ORIGINALGET = $_GET;
-$_GET = array_merge($_GET, $_POST, $body);
-$_GET["profile"] = $body["appLoadProfile"] ?? $_ORIGINALGET["profile"] ?? false;
-//$_GET["subject"] = $_ORIGINALGET["subject"] ?? false;
-$_GET["scope"] ??= false;
-$_GET["saveProfile"] ??= "true";
-if ($_GET["saveProfile"] === "false" && !true) { //This is a very beta feature and stuff does break with it. Please don't use it.
-    $PROFILE = ($_GET["profile"] == "" || $_GET["profile"] == "default") ? "" : ("-".$_GET["profile"]);
-} else {
-    if (!!$_GET["profile"]) $_SESSION["profile"] = $_GET["profile"];
-    if ($_GET["profile"] === "default") $_SESSION["profile"] = "";
-    $_SESSION["profile"] = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $_SESSION["profile"]);
-    $PROFILE = $_SESSION["profile"] === "" ? "" : ("-".$_SESSION["profile"]);
-}
-if (!file_exists("./JSON{$PROFILE}") || !is_dir("./JSON{$PROFILE}")) {
-    if ($PROFILE != "") {
-        header('Content-Type: application/json');
-        die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
-    }
-    mkdir("./JSON{$PROFILE}");
+
+require_once __DIR__ . '/lib/SecureStorage.php';
+require_once __DIR__ . '/lib/CampaignService.php';
+
+function jsonResponse(array $payload, int $status = 200): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    exit;
 }
 
-function copyFolder($src, $dst) {
-    $dir = opendir($src);
-    @mkdir($dst);
+set_exception_handler(static function (Throwable $error): never {
+    error_log('Scuola request failed: ' . get_class($error) . ': ' . $error->getMessage());
+    $clientError = $error instanceof StorageException || $error instanceof InvalidArgumentException;
+    jsonResponse([
+        'status' => false,
+        'message' => $clientError ? $error->getMessage() : 'Unexpected server error.',
+    ], $clientError ? 400 : 500);
+});
 
-    while (($file = readdir($dir)) !== false) {
-        if ($file != '.' && $file != '..') {
-            if (is_dir("$src/$file")) {
-                copyFolder("$src/$file", "$dst/$file");
-            } else {
-                copy("$src/$file", "$dst/$file");
-            }
+function requestBody(): array
+{
+    $raw = file_get_contents('php://input');
+    if ($raw === false || trim($raw) === '') return [];
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function safeName(string $name): string
+{
+    return trim((string) preg_replace('/[^\pL\pN _-]+/u', '-', $name));
+}
+
+function requireAdmin(?array $user): void
+{
+    if (!(bool) ($user['admin'] ?? false)) jsonResponse(['status' => false, 'message' => 'Not Authorized!'], 403);
+}
+
+function allSubjectData(array $classData): array
+{
+    $result = [];
+    foreach ($classData['subjects'] as $name => $data) $result[] = ['fileName' => $name, 'data' => $data];
+    return $result;
+}
+
+function classesForAdmin(SecureStorage $storage, string $userId): array
+{
+    $classes = [];
+    foreach ($storage->listClassesForUser($userId) as $membership) {
+        $data = $storage->getClass($membership['id']);
+        if ((bool) ($data['users'][$userId]['admin'] ?? false)) {
+            $classes[] = ['id' => $membership['id'], 'name' => $membership['name'], 'admin' => true];
         }
     }
-    closedir($dir);
+    return $classes;
 }
-function deleteFolder($dir) {
-    if (!is_dir($dir)) return;
 
-    $items = new \RecursiveIteratorIterator(
-        new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-        \RecursiveIteratorIterator::CHILD_FIRST
-    );
-
-    foreach ($items as $item) {
-        $item->isDir() ? rmdir($item) : unlink($item);
-    }
-    rmdir($dir);
+function pushRequest(string $path, array $payload): array
+{
+    $base = rtrim((string) (getenv('SCUOLA_PUSH_URL') ?: 'http://127.0.0.1:5743'), '/');
+    $context = stream_context_create(['http' => [
+        'header' => "Content-Type: application/json\r\n", 'method' => 'POST',
+        'content' => json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+        'timeout' => 15, 'ignore_errors' => true,
+    ]]);
+    $response = @file_get_contents($base . $path, false, $context);
+    if ($response === false) return ['status' => false, 'message' => 'Push service unavailable.'];
+    $decoded = json_decode($response, true);
+    return is_array($decoded) ? $decoded : ['status' => false, 'message' => 'Invalid push service response.'];
 }
-function generateICSFile($calendarMetaData, $events) {
-    $icsContent = "BEGIN:VCALENDAR\n"
-        . "VERSION:2.0\n"
-        . "PRODID:-//ical.marudot.com//EN\n"
-        . "CALSCALE:GREGORIAN\n"
-        . "METHOD:PUBLISH\n"
-        . "X-WR-CALNAME:" . $calendarMetaData['name'] . "\n"
-        . "X-WR-TIMEZONE:" . ($calendarMetaData['timezone'] ?? 'Etc/GMT') . "\n";
 
+function calendarEscape(string $value): string
+{
+    return str_replace(["\\", ";", ",", "\r\n", "\n", "\r"], ["\\\\", "\\;", "\\,", "\\n", "\\n", "\\n"], $value);
+}
+
+function generateICSFile(array $events): string
+{
+    $content = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//scuola.xcenter.it//EN\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:Calendario Interrogazioni Programmate\r\nX-WR-TIMEZONE:Europe/Rome\r\n";
     foreach ($events as $event) {
-        $icsContent .= "BEGIN:VEVENT\n"
-            . "SUMMARY:" . $event['title'] . "\n"
-            . "DTSTART;VALUE=DATE:" . $event['start']->format('Ymd') . "\n"
-            . "DTEND;VALUE=DATE:" . $event['end']->format('Ymd') . "\n"
-            . "LOCATION:" . $event['location'] . "\n"
-            . "DESCRIPTION:" . $event['description'] . "\n"
-            . "UID:" . $event['id'] . "@ical.marudot.com\n"
-            . "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\n"
-            . "STATUS:CONFIRMED\n"
-            . "TRANSP:TRANSPARENT\n"
-            . "SEQUENCE:0\n"
-            . "END:VEVENT\n";
+        $content .= "BEGIN:VEVENT\r\nSUMMARY:" . calendarEscape($event['title']) . "\r\n";
+        $content .= 'DTSTART;VALUE=DATE:' . $event['start']->format('Ymd') . "\r\n";
+        $content .= 'DTEND;VALUE=DATE:' . $event['end']->format('Ymd') . "\r\n";
+        $content .= 'LOCATION:' . calendarEscape($event['location']) . "\r\n";
+        $content .= 'DESCRIPTION:' . calendarEscape($event['description']) . "\r\n";
+        $content .= 'UID:' . hash('sha256', $event['id']) . "@scuola.xcenter.it\r\n";
+        $content .= 'DTSTAMP:' . gmdate('Ymd\THis\Z') . "\r\nSTATUS:CONFIRMED\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT\r\n";
     }
-
-    $icsContent .= "END:VCALENDAR";
-    return $icsContent;
+    return $content . "END:VCALENDAR\r\n";
 }
 
-$subjectJSONs = array_diff(scandir("./JSON{$PROFILE}/"), array('.', '..'));
-$userID = $_GET["UID"] ?? $_SESSION["userID"] ?? NULL;
-$_SESSION["userID"] = $userID;
-$userList = file_exists("./JSON{$PROFILE}/users.json") ? file_get_contents("./JSON{$PROFILE}/users.json") : "";
-$userList = strlen($userList) > 1 ? json_decode($userList, true) : array();
-$subjectName = $_GET["subject"];
-$subject = $subjectName.".json";
-$safeSubject = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $subjectName).".json";
-$userData = $userList[$userID] ?? NULL;
-$subjectData = in_array($subject, $subjectJSONs) ? json_decode(file_get_contents("./JSON{$PROFILE}/".$safeSubject), true) : false;
+$body = requestBody();
+$request = array_merge($_GET, $_POST, $body);
+$scope = (string) ($request['scope'] ?? '');
 
-$profileListRAW = array_diff(scandir("."), array('.', '..'));
-$profileListRAW = array_filter($profileListRAW, function($item) {
-    return strpos($item, 'JSON-') === 0;
-});
-$profileList = array_map(function($item) {
-    return substr($item, 5);
-}, array_values($profileListRAW));
-
-function getAllData() {
-    global $userData, $PROFILE;
-    if (!($userData["admin"] ?? false)) return false;
-    $allSubjectsData = array();
-
-    $subjectJSONs = array_diff(scandir("./JSON{$PROFILE}/"), array('.', '..'));
-    foreach ($subjectJSONs as $tmpsubject) {
-        if ($tmpsubject === "users.json") continue;
-        $subjectNameTMP = str_replace(".json", "", $tmpsubject);
-        $subjectDataTMP = json_decode(file_get_contents("./JSON{$PROFILE}/".$tmpsubject), true);
-        array_push($allSubjectsData, array("fileName" => $subjectNameTMP, "data" => $subjectDataTMP));
-    }
-    return $allSubjectsData;
+try {
+    $storage = new SecureStorage();
+    $storage->bootstrapLegacy(__DIR__);
+} catch (Throwable $error) {
+    error_log('Secure storage bootstrap failed: ' . $error->getMessage());
+    jsonResponse(['status' => false, 'message' => 'Secure storage is unavailable.'], 500);
 }
 
-if ($_GET["scope"] === "loadPageData") {
-    header('Content-Type: application/json');
-    $result = array();
-    $result["user"] = array_merge($userData ?? array(), array("subjectData" => array(
-        "day" => isset($subjectData["answers"][$userID]) ? $subjectData["answers"][$userID]["date"] : false
-    )));
-
-    $result["subject"] = $subjectData ? array(
-        "name" => $subjectName,
-        "days" => $subjectData["days"],
-        "lock" => $subjectData["lock"],
-        "type" => $subjectData["type"] ?? "subject",
-    ) : false;
-
-    $result["users"] = $userData["admin"] ? $userList : array();
-    $result["profiled"] = $PROFILE == "" ? false : str_replace("-", "", $PROFILE);
-    $result["profiles"] = $userData["admin"] ? $profileList : array();
-    
-    $result["profileList"] = array();
-    $result["subjectList"] = array();
-    if (!$userData && file_exists("./JSON/users.json")) $userExistsInMainProfile = isset(json_decode(file_get_contents("./JSON/users.json"), true)[$_GET["UID"]]);
-    foreach ($profileList as $profile) {
-        $profileUserData = file_exists("./JSON-{$profile}/users.json") ? json_decode(file_get_contents("./JSON-{$profile}/users.json"), true) : array();
-        if ($profileUserData[$_GET["UID"]] ?? false) array_push($result["profileList"], array("name" => $profile, "admin" => $profileUserData[$_GET["UID"]]["admin"] ?? false ));
+if ($scope === 'createClass') {
+    try {
+        $created = $storage->createClass(
+            (string) ($body['className'] ?? ''), (string) ($body['adminName'] ?? ''),
+            (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown')
+        );
+        $_SESSION['userID'] = $created['UID'];
+        $_SESSION['classId'] = $created['classId'];
+        jsonResponse(['status' => true, 'UID' => $created['UID'], 'classId' => $created['classId'], 'className' => $created['className']], 201);
+    } catch (Throwable $error) {
+        jsonResponse(['status' => false, 'message' => $error->getMessage()], 400);
     }
-    foreach ($subjectJSONs as $subject) {
-        if ($subject === "users.json") continue;
-        if (json_decode(file_get_contents("./JSON{$PROFILE}/".$subject), true)["hide"] ?? false) continue;
-        array_push($result["subjectList"], str_replace(".json", "", $subject));
+}
+
+$userId = (string) ($request['UID'] ?? $_SESSION['userID'] ?? '');
+if ($userId !== '') $_SESSION['userID'] = $userId;
+$classSelector = (string) ($body['appLoadClass'] ?? $request['class'] ?? '');
+$legacyProfile = (string) ($body['appLoadProfile'] ?? $request['profile'] ?? '');
+$classId = null;
+if ($userId !== '') {
+    if ($classSelector !== '') {
+        $classId = $storage->resolveClassForUser($userId, $classSelector);
+        if ($classId === null && $legacyProfile !== '') {
+            $classId = $storage->resolveClassForUser($userId, null, $legacyProfile);
+        }
+    } elseif ($legacyProfile !== '') {
+        $classId = $storage->resolveClassForUser($userId, null, $legacyProfile);
+    } elseif (!empty($_SESSION['classId'])) {
+        $classId = $storage->resolveClassForUser($userId, (string) $_SESSION['classId']);
     }
+    if ($classId === null && $classSelector === '' && $legacyProfile === '') {
+        $classId = $storage->resolveClassForUser($userId);
+    }
+}
+if ($classId !== null) $_SESSION['classId'] = $classId;
+$classData = $classId !== null ? $storage->getClass($classId) : null;
+$userData = $classData['users'][$userId] ?? null;
+$subjectName = (string) ($request['subject'] ?? '');
+$subjectData = $classData !== null && isset($classData['subjects'][$subjectName]) ? $classData['subjects'][$subjectName] : null;
+$memberships = $userId !== '' ? $storage->listClassesForUser($userId) : [];
 
-    $result["section"] = 
-    (count($userList) === 0 ? "welcome" : (
-        !$userData ? (
-            (count($result["profileList"]) > 0 || $userExistsInMainProfile) ? "changeprofile" : "login-account-not-found"
-        ) : (
-            (isset($_GET["changeProfile"])) ? "changeprofile" : (
-                ((!$subjectData) || (($subjectData["hide"] ?? false) === true)) ? "schedule-subject" : (
-                    (isset($subjectData["answers"][$userID])) ? (
-                        $subjectData["answers"][$userID]["date"] == "Esclusi" ? "alreadyscheduled-excluded" : "alreadyscheduled" 
-                    ) : (
-                        ((isset($_GET["day"])) && (!isset($subjectData["days"][$_GET["day"]]) || strtok($subjectData["days"][$_GET["day"]]["availability"], "/") == 0)) ? "dayunavailable" : (
-                            (count($subjectData["days"] ?? array()) === 0 || $subjectData["lock"] === true) ? "nodays" : "schedule-day"
-                        )
-                    )
-                )
-            )
-        )
-    ));
+if ($scope === 'loadPageData') {
+    $classList = [];
+    foreach ($memberships as $membership) {
+        $memberClass = $storage->getClass($membership['id']);
+        $classList[] = ['id' => $membership['id'], 'name' => $membership['name'], 'admin' => (bool) ($memberClass['users'][$userId]['admin'] ?? false)];
+    }
+    $result = [
+        'status' => true, 'user' => ['subjectData' => ['day' => false]], 'users' => [], 'classId' => $classId,
+        'className' => $classData['name'] ?? null, 'classList' => $classList,
+        'profileList' => $classList, 'profiles' => (bool) ($userData['admin'] ?? false) ? classesForAdmin($storage, $userId) : [],
+        'profiled' => $classId, 'subject' => false, 'subjectList' => [], 'serverTime' => time(),
+    ];
+    if ($userData !== null && $classData !== null) {
+        $result['user'] = array_merge($userData, ['subjectData' => ['day' => $subjectData['answers'][$userId]['date'] ?? false]]);
+        $result['users'] = (bool) ($userData['admin'] ?? false) ? $classData['users'] : [];
+        foreach ($classData['subjects'] as $name => $data) if (!(bool) ($data['hide'] ?? false)) $result['subjectList'][] = $name;
+        if ($subjectData !== null && !(bool) ($subjectData['hide'] ?? false)) {
+            $result['subject'] = [
+                'name' => $subjectName, 'days' => $subjectData['days'], 'lock' => $subjectData['lock'],
+                'hide' => $subjectData['hide'], 'type' => $subjectData['type'] ?? 'subject',
+                'campaign' => CampaignService::normalize($subjectData['campaign'] ?? []),
+                'voting' => CampaignService::votingDecision($subjectData, $userId, time()),
+            ];
+        }
+    }
+    if ($userId === '') $result['section'] = 'login';
+    elseif ($memberships === []) $result['section'] = 'login-account-not-found';
+    elseif ($classData === null || $userData === null || isset($request['changeProfile'])) $result['section'] = 'changeprofile';
+    elseif ($subjectData === null || (bool) ($subjectData['hide'] ?? false)) $result['section'] = 'schedule-subject';
+    elseif (isset($subjectData['answers'][$userId])) {
+        $result['section'] = $subjectData['answers'][$userId]['date'] === 'Esclusi' ? 'alreadyscheduled-excluded' : 'alreadyscheduled';
+    } else {
+        $decision = CampaignService::votingDecision($subjectData, $userId, time());
+        if (($decision['reason'] ?? null) === 'priority-window') $result['section'] = 'priority-wait';
+        elseif (!$decision['allowed']) $result['section'] = 'nodays';
+        elseif (isset($request['day']) && (!isset($subjectData['days'][$request['day']]) || (int) strtok((string) $subjectData['days'][$request['day']]['availability'], '/') === 0)) $result['section'] = 'dayunavailable';
+        elseif (count($subjectData['days']) === 0) $result['section'] = 'nodays';
+        else $result['section'] = 'schedule-day';
+    }
+    jsonResponse($result);
+}
 
-    die(json_encode($result, JSON_PRETTY_PRINT));
-} else if ($_GET["scope"] === "getAllData") {
-    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
-    $allSubjectsData = getAllData();
-    header('Content-Type: application/json');
-    die(json_encode($allSubjectsData, JSON_PRETTY_PRINT));
-} else if ($_GET["scope"] === "getAllUsers") {
-    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
-    header('Content-Type: application/json');
-    die(json_encode($userList, JSON_PRETTY_PRINT));
-} else if ($_GET["scope"] === "updateSettings") {
-    if (!($userData["admin"] ?? false) && count($userList) > 0) die(json_encode(array("status" => false)));
-    $allSubjectsData = array();
-    $okay = true;
-    foreach($body as $updateSubject) {
-        if ($_GET["type"] === "users") {
-            if (($updateSubject["data"] ?? false) && $updateSubject["data"] === "removed") die(json_encode(array("status" => false)));
-            $okay = $okay && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($updateSubject, JSON_PRETTY_PRINT));
-        } else if ($_GET["type"] === "subject" || !isset($_GET["type"])) {
-            $originalFileName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $updateSubject["fileName"]);
-            $updateSubject["fileName"] = $originalFileName.'.json';
-            if ($updateSubject["fileName"] === "users.json") continue;
-            $updateSubject["cleared"] ??= false;
-            if ($updateSubject["data"] === "removed") {
-                $okay = $okay && unlink("./JSON{$PROFILE}/".$updateSubject["fileName"]);
-                foreach ($userList as $userListID => $userListData) {
-                    if (isset($userList[$userListID]["answers"][$originalFileName]))
-                    unset($userList[$userListID]["answers"][$originalFileName]);
-                }
-                $okay = $okay && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+if ($classData === null || $userData === null || $classId === null) jsonResponse(['status' => false, 'message' => 'Not Authorized!'], 403);
+
+if ($scope === 'getAllData') { requireAdmin($userData); jsonResponse(allSubjectData($classData)); }
+if ($scope === 'getAllUsers') { requireAdmin($userData); jsonResponse($classData['users']); }
+
+if ($scope === 'updateSettings') {
+    requireAdmin($userData);
+    $updates = array_is_list($body) ? $body : [$body];
+    $type = (string) ($request['type'] ?? 'subject');
+    $storage->mutateClass($classId, function (array &$data) use ($updates, $type, $userId): void {
+        if (!(bool) ($data['users'][$userId]['admin'] ?? false)) throw new StorageException('Not Authorized!');
+        foreach ($updates as $update) {
+            if ($type === 'users') {
+                $newUsers = $update['data'] ?? $update;
+                if (!is_array($newUsers) || !isset($newUsers[$userId])) throw new StorageException('Invalid user update.');
+                foreach ($newUsers as &$user) $user['priority'] = (bool) ($user['priority'] ?? false);
+                unset($user);
+                $data['users'] = $newUsers;
                 continue;
             }
-            if ($updateSubject["cleared"] === true) {
-                foreach ($userList as $userListID => $userListData) {
-                    if (isset($userList[$userListID]["answers"][$originalFileName]))
-                    unset($userList[$userListID]["answers"][$originalFileName]);
-                }
-                foreach ($updateSubject["data"]["days"] as $day => $dayData) {
-                    $availability = explode("/", $dayData["availability"], 2);
-                    $updateSubject["data"]["days"][$day]["availability"] = ($availability[1]) . "/" . $availability[1];
-                }
-                $okay = $okay && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
+            $fileName = safeName((string) ($update['fileName'] ?? ''));
+            if ($fileName === '' || strtolower($fileName) === 'users') continue;
+            if (($update['data'] ?? null) === 'removed') {
+                unset($data['subjects'][$fileName]);
+                foreach ($data['users'] as &$user) unset($user['answers'][$fileName]);
+                unset($user);
+                continue;
             }
-            $okay = $okay && file_put_contents("./JSON{$PROFILE}/".$updateSubject["fileName"], json_encode($updateSubject["data"], JSON_PRETTY_PRINT));
-        }
-    }
-    header('Content-Type: application/json');
-    die(json_encode(array("status" => $okay, "newData" => ($okay ? array("subjects" => getAllData(), "users" => json_decode(file_get_contents("./JSON{$PROFILE}/users.json"), true), "profiles" => ($PROFILE == "" ? $profileList : false)) : false))));
-} else if ($_GET["scope"] === "profileMGMT") {
-    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
-    header('Content-Type: application/json');
-    $target = preg_replace('/[^a-zA-Z0-9_-]+/', '-', ($body["profile"]??""));
-    $body["action"]??="";
-    $body["method"]??="";
-    $body["newName"]??=false;
-    if ($body["action"] != "listprofiles" && ($target === "default" || $target === "")) die(json_encode(array("status" => false, "message" => "You can't change this profile!")));
-    if ($body["action"] === "newprofile") {
-        if (file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile already exists!")));
-        if ($body["method"] === "import") {
-            copyFolder("./JSON{$PROFILE}", "./JSON-{$target}");
-            die(json_encode(array("status" => true)));
-        } else {
-            $okay = mkdir("./JSON-{$target}");
-            $newUserData = array($userID => $userList[$userID]);
-            $newUserData[$userID]["answers"] = array();
-            $okay = $okay && file_put_contents("./JSON-{$target}/users.json", json_encode($newUserData, JSON_PRETTY_PRINT));
-            die(json_encode(array("status" => $okay)));
-        }
-    } else if ($body["action"] === "listprofiles") {
-        if ($PROFILE != "") die(json_encode(array("status" => false, "message" => "You can only list profiles from the main one!")));
-        die(json_encode(array("status" => true, "profiles" => $profileList)));
-    } else {
-        if (!file_exists("./JSON-{$target}")) die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
-        if ($body["action"] === "renameprofile") {
-            if (!$body["newName"]) die(json_encode(array("status" => false, "message" => "You must specify a new name!")));
-            if ($body["newName"] === "default" || $body["newName"] === "") die(json_encode(array("status" => false, "message" => "This name is forbidden!")));
-            $newName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $body["newName"]);
-            $okay = rename("./JSON-{$target}", "./JSON-{$newName}");
-            die(json_encode(array("status" => $okay), JSON_PRETTY_PRINT));
-        } else if ($body["action"] === "deleteprofile") {
-            deleteFolder("./JSON-{$target}");
-            die(json_encode(array("status" => true)));
-        }
-        die(json_encode(array("status" => false, "message" => "Invalid action!")));
-    }
-} else if ($_GET["scope"] === "downloadProfile") {
-    //! REQUIREMENTS:
-    //! $ apt-get install php-zip
-
-    if (!($userData["admin"] ?? false)) {
-        header('Content-Type: application/json');
-        die(json_encode(array("status" => false)));
-    }
-
-    $_GET["profileName"] ??= "";
-    $profileName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $_GET["profileName"]);
-    if ($profileName == "" || $profileName == "default") {
-        header('Content-Type: application/json');
-        die(json_encode(array("status" => false, "message" => "You can't download this profile!")));
-    }
-
-    if (!file_exists("./JSON-{$profileName}") || !is_dir("./JSON-{$profileName}")) {
-        header('Content-Type: application/json');
-        die(json_encode(array("status" => false, "message" => "This profile does not exist!")));
-    }
-
-    $zip = new ZipArchive();
-    $zipFilename = tempnam(sys_get_temp_dir(), 'zip');
-    if ($zip->open($zipFilename, ZipArchive::CREATE) !== TRUE) {
-        header('Content-Type: application/json');
-        die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
-    }
-
-    $zip->addFromString('profile.json', json_encode(array("name" => $profileName, "date" => date("d.m.Y"))));
-
-    $zip->addEmptyDir('data');
-    $profileData = array_diff(scandir("./JSON-{$profileName}/"), array('.', '..'));
-    foreach ($profileData as $profileFile) {
-        $zip->addFile("./JSON-{$profileName}/{$profileFile}", "data/{$profileFile}");
-    }
-
-    $zip->close();
-    header('Content-Type: application/zip');
-    header('Content-Disposition: attachment; filename="'.$profileName.'.profile.zip"');
-    header('Content-Length: ' . filesize($zipFilename));
-
-    readfile($zipFilename);
-    unlink($zipFilename);
-    die();
-} else if ($_GET["scope"] === "uploadProfile") {
-    //! REQUIREMENTS:
-    //! $ apt-get install php-zip
-
-    header('Content-Type: application/json');
-    if (!($userData["admin"] ?? false)) die(json_encode(array("status" => false)));
-    if (!isset($_FILES["profileData"])) die(json_encode(array("status" => false, "message" => "No file uploaded.")));
-    $file = $_FILES['profileData']['tmp_name'];
-    $tempDir = sys_get_temp_dir() . '/' . uniqid('zip_', true);
-
-    if (!mkdir($tempDir, 0700, true)) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
-    $destination = $tempDir . '/' . $_FILES['profileData']['name'];
-
-    if (!move_uploaded_file($file, $destination)) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
-
-    $zip = new ZipArchive;
-    if ($zip->open($destination) != TRUE) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
-
-    $zip->extractTo($tempDir);
-    $zip->close();
-    
-    if (!file_exists("{$tempDir}/profile.json") || !file_exists("{$tempDir}/data") || !is_dir("{$tempDir}/data")) echo (json_encode(array("status" => false, "message" => "Invalid profile zip!")));
-    else {
-        $profileData = json_decode(file_get_contents("{$tempDir}/profile.json"), true);
-        $profileName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $profileData["name"]);
-        if ($profileName == "" || $profileName == "default") echo json_encode(array("status" => false, "message" => "Invalid profile name!"));
-        else {
-            rename("{$tempDir}/data", "./JSON-{$profileName}");
-            echo json_encode(array("status" => true, "profileName" => $profileName));
-        }
-    }
-    unlink($destination);
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempDir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST) as $file) {
-        $file->isDir() ? rmdir($file) : unlink($file);
-    }
-    rmdir($tempDir);
-    die();
-} else if ($_GET["scope"] === "notifications") {
-    if (!$userData) die(json_encode(array("status" => false, "message" => "Not Authorized!")));
-
-    /*
-    const data = {
-        title: bodyData.title,
-        body: bodyData.body,
-        icon: bodyData.icon,
-        url: bodyData.url,
-        subscriptions: bodyData.subscriptions
-    };
-    */
-
-    switch ($body["action"] ?? "invalid") {
-        case "VAPIDkey":
-            $body["path"] = "/api/vapid-public-key";
-        break;
-
-        case "subscribe":
-            $body["path"] = "/api/subscribe";
-
-            $body["subscription"] ??= array();
-            if (!isset($body["subscription"]["endpoint"]) || !isset($body["subscription"]["keys"])) die(json_encode(array("status" => false, "message" => "Invalid Subscription!")));
-            $userList[$userID]["pushSubscriptions"] ??= array();
-            if (str_contains(json_encode($userList[$userID]["pushSubscriptions"]), json_encode($body["subscription"]))) die(json_encode(array("status" => true, "message" => "This subscription already exists!")));
-            array_push($userList[$userID]["pushSubscriptions"], $body["subscription"]);
-
-            $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
-            die(json_encode(array("status" => !!$okay, "message" => null))); //This is not server-managed anymore
-        break;
-
-        case "unsubscribe":
-            $body["path"] = "/api/unsubscribe";
-
-            if ($body["subscription"] && isset($userList[$userID]["pushSubscriptions"])) {
-                $newPushSubs = array();
-                foreach($userList[$userID]["pushSubscriptions"] as $key => $subscription) {
-                    if (json_encode($subscription) != json_encode($body["subscription"])) array_push($newPushSubs, $subscription);
+            $subject = $update['data'] ?? [];
+            if (!is_array($subject)) throw new StorageException('Invalid subject update.');
+            if ((bool) ($update['cleared'] ?? false)) {
+                $subject['answers'] = []; $subject['answerCount'] = 0;
+                foreach ($subject['days'] ?? [] as &$day) {
+                    $maximum = explode('/', (string) ($day['availability'] ?? '0/0'), 2)[1] ?? '0';
+                    $day['availability'] = $maximum . '/' . $maximum;
                 }
-                $userList[$userID]["pushSubscriptions"] = $newPushSubs;
-                if (count($userList[$userID]["pushSubscriptions"]) === 0) unset($userList[$userID]["pushSubscriptions"]);
-            } else unset($userList[$userID]["pushSubscriptions"]);
-
-            $okay = file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
-
-            die(json_encode(array("status" => !!$okay, "message" => null))); //This is not server-managed anymore
-        break;
-
-        case "sendNotifications": 
-            if (!$userData["admin"]) die(json_encode(array("status" => false, "message" => "Not Authorized!")));
-            $body["path"] = "/api/send-notification";
-            $body["users"] ??= array();
-            $body["subscriptions"] = array();
-            foreach ($body["users"] as $user) {
-                if (!$userList[$user] || !isset($userList[$user]["pushSubscriptions"])) continue;
-                $body["subscriptions"] = array_merge($body["subscriptions"], $userList[$user]["pushSubscriptions"]);
+                unset($day);
+                foreach ($data['users'] as &$user) unset($user['answers'][$fileName]);
+                unset($user);
+                CampaignService::reset($subject);
             }
-        break;
-
-        default: 
-            die(json_encode(array("status" => false, "message" => "Invalid Action!")));
-        break;
-    }
-
-    $url = 'http://localhost:5743'.($body["path"]);
-
-    // Convert data array to JSON
-    $data_json = json_encode($body);
-
-    // Create a stream context
-    $options = array(
-        'http' => array(
-            'header'  => "Content-type: application/json\r\n",
-            'method'  => 'POST',
-            'content' => $data_json,
-        ),
-    );
-    $context = stream_context_create($options);
-
-    // Send the request and get the response
-    $response = file_get_contents($url, false, $context);
-
-    // Check if the request was successful
-    if ($response === false) die(json_encode(array("status" => false, "message" => "Internal Server Error!")));
-
-    // Process the response
-    die($response);
-} else if ($_GET["scope"] === "schedule") {
-    if (!$subjectData || !$subjectData["days"][$_GET["day"]]) die(json_encode(array("status" => false, "message" => "Invalid Day!")));
-    $availability = explode("/", $subjectData["days"][$_GET["day"]]["availability"], 2);
-    if ($availability[0] == "0") die(json_encode(array("status" => false, "message" => "Invalid Day!")));
-    if ($availability[1] != "-1") $subjectData["days"][$_GET["day"]]["availability"] = ($availability[0] - 1) . "/" . $availability[1];
-    $subjectData["answerCount"] = $subjectData["answerCount"] + 1;
-    $subjectData["answers"][$userID] = array("date" => $_GET["day"], "answerNumber" => $subjectData["answerCount"]);
-    $userList[$userID]["answers"][$subjectName] ??= array();
-    array_push($userList[$userID]["answers"][$subjectName], $_GET["day"]);
-    $success = file_put_contents("./JSON{$PROFILE}/".$safeSubject, json_encode($subjectData, JSON_PRETTY_PRINT)) && file_put_contents("./JSON{$PROFILE}/users.json", json_encode($userList, JSON_PRETTY_PRINT));
-    die(json_encode(array("status" =>!!$success, "message" => null)));
-} else if ($_GET["scope"] === "syncICal") {
-    if (!$userData) {
-        header('Content-Type: application/json');
-        die(json_encode(array("status" => false, "message" => "Not Authorized!")));
-    }
-    $calendarMetaData = array(
-        "name" => "Calendario Interrogazioni Programmate"
-    );
-    $userEvents = array();
-    foreach ($userData["answers"] as $answerSubjectName => $answers) {
-        $safeSubjectName = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $answerSubjectName);
-        $txtSubjectData = file_exists("./JSON{$PROFILE}/{$safeSubjectName}.json") ? file_get_contents("./JSON{$PROFILE}/{$safeSubjectName}.json") : "{}";
-        $subjectData = json_decode($txtSubjectData, true);
-        $subjectData["type"] ??= "subject";
-        if ($subjectData["type"] != "subject") continue;
-        foreach ($answers as $answer) {
-            $explodedDate = explode("-", $answer);
-            $date = $explodedDate[2]."-".$explodedDate[1]."-".$explodedDate[0];
-            if (!strtotime($date)) continue;
-            array_push($userEvents, array(
-                "title" => "Interrogazione: ".$answerSubjectName,
-                "start" => new DateTime($date . " 00:00:00"),
-                "end" => new DateTime($date . " 23:59:59"),
-                "location" => "Scuola",
-                "description" => "Interrogazione programmata per la materia ".$answerSubjectName.", il giorno ".$answer,
-                "id" => "Interrogazione-".$answer."-".$answerSubjectName
-            ));
+            $subject['campaign'] = CampaignService::normalize($subject['campaign'] ?? []);
+            if ((bool) ($subject['lock'] ?? false)) CampaignService::pauseForLock($subject);
+            $data['subjects'][$fileName] = $subject;
         }
-    }
-    $response = generateICSFile($calendarMetaData, $userEvents);
-    die($response);
-} else if ($_GET["scope"] == "redirectToCalendar") {
-    if (!$userData) {
-        header('Content-Type: application/json');
-        die(json_encode(array("status" => false, "message" => "Not Authorized!")));
-    }
-    $ical = rawurlencode("webcal://{$_SERVER["HTTP_HOST"]}/manager.php?scope=syncICal&UID={$userID}");
-    $calUrl = "https://calendar.google.com/calendar/r?cid={$ical}";
-    header("HTTP/1.1 301 Moved Permanently");
-    header("Location: $calUrl");
-    die();
+    });
+    $fresh = $storage->getClass($classId);
+    jsonResponse(['status' => true, 'newData' => ['subjects' => allSubjectData($fresh), 'users' => $fresh['users'], 'profiles' => $storage->listClassesForUser($userId)]]);
 }
+
+if ($scope === 'profileMGMT' || $scope === 'classMGMT') {
+    requireAdmin($userData);
+    $action = (string) ($body['action'] ?? '');
+    if ($action === 'listprofiles' || $action === 'listclasses') jsonResponse(['status' => true, 'profiles' => classesForAdmin($storage, $userId)]);
+    if ($action === 'newprofile' || $action === 'newclass') {
+        $name = (string) ($body['profile'] ?? $body['className'] ?? '');
+        $created = ($body['method'] ?? '') === 'import'
+            ? $storage->copyClass($classId, $name, $userId)
+            : $storage->createClassForExistingAdmin($name, $userId, $userData);
+        jsonResponse(['status' => true, ...$created]);
+    }
+    $targetId = (string) ($body['classId'] ?? $body['profile'] ?? '');
+    $targetId = $storage->resolveClassForUser($userId, $targetId) ?? '';
+    if ($targetId === '') jsonResponse(['status' => false, 'message' => 'Class not found.'], 404);
+    $target = $storage->getClass($targetId);
+    requireAdmin($target['users'][$userId] ?? null);
+    if ($action === 'renameprofile' || $action === 'renameclass') { $storage->renameClass($targetId, (string) ($body['newName'] ?? '')); jsonResponse(['status' => true]); }
+    if ($action === 'deleteprofile' || $action === 'deleteclass') {
+        $storage->deleteClass($targetId);
+        if (($_SESSION['classId'] ?? null) === $targetId) unset($_SESSION['classId']);
+        jsonResponse(['status' => true]);
+    }
+    jsonResponse(['status' => false, 'message' => 'Invalid action.'], 400);
+}
+
+if ($scope === 'campaign') {
+    requireAdmin($userData);
+    $action = (string) ($body['action'] ?? 'status');
+    if ($subjectName === '' || !isset($classData['subjects'][$subjectName])) jsonResponse(['status' => false, 'message' => 'Subject not found.'], 404);
+    if ($action === 'status') jsonResponse(['status' => true, 'campaign' => CampaignService::normalize($subjectData['campaign'] ?? [])]);
+    $storage->mutateClass($classId, function (array &$data) use ($action, $subjectName, $body, $userId): void {
+        $subject = &$data['subjects'][$subjectName];
+        if ($action === 'configure') CampaignService::configure($subject, $body['settings'] ?? [], $userId);
+        elseif ($action === 'start') CampaignService::startNow($subject, $data['users'], $userId, time());
+        elseif ($action === 'cancel') CampaignService::reset($subject);
+        elseif ($action === 'resume') {
+            if ((bool) ($subject['hide'] ?? false)) throw new StorageException('Make the subject visible before resuming.');
+            $subject['campaign']['status'] = 'scheduled'; $subject['campaign']['pausedReason'] = null;
+            $subject['campaign']['unlockAt'] = max(time(), (int) ($subject['campaign']['unlockAt'] ?? time()));
+        } else throw new StorageException('Invalid campaign action.');
+        unset($subject);
+    });
+    $fresh = $storage->getClass($classId);
+    jsonResponse(['status' => true, 'campaign' => $fresh['subjects'][$subjectName]['campaign']]);
+}
+
+if ($scope === 'notifications') {
+    $action = (string) ($body['action'] ?? '');
+    if ($action === 'VAPIDkey') jsonResponse(pushRequest('/api/vapid-public-key', $body));
+    if ($action === 'subscribe' || $action === 'unsubscribe') {
+        $subscription = $body['subscription'] ?? null;
+        if ($action === 'subscribe' && (!is_array($subscription) || empty($subscription['endpoint']) || empty($subscription['keys']))) jsonResponse(['status' => false, 'message' => 'Invalid Subscription!'], 400);
+        $subscriptionUpdate = function (array &$data) use ($userId, $subscription, $action): void {
+            if (!isset($data['users'][$userId])) return;
+            $subscriptions = $data['users'][$userId]['pushSubscriptions'] ?? [];
+            if ($action === 'subscribe' && !in_array(json_encode($subscription), array_map('json_encode', $subscriptions), true)) $subscriptions[] = $subscription;
+            if ($action === 'unsubscribe') $subscriptions = array_values(array_filter($subscriptions, static fn ($item): bool => json_encode($item) !== json_encode($subscription)));
+            if ($subscriptions === []) unset($data['users'][$userId]['pushSubscriptions']);
+            else $data['users'][$userId]['pushSubscriptions'] = $subscriptions;
+        };
+        if ($action === 'unsubscribe') {
+            foreach ($storage->listClassesForUser($userId) as $membership) $storage->mutateClass($membership['id'], $subscriptionUpdate);
+        } else {
+            $storage->mutateClass($classId, $subscriptionUpdate);
+        }
+        jsonResponse(['status' => true, 'message' => null]);
+    }
+    if ($action === 'sendNotifications') {
+        requireAdmin($userData);
+        $subscriptions = [];
+        foreach (($body['users'] ?? []) as $uid) $subscriptions = array_merge($subscriptions, $classData['users'][$uid]['pushSubscriptions'] ?? []);
+        $payload = $body; $payload['subscriptions'] = $subscriptions; $payload['classId'] = $classId;
+        jsonResponse(pushRequest('/api/send-notification', $payload));
+    }
+    jsonResponse(['status' => false, 'message' => 'Invalid Action!'], 400);
+}
+
+if ($scope === 'schedule') {
+    $day = (string) ($request['day'] ?? '');
+    $result = ['status' => false, 'message' => 'Invalid Day!'];
+    $storage->mutateClass($classId, function (array &$data) use ($userId, $subjectName, $day, &$result): void {
+        if (!isset($data['subjects'][$subjectName], $data['users'][$userId])) return;
+        $subject = &$data['subjects'][$subjectName];
+        $decision = CampaignService::votingDecision($subject, $userId, time());
+        if (!$decision['allowed']) { $result = ['status' => false, 'message' => $decision['reason'], 'opensAt' => $decision['opensAt'] ?? null]; unset($subject); return; }
+        if (isset($subject['answers'][$userId]) || !isset($subject['days'][$day])) { unset($subject); return; }
+        $availability = explode('/', (string) $subject['days'][$day]['availability'], 2);
+        if ((int) ($availability[0] ?? 0) === 0) { unset($subject); return; }
+        if (($availability[1] ?? '') !== '-1') $subject['days'][$day]['availability'] = ((int) $availability[0] - 1) . '/' . $availability[1];
+        $subject['answerCount'] = (int) ($subject['answerCount'] ?? 0) + 1;
+        $subject['answers'][$userId] = ['date' => $day, 'answerNumber' => $subject['answerCount']];
+        $data['users'][$userId]['answers'][$subjectName] ??= [];
+        $data['users'][$userId]['answers'][$subjectName][] = $day;
+        unset($subject);
+        CampaignService::processClass($data, time());
+        $result = ['status' => true, 'message' => null];
+    });
+    jsonResponse($result, $result['status'] ? 200 : 409);
+}
+
+if ($scope === 'downloadProfile' || $scope === 'downloadClass') {
+    requireAdmin($userData);
+    if (!class_exists('ZipArchive')) jsonResponse(['status' => false, 'message' => 'ZIP support is unavailable.'], 500);
+    $temp = tempnam(sys_get_temp_dir(), 'scuola-profile-'); $zip = new ZipArchive();
+    if ($temp === false || $zip->open($temp, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) jsonResponse(['status' => false, 'message' => 'Unable to create the export.'], 500);
+    $zip->addFromString('profile.json', json_encode(['name' => $classData['name'], 'classId' => $classId, 'date' => date('d.m.Y')]));
+    $zip->addEmptyDir('data');
+    $zip->addFromString('data/users.json', json_encode($classData['users'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    foreach ($classData['subjects'] as $name => $data) $zip->addFromString('data/' . safeName($name) . '.json', json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    $zip->close();
+    header('Content-Type: application/zip'); header('Content-Disposition: attachment; filename="' . safeName($classData['name']) . '.profile.zip"'); header('Content-Length: ' . filesize($temp));
+    readfile($temp); unlink($temp); exit;
+}
+
+if ($scope === 'uploadProfile' || $scope === 'uploadClass') {
+    requireAdmin($userData);
+    if (!isset($_FILES['profileData']['tmp_name']) || !is_uploaded_file($_FILES['profileData']['tmp_name'])) jsonResponse(['status' => false, 'message' => 'No file uploaded.'], 400);
+    $zip = new ZipArchive();
+    if ($zip->open($_FILES['profileData']['tmp_name']) !== true) jsonResponse(['status' => false, 'message' => 'Invalid profile ZIP.'], 400);
+    $profileRaw = $zip->getFromName('profile.json'); $usersRaw = $zip->getFromName('data/users.json');
+    if ($profileRaw === false || $usersRaw === false) { $zip->close(); jsonResponse(['status' => false, 'message' => 'Invalid profile ZIP.'], 400); }
+    $profile = json_decode($profileRaw, true, 512, JSON_THROW_ON_ERROR); $users = json_decode($usersRaw, true, 512, JSON_THROW_ON_ERROR); $subjects = [];
+    if ($zip->numFiles > 500 || strlen($usersRaw) > 10 * 1024 * 1024) { $zip->close(); jsonResponse(['status' => false, 'message' => 'Profile ZIP is too large.'], 400); }
+    for ($index = 0; $index < $zip->numFiles; $index++) {
+        $entry = $zip->getNameIndex($index);
+        if (!is_string($entry) || $entry === 'data/users.json' || !preg_match('#^data/([^/]+)\.json$#u', $entry, $matches)) continue;
+        $subjectRaw = $zip->getFromIndex($index);
+        if (!is_string($subjectRaw) || strlen($subjectRaw) > 10 * 1024 * 1024) { $zip->close(); jsonResponse(['status' => false, 'message' => 'Profile ZIP is too large.'], 400); }
+        $subjects[$matches[1]] = json_decode($subjectRaw, true, 512, JSON_THROW_ON_ERROR);
+    }
+    $zip->close();
+    if (!isset($users[$userId])) $users[$userId] = $userData;
+    $users[$userId]['admin'] = true;
+    $created = $storage->importClass((string) ($profile['name'] ?? 'Classe importata'), $users, $subjects);
+    jsonResponse(['status' => true, 'profileName' => $created['className'], 'classId' => $created['classId']]);
+}
+
+if ($scope === 'syncICal') {
+    $events = [];
+    foreach (($userData['answers'] ?? []) as $answerSubject => $answers) {
+        if (($classData['subjects'][$answerSubject]['type'] ?? 'subject') !== 'subject') continue;
+        foreach ($answers as $answer) {
+            $date = DateTimeImmutable::createFromFormat('!d-m-Y', (string) $answer);
+            if (!$date) continue;
+            $events[] = ['title' => 'Interrogazione: ' . $answerSubject, 'start' => $date, 'end' => $date->modify('+1 day'), 'location' => 'Scuola', 'description' => 'Interrogazione programmata per ' . $answerSubject . ' il ' . $answer, 'id' => $classId . ':' . $userId . ':' . $answerSubject . ':' . $answer];
+        }
+    }
+    header('Content-Type: text/calendar; charset=utf-8'); echo generateICSFile($events); exit;
+}
+
+if ($scope === 'redirectToCalendar') {
+    $calendar = rawurlencode('webcal://' . $_SERVER['HTTP_HOST'] . '/manager.php?' . http_build_query(['scope' => 'syncICal', 'UID' => $userId, 'class' => $classId]));
+    header('Location: https://calendar.google.com/calendar/r?cid=' . $calendar, true, 302); exit;
+}
+
+jsonResponse(['status' => false, 'message' => 'Invalid scope.'], 400);

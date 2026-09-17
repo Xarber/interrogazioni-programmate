@@ -9,6 +9,13 @@
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
+    <nav class="flow-progress hided" id="flow-progress" aria-label="Avanzamento prenotazione">
+        <span data-flow-step="1"><b>1</b> Materia</span>
+        <i></i>
+        <span data-flow-step="2"><b>2</b> Giorno</span>
+        <i></i>
+        <span data-flow-step="3"><b>3</b> Fatto</span>
+    </nav>
     <div class="mainDiv hided" id="welcome">
         <h1>Benvenuto, crea il primo account admin per continuare!</h1>
         <p>Inserisci il tuo nome per iniziare!</p>
@@ -21,19 +28,38 @@
         <h1>Ciao! Accedi per continuare.</h1>
         <p>Inserisci un ID oppure usa un link diretto se ne hai uno a disposizione.</p>
         <input type="text" name="UID" id="UID">
-        <button onclick="window.actions.login(this);">Accedi</button>
+        <div class="inline">
+            <button class="button-secondary" onclick="CHANGESEC('create-class');">Crea una classe</button>
+            <button onclick="window.actions.login(this);">Accedi</button>
+        </div>
     </div>
     <div class="mainDiv hided" id="login-account-not-found">
         <h1>Il tuo account non esiste!</h1>
         <p>Inserisci un nuovo ID oppure usa un link diretto se ne hai uno a disposizione.</p>
         <input type="text" name="UID" id="UID">
-        <button onclick="window.actions.login(this);">Accedi</button>
+        <div class="inline">
+            <button class="button-secondary" onclick="CHANGESEC('create-class');">Crea una classe</button>
+            <button onclick="window.actions.login(this);">Accedi</button>
+        </div>
+    </div>
+    <div class="mainDiv hided" id="create-class">
+        <div class="eyebrow">Nuovo spazio</div>
+        <h1>Crea la tua classe</h1>
+        <p>Avrai un archivio separato e diventerai il primo amministratore.</p>
+        <label for="new-class-name">Nome della classe</label>
+        <input type="text" id="new-class-name" maxlength="100" placeholder="Es. 5ª A">
+        <label for="new-admin-name">Il tuo nome</label>
+        <input type="text" id="new-admin-name" maxlength="100" placeholder="Nome e cognome">
+        <div class="inline">
+            <button class="button-secondary" onclick="CHANGESEC(window.UID ? 'login-account-not-found' : 'login');">Indietro</button>
+            <button onclick="window.actions.createClass(this);">Crea e accedi</button>
+        </div>
     </div>
     <div class="mainDiv hided" id="changeprofile">
-        <h1>Scegli un profilo!</h1>
-        <p>Scegli un profilo in cui sei registrato per continuare!</p>
+        <h1>Scegli una classe</h1>
+        <p>Questo codice appartiene a più classi. Scegli dove vuoi entrare.</p>
         <select name="profile" id="profile" class="id-select-profilelist" required>
-            <option value="default" selected>Scegli un profilo (Profilo Default)</option>
+            <option value="" selected disabled>Scegli una classe</option>
         </select>
         <div class="inline">
             <button type="button" onclick="window.actions.changeUser(this);">Cambia Utente</button>
@@ -47,7 +73,7 @@
             <option selected disabled>Scegli una materia</option>
         </select>
         <div class="inline">
-            <button type="button" id="changeProfileButton" onclick="CHANGESEC('changeprofile');">Cambia Profilo</button>
+            <button type="button" id="changeProfileButton" onclick="CHANGESEC('changeprofile');">Cambia Classe</button>
             <button type="submit" onclick="window.actions.changeSubject(document.getElementById('subject').value);">Conferma</button>
         </div>
     </div>
@@ -76,7 +102,15 @@
         <button onclick="window.actions.changeDay();">Cambia opzione</button>
     </div>
     <div class="mainDiv hided" id="nodays">
-        <h1>Questa materia è bloccata o non ha possibili risposte!</h1>
+        <h1 id="nodays-title">Questa materia è bloccata o non ha possibili risposte!</h1>
+        <p id="nodays-message"></p>
+        <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
+    </div>
+    <div class="mainDiv hided" id="priority-wait">
+        <div class="eyebrow">Accesso prioritario in corso</div>
+        <h1>La scelta aprirà tra poco</h1>
+        <p>Gli utenti prioritari stanno scegliendo. Potrai rispondere appena avranno finito oppure allo scadere della finestra riservata.</p>
+        <p class="status-pill" id="priority-window-time"></p>
         <button id="changeSubjectButton" class="notInlineBtn" onclick="window.actions.changeSubject('');">Cambia Materia</button>
     </div>
     <div class="mainDiv hided" id="schedule-day">
@@ -121,30 +155,37 @@
     </script>
     <script>
         const PWA = window.matchMedia('(display-mode: standalone)').matches;
-        window.UID = new URLSearchParams(location.search).get('UID') ?? localStorage["cachedUID"];
+        window.UID = new URLSearchParams(location.search).get('UID') ?? localStorage["cachedUID"] ?? "";
         window.SUBJECT = new URLSearchParams(location.search).get('subject');
-        window.PROFILE = new URLSearchParams(location.search).get('profile') ?? false;
+        window.CLASS = new URLSearchParams(location.search).get('class') ?? new URLSearchParams(location.search).get('profile') ?? localStorage["cachedClass"] ?? false;
+        window.PROFILE = window.CLASS;
 
         function CHANGESEC(section) {
             if (!document.querySelector('.mainDiv#'+section)) return false;
             document.querySelectorAll('.mainDiv').forEach(e=>e.classList.add('hided'));
             document.querySelector('.mainDiv#'+section).classList.remove('hided');
+            document.body.dataset.section = section;
+            const flow = document.getElementById('flow-progress');
+            const flowSections = new Set(['schedule-subject', 'schedule-day', 'priority-wait', 'dayunavailable', 'nodays', 'scheduleconfirmed', 'alreadyscheduled', 'alreadyscheduled-excluded']);
+            flow.classList.toggle('hided', !flowSections.has(section));
+            const step = section === 'schedule-subject' ? 1 : (['schedule-day', 'priority-wait', 'dayunavailable', 'nodays'].includes(section) ? 2 : 3);
+            flow.dataset.currentStep = String(step);
+            flow.querySelectorAll('[data-flow-step]').forEach(el=>el.classList.toggle('active', Number(el.dataset.flowStep) <= step));
         }
 
         window.renderPage = async (...arguments)=>{
             var UID = arguments[0] ?? window.UID;
             var subject = arguments[1] ?? window.SUBJECT;
-            var profile = arguments[2] ?? window.PROFILE;
+            var classId = arguments[2] ?? window.CLASS;
             console.log(subject);
 
             window.firstRender = window.firstRender === undefined;
             window.prevUID = window.UID;
             window.UID = UID;
             window.SUBJECT = subject;
-            window.PROFILE = profile;
+            window.CLASS = classId;
+            window.PROFILE = classId;
             window.isAdmin = false;
-            localStorage["cachedUID"] = window.UID;
-
             window.pageData = {section: "login"};
             if (window.UID) {
                 window.pageData = await fetch(`manager.php?scope=loadPageData`, {
@@ -152,7 +193,8 @@
                     body: JSON.stringify({
                         UID: window.UID,
                         subject: window.SUBJECT ?? "",
-                        appLoadProfile: (!!window.PROFILE && window.PROFILE != false) ? window.PROFILE : undefined
+                        appLoadClass: (!!window.CLASS && window.CLASS != false) ? window.CLASS : undefined,
+                        appLoadProfile: new URLSearchParams(location.search).get('profile') ?? undefined
                     })
                 }).then(r=>r.json());
                 if (window.pageData.status === false && window.pageData.message === "This profile does not exist!") {
@@ -178,9 +220,12 @@
                 window.isAdmin = window.userData.admin;
                 window.users = window.pageData.users;
                 window.profiles = window.pageData.profiles;
-                window.isCustomProfile = window.pageData.profiled;
-                window.PROFILE = window.isCustomProfile;
-                window.notifications = new PushNotifications(window.UID, "manager.php");
+                window.isCustomProfile = window.pageData.classId;
+                window.CLASS = window.pageData.classId ?? window.CLASS;
+                window.PROFILE = window.CLASS;
+                if ((window.pageData.profileList ?? []).length > 0) localStorage["cachedUID"] = window.UID;
+                if (window.CLASS) localStorage["cachedClass"] = window.CLASS;
+                window.notifications = new PushNotifications(window.UID, "manager.php", window.CLASS);
                 if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
                 localStorage["lastPathName"] = location.pathname;
 
@@ -191,10 +236,10 @@
                 document.querySelector('select.id-select-profilelist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-subjectlist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
                 document.querySelector('select.id-select-daylist').querySelectorAll('option:not(option[selected])').forEach(e=>e.remove());
-                for (var profile in window.pageData.profileList) {
+                for (var profile of window.pageData.profileList) {
                     document.querySelector('#changeProfileButton').classList.remove("hided");
                     document.querySelector('#changeProfileButton').parentNode.classList.add("inline");
-                    document.querySelector('select.id-select-profilelist').innerHTML += `<option value="${window.pageData.profileList[profile].name}">${profile.admin ? `<b>Admin</b> ` : ``}${window.pageData.profileList[profile].name}</option>`;
+                    document.querySelector('select.id-select-profilelist').add(new Option(`${profile.admin ? '(Admin) ' : ''}${profile.name}`, profile.id));
                 }
                 var subjcount = 0;
                 for (var subject of window.pageData.subjectList) {
@@ -203,29 +248,58 @@
                         document.querySelectorAll('#changeSubjectButton').forEach(e=>e.classList.remove("hided"));
                         document.querySelectorAll('#changeSubjectButton:not(.notInlineBtn)').forEach(e=>e.parentNode.classList.add("inline"));
                     }
-                    document.querySelector('select.id-select-subjectlist').innerHTML += `<option value="${subject}">${subject}</option>`;
+                    document.querySelector('select.id-select-subjectlist').add(new Option(subject, subject));
                 }
-                for (var day in window.pageData.subject.days) {
-                    document.querySelector('select.id-select-daylist').innerHTML += `<option value="${day}" ${window.pageData.subject.days[day].availability.split('/')[0] === "0" ? "disabled" : ""}>(${window.pageData.subject.days[day].availability === "-1/-1" ? "∞" : window.pageData.subject.days[day].availability} Liberi) ${window.pageData.subject.days[day].dayName == "-" ? "" : `${window.pageData.subject.days[day].dayName} `}${day}</option>`;
+                for (var day in (window.pageData.subject?.days ?? {})) {
+                    const dayData = window.pageData.subject.days[day];
+                    const option = new Option(`(${dayData.availability === '-1/-1' ? '∞' : dayData.availability} Liberi) ${dayData.dayName == '-' ? '' : `${dayData.dayName} `}${day}`, day);
+                    option.disabled = dayData.availability.split('/')[0] === '0';
+                    document.querySelector('select.id-select-daylist').add(option);
                 }
 
-                document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.innerHTML = window.userData.name);
-                document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
-                document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = window.userData.subjectData.day);
-                document.querySelectorAll('#javascript-change-schedule-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? "Che giorno vuoi farti interrogare?" : "Come vuoi rispondere?");
-                document.querySelectorAll('#javascript-change-schedule-alreadychosen-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? "Sarai interrogato in data: " : "Hai risposto con: ");
-                document.querySelectorAll('#javascript-change-schedule-confirmed1-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? "Ti sei prenotato a " : "Hai già risposto a ");
-                document.querySelectorAll('#javascript-change-schedule-confirmed2-text').forEach(e=>e.innerHTML = window.pageData.subject.type === "subject" ? " per il " : " con ");
+                document.querySelectorAll('#javascript-change-user-name').forEach(e=>e.textContent = window.userData.name ?? '');
+                document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.textContent = window.SUBJECT ?? '');
+                document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.textContent = window.userData.subjectData?.day ?? '');
+                const currentType = window.pageData.subject?.type ?? "subject";
+                document.querySelectorAll('#javascript-change-schedule-text').forEach(e=>e.innerHTML = currentType === "subject" ? "Che giorno vuoi farti interrogare?" : "Come vuoi rispondere?");
+                document.querySelectorAll('#javascript-change-schedule-alreadychosen-text').forEach(e=>e.innerHTML = currentType === "subject" ? "Sarai interrogato in data: " : "Hai risposto con: ");
+                document.querySelectorAll('#javascript-change-schedule-confirmed1-text').forEach(e=>e.innerHTML = currentType === "subject" ? "Ti sei prenotato a " : "Hai già risposto a ");
+                document.querySelectorAll('#javascript-change-schedule-confirmed2-text').forEach(e=>e.innerHTML = currentType === "subject" ? " per il " : " con ");
+                const opensAt = window.pageData.subject?.voting?.opensAt;
+                document.querySelector('#priority-window-time').textContent = opensAt
+                    ? `Accesso generale entro ${new Date(opensAt * 1000).toLocaleString('it-IT', {dateStyle: 'short', timeStyle: 'short'})}`
+                    : '';
+                const votingReason = window.pageData.subject?.voting?.reason;
+                const noDaysTitle = document.querySelector('#nodays-title');
+                const noDaysMessage = document.querySelector('#nodays-message');
+                if (votingReason === 'scheduled' && opensAt) {
+                    noDaysTitle.textContent = 'Apertura programmata';
+                    noDaysMessage.textContent = `Potrai scegliere dal ${new Date(opensAt * 1000).toLocaleString('it-IT', {dateStyle: 'short', timeStyle: 'short'})}.`;
+                } else if (votingReason === 'locked' || votingReason === 'paused') {
+                    noDaysTitle.textContent = 'Le scelte sono temporaneamente bloccate';
+                    noDaysMessage.textContent = 'La materia è visibile, ma un amministratore deve ancora aprire le prenotazioni.';
+                } else {
+                    noDaysTitle.textContent = 'Non ci sono scelte disponibili';
+                    noDaysMessage.textContent = 'Riprova più tardi oppure scegli un’altra materia.';
+                }
 
-                await window.notifications.status().then(async r=>{
+                if (window.CLASS && window.userData.name) await window.notifications.status().then(async r=>{
                     if (r != true) return;
                     const sw = await navigator.serviceWorker.getRegistration();
-                    if (!window.userData.pushSubscriptions || !sw) return window.notifications.unsubscribe();
-                    if (!'pushManager' in sw) return;
+                    if (!sw) return;
+                    if (!('pushManager' in sw)) return;
                     const sub = await sw.pushManager.getSubscription();
+                    if (!sub) return;
                     const userSubscriptions = new Set();
-                    for (var rsub of window.userData.pushSubscriptions) userSubscriptions.add(JSON.stringify(rsub));
-                    if (!userSubscriptions.has(JSON.stringify(sub))) return window.notifications.unsubscribe(false);
+                    for (var rsub of (window.userData.pushSubscriptions ?? [])) userSubscriptions.add(JSON.stringify(rsub));
+                    if (!userSubscriptions.has(JSON.stringify(sub))) {
+                        await fetch(`manager.php?${new URLSearchParams({scope: 'notifications', UID: window.UID, class: window.CLASS}).toString()}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({subscription: sub, action: 'subscribe'})
+                        });
+                    }
+                    (navigator.serviceWorker.controller ?? sw.active)?.postMessage({pathname: location.pathname, uid: window.UID, classId: window.CLASS});
                     window.notifications.update();
                     navigator.serviceWorker.addEventListener("message", (e)=>console.log(JSON.parse(e.data)));
                 })
@@ -330,13 +404,13 @@
                     btn.innerHTML = "Dati utente";
                     btn.onclick = ()=>{
                         window.dash = (!!(window.dash ?? {closed: true}).closed) ? new UserDashboard(null, {admin: isAdmin, onOpenAdminDash: ()=>{
-                            fetch(`manager.php?UID=${window.UID}&scope=getAllData`).then(r=>r.json()).then(r=>{
+                            fetch(`manager.php?UID=${window.UID}&class=${window.CLASS}&scope=getAllData`).then(r=>r.json()).then(r=>{
                                 window.adminDash = new AdminDashboard(null, {
                                     fetchPrefix: "manager.php",
                                     subjects: r,
                                     updateCallback: async (type, fullData, fileData, forceBlockRefresh = false)=>{
                                         console.log(fullData, fileData);
-                                        const r = await fetch(`manager.php?UID=${window.UID}&scope=updateSettings&type=${type}`, {
+                                        const r = await fetch(`manager.php?UID=${window.UID}&class=${window.CLASS}&scope=updateSettings&type=${type}`, {
                                             method: "POST",
                                             body: JSON.stringify([fileData])
                                         }).then(r=>r.json());
@@ -356,11 +430,11 @@
                                     analysisFunction: analizzaDati,
                                     notificationClass: window.notifications,
                                     refreshUsers: async ()=>{
-                                        const res = await fetch(`manager.php?UID=${window.UID}&scope=getAllUsers`).then(r=>r.json());
+                                        const res = await fetch(`manager.php?UID=${window.UID}&class=${window.CLASS}&scope=getAllUsers`).then(r=>r.json());
                                         return (res.status === false) ? {} : res;
                                     },
                                     refreshProfiles: async()=>{
-                                        const res = await fetch(`manager.php?UID=${window.UID}&scope=profileMGMT`, {
+                                        const res = await fetch(`manager.php?UID=${window.UID}&class=${window.CLASS}&scope=profileMGMT`, {
                                             method: "POST",
                                             body: JSON.stringify({action: "listprofiles"})
                                         }).then(r=>r.json());
@@ -378,7 +452,7 @@
                 if ((window.firstRender || window.prevUID != window.UID) && window.pageData.section != "login-account-not-found" && window.pageData.section != "login") {
                     window.ManifestLink = document.createElement('link');
                     window.ManifestLink.rel = 'manifest';
-                    window.ManifestLink.href = `/assets/manifest.php?UID=${window.UID}`;
+                    window.ManifestLink.href = `/assets/manifest.php?UID=${window.UID}&class=${window.CLASS ?? ''}`;
                     document.head.appendChild(window.ManifestLink);
                 }
             }
@@ -485,6 +559,42 @@
             });
 
             window.actions = {
+                createClass: function(elThis) {
+                    const promise = new Promise(async (resolve)=>{
+                        const className = document.getElementById('new-class-name').value.trim();
+                        const adminName = document.getElementById('new-admin-name').value.trim();
+                        if (!className || !adminName) {
+                            alert('Inserisci il nome della classe e il tuo nome.');
+                            return resolve(false);
+                        }
+                        elThis.disabled = true;
+                        elThis.textContent = 'Creazione...';
+                        const response = await fetch('manager.php?scope=createClass', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({className, adminName})
+                        }).then(r=>r.json()).catch(error=>({status: false, message: error.toString()}));
+                        elThis.disabled = false;
+                        elThis.textContent = 'Crea e accedi';
+                        if (!response.status) {
+                            alert(response.message ?? 'Impossibile creare la classe.');
+                            return resolve(false);
+                        }
+                        window.UID = response.UID;
+                        window.CLASS = response.classId;
+                        window.PROFILE = response.classId;
+                        localStorage['cachedUID'] = response.UID;
+                        localStorage['cachedClass'] = response.classId;
+                        const link = `${location.origin}${location.pathname}?UID=${encodeURIComponent(response.UID)}&class=${encodeURIComponent(response.classId)}`;
+                        await navigator.clipboard?.writeText(link).catch(()=>{});
+                        alert(`Classe creata. Il link di accesso admin è stato copiato.\nConservalo: ${link}`);
+                        resolve(await window.renderPage(response.UID, '', response.classId));
+                    });
+                    promise._actionName = 'createClass';
+                    promise._actionArgs = [elThis];
+                    window.actionManager[1](promise);
+                    return promise;
+                },
                 welcomeCreate: function(elThis) {
                     const promise = new Promise(async (re)=>{
                         const body = {};
@@ -504,11 +614,17 @@
                 },
                 login: function(elThis) {
                     const promise = new Promise(async (r)=>{
-                        elThis.parentNode.querySelector('#UID').value =
-                            elThis.parentNode.querySelector('#UID').value.indexOf('UID=') != -1
-                                ? (new URLSearchParams(`?${elThis.parentNode.querySelector('#UID').value.split('?', 2)[1]}`)).get('UID')
-                                : elThis.parentNode.querySelector('#UID').value;
-                        r(await window.renderPage(elThis.parentNode.querySelector('#UID').value));
+                        const input = elThis.parentNode.querySelector('#UID');
+                        const rawValue = input.value.trim();
+                        let loginCode = rawValue;
+                        let selectedClass = false;
+                        if (rawValue.includes('UID=')) {
+                            const parameters = new URL(rawValue.includes('://') ? rawValue : `${location.origin}/${rawValue.replace(/^\/?/, '')}`).searchParams;
+                            loginCode = parameters.get('UID') ?? '';
+                            selectedClass = parameters.get('class') ?? parameters.get('profile') ?? false;
+                        }
+                        input.value = loginCode;
+                        r(await window.renderPage(loginCode, '', selectedClass));
                     });
                     promise._actionName = 'login';
                     promise._actionArgs = [elThis];
@@ -517,6 +633,10 @@
                 },
                 changeUser: function(elThis) {
                     const promise = new Promise(async (r)=>{
+                        localStorage.removeItem('cachedUID');
+                        localStorage.removeItem('cachedClass');
+                        window.CLASS = false;
+                        window.PROFILE = false;
                         r(await window.renderPage(''));
                     });
                     promise._actionName = 'changeUser';
@@ -524,7 +644,7 @@
                     window.actionManager[1](promise);
                     return promise;
                 },
-                changeProfile: function(profile = window.PROFILE) {
+                changeProfile: function(profile = window.CLASS) {
                     const promise = new Promise(async (r)=>{
                         r(await window.renderPage(undefined, undefined, profile));
                     });
@@ -553,10 +673,10 @@
                 },
                 scheduleDay: function(day) {
                     const promise = new Promise(async (r)=>{
-                        const res = await fetch(`manager.php?UID=${window.UID}&scope=schedule&subject=${window.SUBJECT}&day=${day}`).then(r=>r.json());
+                        const res = await fetch(`manager.php?UID=${window.UID}&class=${window.CLASS}&scope=schedule&subject=${encodeURIComponent(window.SUBJECT)}&day=${encodeURIComponent(day)}`).then(r=>r.json());
                         if (res.status === true) {
-                            document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.innerHTML = window.SUBJECT);
-                            document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.innerHTML = day);
+                            document.querySelectorAll('#javascript-change-schedule-data').forEach(e=>e.textContent = window.SUBJECT);
+                            document.querySelectorAll('#javascript-change-schedule-data-day').forEach(e=>e.textContent = day);
                             return r(CHANGESEC("scheduleconfirmed"));
                         }
                         if (res.message === "Invalid Day!") return r(CHANGESEC("dayunavailable"));
