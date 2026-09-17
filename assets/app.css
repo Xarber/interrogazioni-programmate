@@ -288,6 +288,39 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
     font-weight: 700;
 }
 
+.saved-user-list {
+    display: grid;
+    gap: 9px;
+    max-height: min(44vh, 360px);
+    overflow-y: auto;
+}
+
+.saved-user-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    min-height: 64px;
+    margin: 0;
+    padding: 12px 15px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .055);
+    box-shadow: none;
+    text-align: left;
+}
+
+.saved-user-card:hover { border-color: rgba(225, 161, 80, .44); background: rgba(225, 161, 80, .1); }
+.saved-user-identity { min-width: 0; }
+.saved-user-identity strong,
+.saved-user-identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved-user-identity strong { font-size: .96rem; }
+.saved-user-identity small { margin-top: 3px; color: var(--muted); font-size: .78rem; }
+.saved-user-arrow { flex: 0 0 auto; color: var(--accent); font-size: 1.2rem; }
+.saved-user-empty { margin: 0 !important; padding: 15px; border: 1px dashed var(--border); border-radius: 14px; }
+
 ::-webkit-scrollbar { width: 12px; height: 12px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: rgba(255,255,255,.24); background-clip: content-box; }
@@ -327,6 +360,7 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
     .mainDiv input, .mainDiv select { min-height: 50px; }
     .inline { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .inline > button { width: 100%; padding-inline: 12px; }
+    .saved-users-login-button { grid-column: 1 / -1; }
 }
 
 @media (max-width: 355px) {

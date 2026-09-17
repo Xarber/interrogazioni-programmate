@@ -197,6 +197,7 @@ class UserDashboard {
                         ? `\`manager.php?scope=redirectToCalendar&UID=\${window.UID}&class=\${window.CLASS}\`, '_blank'`
                         : `\`webcal://\${location.hostname}/manager.php?scope=syncICal&UID=\${window.UID}&class=\${window.CLASS}\``
                     })" id="dash-calendar-btn" title="Aggiungi al calendario"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2Zm13 8H4v10h16V10ZM4 8h16V6h-3v1h-2V6H9v1H7V6H4v2Z"/></svg><span>Calendario</span></button>
+                    <button id="dash-switch-user-btn" class="dashboard-action-btn" title="Cambia utente"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 13c2.67 0 8 1.34 8 4v3h-2v-3c0-.74-3.09-2-6-2-.82 0-1.66.1-2.43.26a8.1 8.1 0 0 0-1.67-1.64A14.4 14.4 0 0 1 16 13ZM8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 1.79-8 4v2h16v-2c0-2.21-3.58-4-8-4Zm8-3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg><span>Cambia utente</span></button>
                     ${this.userData.admin ? '<button onclick="" id="dash-admin-view-btn" class="dashboard-action-btn dashboard-action-primary" title="Apri dashboard amministratore"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3Zm10 0h8v5h-8V3ZM3 13h8v8H3v-8Zm10-3h8v11h-8V10Z"/></svg><span>Dashboard</span></button>' : ""}
                 </div>
             </div>
@@ -208,6 +209,7 @@ class UserDashboard {
         if (!this.appended) this.container.appendChild(this.dashboard);
         this.appended = true;
         if (this.dashboard.querySelector("button#dash-admin-view-btn")) this.dashboard.querySelector("button#dash-admin-view-btn").onclick = this.userData.onOpenAdminDash;
+        this.dashboard.querySelector("button#dash-switch-user-btn").onclick = this.userData.onSwitchUser;
         (async ()=>{
             if (!this.notificationClass) return;
             const status = await this.notificationClass.status();
@@ -373,7 +375,7 @@ class UserDashboard {
             }
             .user-dashboard-actions {
                 display: grid;
-                grid-template-columns: repeat(${this.userData.admin ? '3' : '2'}, minmax(0, 1fr));
+                grid-template-columns: repeat(${this.userData.admin ? '4' : '3'}, minmax(0, 1fr));
                 gap: 9px;
                 margin-top: 14px;
             }
@@ -2533,6 +2535,7 @@ class AdminDashboard {
     }
     
     uploadProfile() {
+        const maxUploadBytes = 1024 * 1024;
         const form = document.createElement("form");
         const fileInput = document.createElement("input");
 
@@ -2548,13 +2551,25 @@ class AdminDashboard {
 
         fileInput.addEventListener("change", async () => {
             if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (!/\.zip$/i.test(file.name)) {
+                    alert("Seleziona un profilo classe in formato ZIP.");
+                    return;
+                }
+                if (file.size < 1 || file.size > maxUploadBytes) {
+                    alert("Il profilo classe non può superare 1 MB.");
+                    return;
+                }
+                const allowedTypes = new Set(["", "application/zip", "application/x-zip", "application/x-zip-compressed", "application/octet-stream"]);
+                if (!allowedTypes.has(file.type)) {
+                    alert("Il file selezionato non viene riconosciuto come archivio ZIP.");
+                    return;
+                }
                 const formData = new FormData();
-                formData.append("profileData", fileInput.files[0]);
-                const r = await fetch(form.action, {
-                    method: "POST",
-                    body: formData
-                }).then(r=>r.json());
-                if (!r.status) alert("Impossibile completare l'azione!");
+                formData.append("profileData", file);
+                const response = await fetch(form.action, {method: "POST", body: formData});
+                const r = await response.json().catch(()=>({status: false, message: "Risposta non valida dal server."}));
+                if (!response.ok || !r.status) alert(r.message ?? "Impossibile completare l'azione!");
                 else {
                     this.profiles = await this.refreshProfiles();
                     this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));

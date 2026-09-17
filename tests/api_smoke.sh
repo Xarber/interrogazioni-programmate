@@ -99,6 +99,22 @@ unzip -t "$archive" >/dev/null
 uploaded=$(curl --silent --show-error "$base_url/manager.php?scope=uploadProfile&UID=$uid&class=$class_id" -F "profileData=@$archive")
 jq -e '.status == true and (.classId | length == 32)' <<<"$uploaded" >/dev/null
 
+fake_zip="$test_root/not-a-profile.zip"
+printf 'this is not a zip archive' >"$fake_zip"
+invalid_upload=$(curl --silent --show-error "$base_url/manager.php?scope=uploadProfile&UID=$uid&class=$class_id" -F "profileData=@$fake_zip;type=application/zip")
+jq -e '.status == false and (.message | test("ZIP"))' <<<"$invalid_upload" >/dev/null
+
+invalid_json_zip="$test_root/invalid-json.profile.zip"
+cp "$archive" "$invalid_json_zip"
+"$php_bin" "${php_options[@]}" -r '$zip = new ZipArchive(); $zip->open($argv[1]); $zip->addFromString("profile.json", "{invalid json"); $zip->close();' "$invalid_json_zip"
+invalid_json_upload=$(curl --silent --show-error "$base_url/manager.php?scope=uploadProfile&UID=$uid&class=$class_id" -F "profileData=@$invalid_json_zip;type=application/zip")
+jq -e '.status == false and (.message | test("invalid JSON"))' <<<"$invalid_json_upload" >/dev/null
+
+oversized_zip="$test_root/oversized.profile.zip"
+dd if=/dev/zero of="$oversized_zip" bs=1048577 count=1 status=none
+oversized_upload=$(curl --silent --show-error "$base_url/manager.php?scope=uploadProfile&UID=$uid&class=$class_id" -F "profileData=@$oversized_zip;type=application/zip")
+jq -e '.status == false and (.message | test("1 MB"))' <<<"$oversized_upload" >/dev/null
+
 deleted=$(curl --silent --show-error "$base_url/manager.php?scope=profileMGMT&UID=$uid&class=$class_id" \
     -H 'Content-Type: application/json' --data "$(jq -nc --arg class "$new_class_id" '{action:"deleteprofile",classId:$class}')")
 jq -e '.status == true' <<<"$deleted" >/dev/null

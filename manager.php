@@ -38,6 +38,175 @@ function safeName(string $name): string
     return trim((string) preg_replace('/[^\pL\pN _-]+/u', '-', $name));
 }
 
+const PROFILE_IMPORT_MAX_UPLOAD_BYTES = 1024 * 1024;
+const PROFILE_IMPORT_MAX_EXPANDED_BYTES = 4 * 1024 * 1024;
+const PROFILE_IMPORT_MAX_ENTRIES = 128;
+
+function importTextLength(string $value): int
+{
+    return function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value);
+}
+
+function decodeImportObject(string $raw, string $label): array
+{
+    $trimmed = ltrim($raw);
+    if ($trimmed === '' || $trimmed[0] !== '{') {
+        throw new InvalidArgumentException($label . ' must contain a JSON object.');
+    }
+    try {
+        $decoded = json_decode($raw, true, 128, JSON_THROW_ON_ERROR);
+    } catch (JsonException $error) {
+        throw new InvalidArgumentException($label . ' contains invalid JSON.');
+    }
+    if (!is_array($decoded)) throw new InvalidArgumentException($label . ' must contain a JSON object.');
+    return $decoded;
+}
+
+function validateImportText(mixed $value, string $label, int $maximum = 100, bool $allowEmpty = false): string
+{
+    if (!is_string($value)) throw new InvalidArgumentException($label . ' must be text.');
+    $value = trim($value);
+    $length = importTextLength($value);
+    if ((!$allowEmpty && $length === 0) || $length > $maximum || str_contains($value, "\0")) {
+        throw new InvalidArgumentException($label . ' is invalid.');
+    }
+    return $value;
+}
+
+function validateImportedUsers(array $users): void
+{
+    if ($users === [] || count($users) > 500) throw new InvalidArgumentException('data/users.json has an invalid user list.');
+    foreach ($users as $uid => $user) {
+        validateImportText((string) $uid, 'A user ID', 255);
+        if (!is_array($user) || array_is_list($user)) throw new InvalidArgumentException('Every imported user must be a JSON object.');
+        validateImportText($user['name'] ?? null, 'An imported user name', 100);
+        foreach (['admin', 'priority', 'watcherAcc'] as $booleanField) {
+            if (array_key_exists($booleanField, $user) && !is_bool($user[$booleanField])) {
+                throw new InvalidArgumentException('Invalid user field: ' . $booleanField . '.');
+            }
+        }
+        if (isset($user['pushSubscriptions']) && !is_array($user['pushSubscriptions'])) {
+            throw new InvalidArgumentException('Invalid notification data in data/users.json.');
+        }
+        if (isset($user['answers']) && !is_array($user['answers'])) {
+            throw new InvalidArgumentException('Invalid answers in data/users.json.');
+        }
+        foreach (($user['answers'] ?? []) as $subject => $dates) {
+            validateImportText((string) $subject, 'An answer subject', 100);
+            if (!is_array($dates)) throw new InvalidArgumentException('A user answer list must be an array.');
+            foreach ($dates as $date) validateImportText($date, 'An answer value', 100);
+        }
+    }
+}
+
+function validateImportedSubject(string $name, array $subject): void
+{
+    validateImportText($name, 'A subject name', 100);
+    if (array_is_list($subject)) throw new InvalidArgumentException('Every subject file must contain a JSON object.');
+    foreach (['lock', 'hide'] as $booleanField) {
+        if (array_key_exists($booleanField, $subject) && !is_bool($subject[$booleanField])) {
+            throw new InvalidArgumentException('Invalid subject field: ' . $booleanField . '.');
+        }
+    }
+    if (isset($subject['type'])) validateImportText($subject['type'], 'A subject type', 40);
+    if (isset($subject['answerCount']) && !is_int($subject['answerCount'])) {
+        throw new InvalidArgumentException('A subject answerCount must be an integer.');
+    }
+    foreach (['answers', 'days', 'campaign'] as $objectField) {
+        if (isset($subject[$objectField]) && !is_array($subject[$objectField])) {
+            throw new InvalidArgumentException('Invalid subject field: ' . $objectField . '.');
+        }
+    }
+    foreach (($subject['days'] ?? []) as $date => $day) {
+        validateImportText((string) $date, 'A subject date', 100);
+        if (!is_array($day) || array_is_list($day)) throw new InvalidArgumentException('Every subject date must be a JSON object.');
+        $availability = validateImportText($day['availability'] ?? null, 'A date availability', 30);
+        if (!preg_match('/^(?:-1\/-1|\d+\/\d+)$/', $availability)) {
+            throw new InvalidArgumentException('A date availability has an invalid format.');
+        }
+        if (isset($day['dayName'])) validateImportText($day['dayName'], 'A day name', 100, true);
+    }
+    foreach (($subject['answers'] ?? []) as $uid => $answer) {
+        validateImportText((string) $uid, 'A subject answer user ID', 255);
+        if (!is_array($answer) || array_is_list($answer)) throw new InvalidArgumentException('Every subject answer must be a JSON object.');
+        validateImportText($answer['date'] ?? null, 'A subject answer value', 100);
+        if (isset($answer['answerNumber']) && !is_int($answer['answerNumber'])) {
+            throw new InvalidArgumentException('A subject answer number must be an integer.');
+        }
+    }
+}
+
+function parseProfileImport(string $path, string $originalName): array
+{
+    if (!class_exists('ZipArchive')) throw new RuntimeException('ZIP support is unavailable.');
+    if (!preg_match('/\.zip$/i', $originalName)) throw new InvalidArgumentException('The class profile must be a .zip file.');
+    $signature = file_get_contents($path, false, null, 0, 4);
+    if ($signature !== "PK\x03\x04") throw new InvalidArgumentException('The uploaded file is not a valid ZIP archive.');
+
+    $zip = new ZipArchive();
+    if ($zip->open($path, ZipArchive::CHECKCONS) !== true) throw new InvalidArgumentException('Invalid or damaged profile ZIP.');
+    try {
+        if ($zip->numFiles < 2 || $zip->numFiles > PROFILE_IMPORT_MAX_ENTRIES) {
+            throw new InvalidArgumentException('The profile ZIP contains too many or too few files.');
+        }
+        $allowedFiles = ['profile.json' => true, 'data/users.json' => true];
+        $seen = [];
+        $expandedBytes = 0;
+        $jsonFiles = [];
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $entry = $zip->getNameIndex($index);
+            $stat = $zip->statIndex($index);
+            if (!is_string($entry) || !is_array($stat) || $entry === '' || str_contains($entry, "\0") || str_contains($entry, '\\') || str_starts_with($entry, '/') || preg_match('#(^|/)\.\.(/|$)#', $entry)) {
+                throw new InvalidArgumentException('The profile ZIP contains an unsafe path.');
+            }
+            if (isset($seen[$entry])) throw new InvalidArgumentException('The profile ZIP contains duplicate entries.');
+            $seen[$entry] = true;
+
+            $isDirectory = str_ends_with($entry, '/');
+            if ($isDirectory) {
+                if ($entry !== 'data/') throw new InvalidArgumentException('The profile ZIP contains an unexpected directory.');
+                continue;
+            }
+            if (!isset($allowedFiles[$entry]) && !preg_match('#^data/([^/]{1,100})\.json$#u', $entry, $matches)) {
+                throw new InvalidArgumentException('The profile ZIP contains an unexpected file.');
+            }
+            $size = (int) ($stat['size'] ?? -1);
+            if ($size < 0 || $size > PROFILE_IMPORT_MAX_UPLOAD_BYTES) {
+                throw new InvalidArgumentException('A JSON file in the profile is too large.');
+            }
+            $expandedBytes += $size;
+            if ($expandedBytes > PROFILE_IMPORT_MAX_EXPANDED_BYTES) {
+                throw new InvalidArgumentException('The expanded profile is too large.');
+            }
+            $raw = $zip->getFromIndex($index);
+            if (!is_string($raw) || strlen($raw) !== $size) throw new InvalidArgumentException('A profile file could not be read.');
+            $jsonFiles[$entry] = $raw;
+        }
+        if (!isset($jsonFiles['profile.json'], $jsonFiles['data/users.json'])) {
+            throw new InvalidArgumentException('The profile ZIP must contain profile.json and data/users.json.');
+        }
+
+        $profile = decodeImportObject($jsonFiles['profile.json'], 'profile.json');
+        $profile['name'] = validateImportText($profile['name'] ?? null, 'The class name', 100);
+        if (isset($profile['classId'])) validateImportText($profile['classId'], 'The source class ID', 255, true);
+        if (isset($profile['date'])) validateImportText($profile['date'], 'The export date', 40, true);
+        $users = decodeImportObject($jsonFiles['data/users.json'], 'data/users.json');
+        validateImportedUsers($users);
+        $subjects = [];
+        foreach ($jsonFiles as $entry => $raw) {
+            if (!preg_match('#^data/([^/]+)\.json$#u', $entry, $matches) || $entry === 'data/users.json') continue;
+            $name = $matches[1];
+            if (isset($subjects[$name])) throw new InvalidArgumentException('The profile ZIP contains duplicate subject names.');
+            $subject = decodeImportObject($raw, $entry);
+            validateImportedSubject($name, $subject);
+            $subjects[$name] = $subject;
+        }
+        return ['profile' => $profile, 'users' => $users, 'subjects' => $subjects];
+    } finally {
+        $zip->close();
+    }
+}
+
 function requireAdmin(?array $user): void
 {
     if (!(bool) ($user['admin'] ?? false)) jsonResponse(['status' => false, 'message' => 'Not Authorized!'], 403);
@@ -363,24 +532,26 @@ if ($scope === 'downloadProfile' || $scope === 'downloadClass') {
 
 if ($scope === 'uploadProfile' || $scope === 'uploadClass') {
     requireAdmin($userData);
-    if (!isset($_FILES['profileData']['tmp_name']) || !is_uploaded_file($_FILES['profileData']['tmp_name'])) jsonResponse(['status' => false, 'message' => 'No file uploaded.'], 400);
-    $zip = new ZipArchive();
-    if ($zip->open($_FILES['profileData']['tmp_name']) !== true) jsonResponse(['status' => false, 'message' => 'Invalid profile ZIP.'], 400);
-    $profileRaw = $zip->getFromName('profile.json'); $usersRaw = $zip->getFromName('data/users.json');
-    if ($profileRaw === false || $usersRaw === false) { $zip->close(); jsonResponse(['status' => false, 'message' => 'Invalid profile ZIP.'], 400); }
-    $profile = json_decode($profileRaw, true, 512, JSON_THROW_ON_ERROR); $users = json_decode($usersRaw, true, 512, JSON_THROW_ON_ERROR); $subjects = [];
-    if ($zip->numFiles > 500 || strlen($usersRaw) > 10 * 1024 * 1024) { $zip->close(); jsonResponse(['status' => false, 'message' => 'Profile ZIP is too large.'], 400); }
-    for ($index = 0; $index < $zip->numFiles; $index++) {
-        $entry = $zip->getNameIndex($index);
-        if (!is_string($entry) || $entry === 'data/users.json' || !preg_match('#^data/([^/]+)\.json$#u', $entry, $matches)) continue;
-        $subjectRaw = $zip->getFromIndex($index);
-        if (!is_string($subjectRaw) || strlen($subjectRaw) > 10 * 1024 * 1024) { $zip->close(); jsonResponse(['status' => false, 'message' => 'Profile ZIP is too large.'], 400); }
-        $subjects[$matches[1]] = json_decode($subjectRaw, true, 512, JSON_THROW_ON_ERROR);
+    $upload = $_FILES['profileData'] ?? null;
+    if (!is_array($upload) || ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !isset($upload['tmp_name']) || !is_uploaded_file($upload['tmp_name'])) {
+        jsonResponse(['status' => false, 'message' => 'No valid class profile was uploaded.'], 400);
     }
-    $zip->close();
+    $reportedSize = (int) ($upload['size'] ?? 0);
+    $actualSize = filesize($upload['tmp_name']);
+    if ($reportedSize < 1 || $reportedSize > PROFILE_IMPORT_MAX_UPLOAD_BYTES || $actualSize === false || $actualSize < 1 || $actualSize > PROFILE_IMPORT_MAX_UPLOAD_BYTES) {
+        jsonResponse(['status' => false, 'message' => 'The class profile must be no larger than 1 MB.'], 413);
+    }
+    if (class_exists('finfo')) {
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
+        if (!in_array($mime, ['application/zip', 'application/x-zip', 'application/x-zip-compressed', 'application/octet-stream'], true)) {
+            jsonResponse(['status' => false, 'message' => 'The uploaded file is not a ZIP archive.'], 400);
+        }
+    }
+    $import = parseProfileImport($upload['tmp_name'], (string) ($upload['name'] ?? ''));
+    $profile = $import['profile']; $users = $import['users']; $subjects = $import['subjects'];
     if (!isset($users[$userId])) $users[$userId] = $userData;
     $users[$userId]['admin'] = true;
-    $created = $storage->importClass((string) ($profile['name'] ?? 'Classe importata'), $users, $subjects);
+    $created = $storage->importClass($profile['name'], $users, $subjects);
     jsonResponse(['status' => true, 'profileName' => $created['className'], 'classId' => $created['classId']]);
 }
 

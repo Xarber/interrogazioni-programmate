@@ -6,7 +6,7 @@
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
     <title>Interrogazioni Programmate</title>
-    <link rel="stylesheet" href="/assets/app.css?v=6">
+    <link rel="stylesheet" href="/assets/app.css?v=7">
 </head>
 <body>
     <nav class="flow-progress hided" id="flow-progress" aria-label="Avanzamento prenotazione">
@@ -32,6 +32,7 @@
         <input type="text" name="UID" id="login-uid" class="login-uid-input" autocomplete="off" aria-describedby="login-error">
         <p class="form-error hided" id="login-error" role="alert">Inserisci un ID valido.</p>
         <div class="inline">
+            <button class="button-secondary saved-users-login-button hided" onclick="window.actions.showUserSwitcher();">Utenti salvati</button>
             <button class="button-secondary" onclick="CHANGESEC('create-class');">Crea una classe</button>
             <button onclick="window.actions.login(this);">Accedi</button>
         </div>
@@ -44,8 +45,19 @@
         <input type="text" name="UID" id="retry-login-uid" class="login-uid-input" autocomplete="off" aria-invalid="true" aria-describedby="retry-login-error">
         <p class="form-error" id="retry-login-error" role="alert">L’ID inserito non appartiene a nessuna classe.</p>
         <div class="inline">
+            <button class="button-secondary saved-users-login-button hided" onclick="window.actions.showUserSwitcher();">Utenti salvati</button>
             <button class="button-secondary" onclick="CHANGESEC('create-class');">Crea una classe</button>
             <button onclick="window.actions.login(this);">Accedi</button>
+        </div>
+    </div>
+    <div class="mainDiv hided" id="switch-user">
+        <div class="eyebrow">Accessi salvati</div>
+        <h1>Scegli un utente</h1>
+        <p>I codici restano salvati soltanto su questo dispositivo.</p>
+        <div class="saved-user-list" id="saved-user-list"></div>
+        <div class="inline">
+            <button class="button-secondary" onclick="window.actions.changeUser(this);">Usa un altro codice</button>
+            <button onclick="window.actions.closeUserSwitcher();">Indietro</button>
         </div>
     </div>
     <div class="mainDiv hided" id="create-class">
@@ -157,7 +169,7 @@
             document.body.appendChild(toggleBtn);
         }})();
     </script>
-    <script src="/assets/dash.js?v=6"></script>
+    <script src="/assets/dash.js?v=7"></script>
     <script>
         const uid = ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -171,6 +183,70 @@
         window.SUBJECT = new URLSearchParams(location.search).get('subject');
         window.CLASS = new URLSearchParams(location.search).get('class') ?? new URLSearchParams(location.search).get('profile') ?? localStorage["cachedClass"] ?? false;
         window.PROFILE = window.CLASS;
+        const SAVED_USERS_KEY = 'savedUsersV1';
+
+        function loadSavedUsers() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(SAVED_USERS_KEY) ?? '[]');
+                if (!Array.isArray(parsed)) return [];
+                return parsed.filter(item => item && typeof item.uid === 'string' && item.uid.length > 0).slice(0, 12);
+            } catch (error) {
+                console.warn('Impossibile leggere gli utenti salvati:', error);
+                return [];
+            }
+        }
+
+        function rememberCurrentUser() {
+            if (!window.UID || !window.CLASS || !window.userData?.name || !window.pageData?.className) return;
+            const saved = loadSavedUsers().filter(item => item.uid !== window.UID);
+            saved.unshift({
+                uid: window.UID,
+                classId: window.CLASS,
+                userName: String(window.userData.name),
+                className: String(window.pageData.className),
+                lastUsedAt: Date.now()
+            });
+            localStorage.setItem(SAVED_USERS_KEY, JSON.stringify(saved.slice(0, 12)));
+        }
+
+        function updateSavedUserControls() {
+            const hasSavedUsers = loadSavedUsers().length > 0;
+            document.querySelectorAll('.saved-users-login-button').forEach(button => button.classList.toggle('hided', !hasSavedUsers));
+        }
+
+        function renderSavedUsers() {
+            const container = document.getElementById('saved-user-list');
+            if (!container) return;
+            container.replaceChildren();
+            const savedUsers = loadSavedUsers();
+            if (savedUsers.length === 0) {
+                const empty = document.createElement('p');
+                empty.className = 'saved-user-empty';
+                empty.textContent = 'Non ci sono ancora utenti salvati su questo dispositivo.';
+                container.appendChild(empty);
+                return;
+            }
+            savedUsers.forEach(user => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'saved-user-card';
+                button.title = `Accedi come ${user.userName || 'utente'}${user.className ? ` in ${user.className}` : ''}`;
+                const identity = document.createElement('span');
+                identity.className = 'saved-user-identity';
+                const name = document.createElement('strong');
+                name.textContent = user.userName || 'Utente salvato';
+                const className = document.createElement('small');
+                className.textContent = user.className || 'Classe da scegliere';
+                identity.append(name, className);
+                const arrow = document.createElement('span');
+                arrow.className = 'saved-user-arrow';
+                arrow.setAttribute('aria-hidden', 'true');
+                arrow.textContent = '→';
+                button.append(identity, arrow);
+                button.addEventListener('click', () => window.actions.switchUser(user.uid, user.classId || false));
+                container.appendChild(button);
+            });
+        }
 
         function CHANGESEC(section) {
             if (!document.querySelector('.mainDiv#'+section)) return false;
@@ -252,6 +328,8 @@
                 window.PROFILE = window.CLASS;
                 if ((window.pageData.profileList ?? []).length > 0) localStorage["cachedUID"] = window.UID;
                 if (window.CLASS) localStorage["cachedClass"] = window.CLASS;
+                rememberCurrentUser();
+                updateSavedUserControls();
                 window.notifications = new PushNotifications(window.UID, "manager.php", window.CLASS);
                 if (!!window.UID && window.UID.length > 0) localStorage["lastUID"] = window.UID;
                 localStorage["lastPathName"] = location.pathname;
@@ -511,7 +589,7 @@
                                 console.error(error);
                                 alert('Impossibile aprire la dashboard. Riprova tra poco.');
                             });
-                        }, className: window.pageData.className, ...window.userData}, window.notifications) : window.dash;
+                        }, onSwitchUser: ()=>window.actions.showUserSwitcher(), className: window.pageData.className, ...window.userData}, window.notifications) : window.dash;
                     }
                     if (hasActiveClass) btnDiv.appendChild(btn);
                 document.documentElement.appendChild(btnDiv);
@@ -720,6 +798,22 @@
                     promise._actionArgs = [elThis];
                     window.actionManager[1](promise);
                     return promise;
+                },
+                showUserSwitcher: function() {
+                    window.dash?.close();
+                    renderSavedUsers();
+                    CHANGESEC('switch-user');
+                },
+                closeUserSwitcher: function() {
+                    if (window.UID) return window.renderPage(window.UID, '', window.CLASS);
+                    CHANGESEC('login');
+                },
+                switchUser: function(uid, classId = false) {
+                    if (!uid) return;
+                    localStorage.setItem('cachedUID', uid);
+                    if (classId) localStorage.setItem('cachedClass', classId);
+                    else localStorage.removeItem('cachedClass');
+                    return window.renderPage(uid, '', classId);
                 },
                 changeProfile: function(profile = window.CLASS) {
                     const promise = new Promise(async (r)=>{
