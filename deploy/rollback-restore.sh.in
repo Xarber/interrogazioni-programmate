@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+backup_root=$(cd "$(dirname "$0")" && pwd)
+app_root='@APP_ROOT@'
+source_root="$backup_root/legacy-live"
+
+cd "$backup_root"
+sha256sum --check MANIFEST.sha256
+
+shopt -s nullglob
+legacy_directories=("$source_root"/JSON*)
+if (( ${#legacy_directories[@]} == 0 )); then
+    echo 'No legacy JSON directories exist in this backup.' >&2
+    exit 1
+fi
+
+for source_directory in "${legacy_directories[@]}"; do
+    name=$(basename "$source_directory")
+    if [[ ! "$name" =~ ^JSON(-[A-Za-z0-9_-]+)?$ ]]; then
+        echo "Unsafe legacy directory name: $name" >&2
+        exit 1
+    fi
+    if [[ -e "$app_root/$name" ]]; then
+        echo "Refusing to overwrite $app_root/$name" >&2
+        exit 1
+    fi
+done
+
+for source_directory in "${legacy_directories[@]}"; do
+    cp -a -- "$source_directory" "$app_root/"
+done
+
+if [[ -f "$backup_root/secrets/vapidkeys.json" ]]; then
+    install -o xcenter -g xcenter -m 0660 "$backup_root/secrets/vapidkeys.json" "$app_root/vapidkeys.json"
+fi
+
+for source_directory in "${legacy_directories[@]}"; do
+    name=$(basename "$source_directory")
+    diff -qr -- "$source_directory" "$app_root/$name" >/dev/null
+done
+
+echo 'Legacy JSON and VAPID data restored and verified.'
+
