@@ -11,8 +11,8 @@ self.addEventListener('install', event => {
             return cache.addAll([
                 //'/',
                 '/interrogazioni.php',
-                '/assets/app.css',
-                '/assets/dash.js',
+                '/assets/app.css?v=3',
+                '/assets/dash.js?v=3',
                 '/assets/manifest.php',
                 //'/push-service-worker.js',
                 //'/manager.php?scope=loadPageData'
