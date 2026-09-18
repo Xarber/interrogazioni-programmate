@@ -378,10 +378,26 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
     .app-dialog-input[type="time"],
     .app-dialog-input[type="datetime-local"] {
         height: 52px;
+        padding-block: 0;
+        line-height: normal;
         -webkit-appearance: none;
         appearance: none;
     }
-    .app-dialog-input::-webkit-date-and-time-value { width: 100%; text-align: center; }
+    .app-dialog-input::-webkit-date-and-time-value {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        line-height: normal;
+        text-align: center;
+    }
+    .app-dialog-input::-webkit-datetime-edit {
+        display: flex;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+    }
 }
 .app-dialog-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .app-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
