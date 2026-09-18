@@ -6,7 +6,7 @@
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
     <title>Interrogazioni Programmate</title>
-    <link rel="stylesheet" href="/assets/app.css?v=13">
+    <link rel="stylesheet" href="/assets/app.css?v=14">
 </head>
 <body>
     <nav class="flow-progress hided" id="flow-progress" aria-label="Avanzamento prenotazione">

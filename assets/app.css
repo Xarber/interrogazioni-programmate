@@ -369,8 +369,8 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
 .app-dialog-input { display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 52px; padding: 0 14px; color: var(--text); border: 1px solid var(--border); border-radius: 14px; outline: 0; background: rgba(0, 0, 0, .28); color-scheme: dark; }
 .app-dialog-input[type="date"],
 .app-dialog-input[type="time"],
-.app-dialog-input[type="datetime-local"] { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; }
-.app-dialog-input::-webkit-date-and-time-value { min-width: 0; overflow: hidden; text-align: left; }
+.app-dialog-input[type="datetime-local"] { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; text-align: center; }
+.app-dialog-input::-webkit-date-and-time-value { min-width: 0; overflow: hidden; text-align: center; }
 .app-dialog-input::-webkit-datetime-edit { min-width: 0; overflow: hidden; padding: 0; }
 .app-dialog-input::-webkit-calendar-picker-indicator { flex: 0 0 auto; margin-left: auto; }
 @supports (-webkit-touch-callout: none) {
@@ -381,7 +381,7 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
         -webkit-appearance: none;
         appearance: none;
     }
-    .app-dialog-input::-webkit-date-and-time-value { width: 100%; }
+    .app-dialog-input::-webkit-date-and-time-value { width: 100%; text-align: center; }
 }
 .app-dialog-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .app-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
