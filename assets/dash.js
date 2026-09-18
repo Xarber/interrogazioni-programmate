@@ -1291,6 +1291,7 @@ class AdminDashboard {
                 flex-grow: 1;
                 padding: 20px;
                 overflow-y: auto;
+                overflow-x: hidden;
             }
             .admin-dashboard-main-header h3 {
                 flex: 1;
