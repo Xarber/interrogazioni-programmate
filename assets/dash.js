@@ -30,6 +30,21 @@ const AppDialog = (() => {
             dialog.className = `app-dialog app-dialog-${kind}${options.tone ? ` is-${options.tone}` : ''}`;
             dialog.setAttribute('role', kind === 'alert' ? 'alertdialog' : 'dialog');
             dialog.setAttribute('aria-modal', 'true');
+            dialog.tabIndex = -1;
+
+            const visualViewport = window.visualViewport;
+            const syncViewport = () => {
+                const height = visualViewport?.height ?? window.innerHeight;
+                const width = visualViewport?.width ?? window.innerWidth;
+                backdrop.style.setProperty('--app-dialog-viewport-height', `${height}px`);
+                backdrop.style.setProperty('--app-dialog-viewport-width', `${width}px`);
+                backdrop.style.setProperty('--app-dialog-viewport-top', `${visualViewport?.offsetTop ?? 0}px`);
+                backdrop.style.setProperty('--app-dialog-viewport-left', `${visualViewport?.offsetLeft ?? 0}px`);
+                backdrop.style.setProperty('--app-dialog-max-height', `${Math.max(160, height * 0.88)}px`);
+            };
+            syncViewport();
+            visualViewport?.addEventListener('resize', syncViewport);
+            visualViewport?.addEventListener('scroll', syncViewport);
 
             const kicker = document.createElement('span');
             kicker.className = 'app-dialog-kicker';
@@ -100,6 +115,8 @@ const AppDialog = (() => {
                 if (finished) return;
                 finished = true;
                 document.removeEventListener('keydown', onKeydown);
+                visualViewport?.removeEventListener('resize', syncViewport);
+                visualViewport?.removeEventListener('scroll', syncViewport);
                 backdrop.classList.add('is-closing');
                 setTimeout(() => {
                     backdrop.remove();
@@ -131,7 +148,10 @@ const AppDialog = (() => {
             };
             document.addEventListener('keydown', onKeydown);
             requestAnimationFrame(() => backdrop.classList.add('is-visible'));
-            setTimeout(() => (input ?? confirm).focus(), 20);
+            setTimeout(() => {
+                const focusTarget = window.matchMedia('(max-width: 600px)').matches ? dialog : (input ?? confirm);
+                focusTarget.focus({preventScroll: true});
+            }, 20);
         });
         const result = pending.then(task, task);
         pending = result.catch(() => undefined);
