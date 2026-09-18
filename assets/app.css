@@ -403,7 +403,7 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
         left: 0;
         display: flex;
         flex-direction: column;
-        justify-content: safe center;
+        justify-content: flex-start;
         transform: none;
         width: 100%;
         max-width: none;
@@ -415,6 +415,14 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
         background: transparent;
         box-shadow: none;
         animation-name: card-in-mobile;
+    }
+    .mainDiv > .inline:last-child {
+        margin-top: auto;
+        padding-top: 24px;
+    }
+    .mainDiv > button:last-child {
+        width: 100%;
+        margin: auto 0 0;
     }
     body[data-section="schedule-subject"] .mainDiv,
     body[data-section="schedule-day"] .mainDiv,
