@@ -1,3 +1,170 @@
+const AppDialog = (() => {
+    const copyIcon = `<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2Zm2 0h4a2 2 0 0 1 2 2v6h2V5h-8v2Zm4 2H6v10h8V9Z"/></svg>`;
+    let pending = Promise.resolve();
+
+    async function copyText(value) {
+        if (navigator.clipboard?.writeText) {
+            try {
+                await navigator.clipboard.writeText(value);
+                return true;
+            } catch (_) {}
+        }
+        const fallback = document.createElement('textarea');
+        fallback.value = value;
+        fallback.setAttribute('readonly', '');
+        fallback.style.position = 'fixed';
+        fallback.style.opacity = '0';
+        document.body.appendChild(fallback);
+        fallback.select();
+        const copied = document.execCommand('copy');
+        fallback.remove();
+        return copied;
+    }
+
+    function show(options = {}) {
+        const task = () => new Promise(resolve => {
+            const kind = options.kind ?? 'alert';
+            const backdrop = document.createElement('div');
+            backdrop.className = 'app-dialog-backdrop';
+            const dialog = document.createElement('section');
+            dialog.className = `app-dialog app-dialog-${kind}${options.tone ? ` is-${options.tone}` : ''}`;
+            dialog.setAttribute('role', kind === 'alert' ? 'alertdialog' : 'dialog');
+            dialog.setAttribute('aria-modal', 'true');
+
+            const kicker = document.createElement('span');
+            kicker.className = 'app-dialog-kicker';
+            kicker.textContent = options.kicker ?? (kind === 'confirm' ? 'Conferma' : kind === 'prompt' ? 'Inserimento' : 'Informazione');
+            const title = document.createElement('h2');
+            title.textContent = options.title ?? (kind === 'confirm' ? 'Confermi questa operazione?' : kind === 'prompt' ? 'Inserisci un valore' : 'Operazione completata');
+            const message = document.createElement('p');
+            message.className = 'app-dialog-message';
+            message.textContent = String(options.message ?? '');
+            dialog.append(kicker, title);
+            if (message.textContent) dialog.appendChild(message);
+
+            let input = null;
+            if (kind === 'prompt') {
+                const label = document.createElement('label');
+                label.className = 'app-dialog-label';
+                label.textContent = options.label ?? options.title ?? 'Valore';
+                input = document.createElement('input');
+                input.className = 'app-dialog-input';
+                input.type = options.type ?? 'text';
+                input.value = options.defaultValue ?? '';
+                input.placeholder = options.placeholder ?? '';
+                input.required = options.required !== false;
+                for (const attribute of ['min', 'max', 'step', 'maxlength']) {
+                    if (options[attribute] !== undefined) input.setAttribute(attribute, String(options[attribute]));
+                }
+                label.appendChild(input);
+                dialog.appendChild(label);
+            }
+
+            if (Array.isArray(options.copyFields)) {
+                const fields = document.createElement('div');
+                fields.className = 'app-dialog-copy-fields';
+                options.copyFields.forEach(field => {
+                    const row = document.createElement('div');
+                    row.className = 'app-dialog-copy-row';
+                    const text = document.createElement('div');
+                    const label = document.createElement('small');
+                    label.textContent = field.label;
+                    const value = document.createElement('code');
+                    value.textContent = field.value;
+                    text.append(label, value);
+                    const copy = document.createElement('button');
+                    copy.type = 'button';
+                    copy.className = 'app-dialog-copy-button';
+                    copy.title = `Copia ${field.label}`;
+                    copy.setAttribute('aria-label', `Copia ${field.label}`);
+                    copy.innerHTML = copyIcon;
+                    copy.addEventListener('click', async () => {
+                        if (!await copyText(field.value)) return;
+                        copy.classList.add('is-copied');
+                        copy.title = 'Copiato';
+                        setTimeout(() => {
+                            copy.classList.remove('is-copied');
+                            copy.title = `Copia ${field.label}`;
+                        }, 1800);
+                    });
+                    row.append(text, copy);
+                    fields.appendChild(row);
+                });
+                dialog.appendChild(fields);
+            }
+
+            const actions = document.createElement('div');
+            actions.className = 'app-dialog-actions';
+            let finished = false;
+            const finish = value => {
+                if (finished) return;
+                finished = true;
+                document.removeEventListener('keydown', onKeydown);
+                backdrop.classList.add('is-closing');
+                setTimeout(() => {
+                    backdrop.remove();
+                    resolve(value);
+                }, 120);
+            };
+            const cancel = document.createElement('button');
+            cancel.type = 'button';
+            cancel.className = 'app-dialog-secondary';
+            cancel.textContent = options.cancelText ?? 'Annulla';
+            cancel.addEventListener('click', () => finish(kind === 'prompt' ? null : false));
+            const confirm = document.createElement('button');
+            confirm.type = 'button';
+            confirm.className = options.tone === 'danger' ? 'app-dialog-danger' : 'app-dialog-primary';
+            confirm.textContent = options.confirmText ?? (kind === 'alert' ? 'Va bene' : 'Conferma');
+            confirm.addEventListener('click', () => {
+                if (input && !input.reportValidity()) return;
+                finish(input ? input.value : true);
+            });
+            if (kind !== 'alert') actions.appendChild(cancel);
+            actions.appendChild(confirm);
+            dialog.appendChild(actions);
+            backdrop.appendChild(dialog);
+            document.documentElement.appendChild(backdrop);
+
+            const onKeydown = event => {
+                if (event.key === 'Escape') finish(kind === 'prompt' ? null : kind === 'alert' ? true : false);
+                if (event.key === 'Enter' && (event.target === input || kind !== 'prompt')) confirm.click();
+            };
+            document.addEventListener('keydown', onKeydown);
+            requestAnimationFrame(() => backdrop.classList.add('is-visible'));
+            setTimeout(() => (input ?? confirm).focus(), 20);
+        });
+        const result = pending.then(task, task);
+        pending = result.catch(() => undefined);
+        return result;
+    }
+
+    return {
+        alert(message, options = {}) {
+            return show({...options, kind: 'alert', message});
+        },
+        confirm(message, options = {}) {
+            return show({...options, kind: 'confirm', message});
+        },
+        prompt(message, defaultValue = '', options = {}) {
+            return show({...options, kind: 'prompt', message, defaultValue});
+        },
+        credentials({uid, link, title = 'Conserva i dati di accesso', message = 'Puoi copiare il codice utente o il link completo.'}) {
+            return show({
+                kind: 'alert',
+                kicker: 'Accesso creato',
+                title,
+                message,
+                confirmText: 'Ho salvato i dati',
+                copyFields: [
+                    {label: 'ID utente', value: uid},
+                    ...(link ? [{label: 'Link di accesso', value: link}] : [])
+                ]
+            });
+        }
+    };
+})();
+window.AppDialog = AppDialog;
+
 class PushNotifications {
     /**
      * Initializes a PushNotifications object.
@@ -220,7 +387,7 @@ class UserDashboard {
                 notificationButton.disabled = true;
                 notificationButton.querySelector('span').textContent = "Attendi...";
                 const response = !status ? await this.notificationClass.subscribe() : await this.notificationClass.unsubscribe();
-                if (!response.status) alert(!!response.userError ? response.message : `Impossibile attivare le notifiche! Ricarica la pagina e riprova.`);
+                if (!response.status) await AppDialog.alert(!!response.userError ? response.message : `Impossibile attivare le notifiche! Ricarica la pagina e riprova.`);
                 this.render();
             };
         })();
@@ -908,7 +1075,7 @@ class AdminDashboard {
             userData.priority && userFlags.push("P");
             userFlags = userFlags.length > 0 ? `[${userFlags.join("] [")}] ` : "";
             userElement.innerHTML = `
-                <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" oldtitle="Clicca per copiare il link d'accesso dell'utente" oldonclick="if (confirm(\`Vuoi copiare un testo con il link d'accesso per ${userData.name}?\`)) {navigator.clipboard.writeText('${location.href.split('?')[0]}?UID=${userUUID}${!this.isCustomProfile ? '' : `&profile=${this.isCustomProfile}`}');alert('Il link per ${userData.name} è stato copiato!')}" style="cursor: pointer;">${userFlags}${userData.name}</span>
+                <span data-user="${userUUID}" title="Clicca per cambiare il nome utente" style="cursor: pointer;">${userFlags}${userData.name}</span>
                 <span class="admin-availability">Risposte: ${userAnswerNumber}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-priority-btn ${userData.priority ? 'is-warning' : 'is-muted'}" data-user="${userUUID}" title="${userData.priority ? 'Rimuovi la priorità' : 'Rendi questo utente prioritario'}">
@@ -947,7 +1114,7 @@ class AdminDashboard {
             const profileElement = document.createElement('div');
             profileElement.className = 'admin-day-item';
             profileElement.innerHTML = `
-                <span title="Apri questa classe" onclick="if (confirm('Vuoi entrare nella classe ${profileName}?')) location.href = location.href.split('?')[0]+'?class=${profileId}&UID='+window.UID;">${profileName}</span>
+                <span data-open-profile="${profileId}" title="Apri questa classe" style="cursor: pointer;">${profileName}</span>
                 <div class="admin-inline admin-user-actions">
                     <button class="admin-download-file-btn is-muted" data-profile="${profileId}" title="Scarica un backup della classe">
                         ${this.icons.download}
@@ -1697,7 +1864,7 @@ class AdminDashboard {
             if (e.target.checked && state.allAnswered) {
                 e.target.checked = false;
                 this.updateDashboard();
-                return alert('Tutti gli utenti hanno già risposto: non è necessario bloccare la materia.');
+                return await AppDialog.alert('Tutti gli utenti hanno già risposto: non è necessario bloccare la materia.');
             }
             const previousValue = !e.target.checked;
             this.jsonFiles[this.currentFileIndex].data.lock = e.target.checked;
@@ -1715,7 +1882,7 @@ class AdminDashboard {
             if (e.target.checked && !state.empty) {
                 e.target.checked = false;
                 this.updateDashboard();
-                return alert('Per nascondere la materia devi prima eliminare tutte le date e tutte le risposte.');
+                return await AppDialog.alert('Per nascondere la materia devi prima eliminare tutte le date e tutte le risposte.');
             }
             const previousValue = !e.target.checked;
             this.jsonFiles[this.currentFileIndex].data.hide = e.target.checked;
@@ -1743,14 +1910,14 @@ class AdminDashboard {
         startCampaignBtn.addEventListener('click', async () => await this.configureCampaign(true));
         const cancelCampaignBtn = this.dashboard.querySelector('#cancelCampaignBtn');
         cancelCampaignBtn.addEventListener('click', async () => {
-            if (!confirm('Vuoi annullare questa automazione? Le risposte non verranno cancellate.')) return;
+            if (!await AppDialog.confirm('Vuoi annullare questa automazione? Le risposte non verranno cancellate.')) return;
             await this.campaignRequest('cancel');
         });
 
         if (typeof this.dataAnalysis === "function") {
             const copyAnswersBtn = this.dashboard.querySelector('#copyAnswersBtn');
-            copyAnswersBtn.addEventListener('click', () => {
-                if (!confirm(`Vuoi copiare le prenotazioni per questa materia?`)) return;
+            copyAnswersBtn.addEventListener('click', async () => {
+                if (!await AppDialog.confirm(`Vuoi copiare le prenotazioni per questa materia?`)) return;
                 this.dataAnalysis({
                     clipboard: true, 
                     copy: "prenotazioni", 
@@ -1758,9 +1925,9 @@ class AdminDashboard {
                     data: this.jsonFiles[this.currentFileIndex].data,
                     subject: this.jsonFiles[this.currentFileIndex].fileName,
                     users: this.userData,
-                    minimal: !confirm(`Vuoi copiare la versione completa? (Annulla = Minimale)`)
+                    minimal: !await AppDialog.confirm(`Vuoi copiare la versione completa? (Annulla = Minimale)`)
                 });
-                alert("Prenotazioni utente copiate!");
+                await AppDialog.alert("Prenotazioni utente copiate!");
             });
         }
 
@@ -1830,16 +1997,20 @@ class AdminDashboard {
             if (target.classList.contains('admin-invite-btn')) {
                 const name = this.userData[target.dataset.user].name.split(' ');
                 if (target.classList.contains('admin-notify-user-btn')) {
-                    if (!confirm(`Vuoi mandare una notifica di accesso a ${name.join(" ")}?`)) return;
+                    if (!await AppDialog.confirm(`Vuoi mandare una notifica di accesso a ${name.join(" ")}?`)) return;
                     await this.sendSubjectNotification([target.dataset.user], this.currentFileIndex, {
                         title: "Nuova Notifica",
                         desc: "Questa notifica ti è stata inviata da un admin per entrare nel sito. Vai a dare un occhiata!"
                     });
                     return;
                 }
-                if (!confirm(`Vuoi copiare un testo con il link d'accesso per ${name.join(" ")}?`)) return;
-                navigator.clipboard.writeText(`Ciao, ${name[name.length - 1]}!\nQuesto è il tuo link di accesso per la pagina delle prenotazioni delle interrogazioni programmate:\n${location.href.split('?')[0]}?UID=${target.dataset.user}&class=${window.CLASS}\nNON CONDIVIDERLO ALTRIMENTI DARAI IL TUO ACCESSO AD ALTRE PERSONE!\nNon perdere troppo tempo a rispondere siccome i posti sono limitati!`);
-                alert(`Il testo con il link d'accesso di ${name.join(" ")} è stato copiato!`);
+                const link = `${location.href.split('?')[0]}?UID=${encodeURIComponent(target.dataset.user)}&class=${encodeURIComponent(window.CLASS)}`;
+                await AppDialog.credentials({
+                    uid: target.dataset.user,
+                    link,
+                    title: `Accesso di ${name.join(" ")}`,
+                    message: 'Copia il codice utente oppure il link completo. Questi dati consentono di accedere all’account.'
+                });
             }
         });
 
@@ -1848,13 +2019,18 @@ class AdminDashboard {
             const target = e.target.closest('[data-user]');
             if (!target) return;
             if (target.classList.contains('admin-notify-all-btn')) {
-                if (confirm("Sei sicuro di voler inviare una notifica a TUTTI gli utenti mancanti?")) await this.sendSubjectNotification(this.getMissingAnswers(), undefined, {urgency: "high"});
+                if (await AppDialog.confirm("Sei sicuro di voler inviare una notifica a TUTTI gli utenti mancanti?")) await this.sendSubjectNotification(this.getMissingAnswers(), undefined, {urgency: "high"});
             } else if (target.classList.contains('admin-notify-user-btn')) {
-                if (target.classList.contains("admin-disabled")) return alert("Questo utente non ha attivato le notifiche!");
-                if (confirm(`Sei sicuro di voler inviare una notifica a ${this.userData[target.dataset.user].name}?`)) await this.sendSubjectNotification([target.dataset.user], undefined, {urgency: "high"});
+                if (target.classList.contains("admin-disabled")) return await AppDialog.alert("Questo utente non ha attivato le notifiche!");
+                if (await AppDialog.confirm(`Sei sicuro di voler inviare una notifica a ${this.userData[target.dataset.user].name}?`)) await this.sendSubjectNotification([target.dataset.user], undefined, {urgency: "high"});
             } else if (target.classList.contains("admin-add-answer-btn") && false) { //! This is disabled because swapping to a day actually has better UI.
-                const day = prompt(`Che giorno vuoi prenotare ${this.userData[target.dataset.user].name}? DD-MM-YYYY`);
-                if (!prompt) return;
+                const pickedDay = await AppDialog.prompt(`Scegli il giorno per ${this.userData[target.dataset.user].name}.`, '', {
+                    title: 'Aggiungi risposta',
+                    label: 'Data',
+                    type: 'date'
+                });
+                const day = this.pickerDateToStored(pickedDay);
+                if (!day) return;
                 await this.moveUserToDate(target.dataset.user, day, true);
             } else if (target.classList.contains('admin-edit-day-btn')) {
                 this.dashboard.querySelector('#subjectAnswerList').classList.toggle("admin-swapping-user-answer");
@@ -1878,10 +2054,19 @@ class AdminDashboard {
 
         const profileList = this.dashboard.querySelector('#profileList');
         profileList.addEventListener('click', async (e) => {
+            const openProfile = e.target.closest('[data-open-profile]');
+            if (openProfile) {
+                const profile = this.profiles.find(item => (item.id ?? item) === openProfile.dataset.openProfile);
+                const profileName = profile?.name ?? profile ?? 'questa classe';
+                if (await AppDialog.confirm(`Vuoi entrare nella classe ${profileName}?`, {title: 'Cambia classe'})) {
+                    location.href = `${location.href.split('?')[0]}?class=${encodeURIComponent(openProfile.dataset.openProfile)}&UID=${encodeURIComponent(window.UID)}`;
+                }
+                return;
+            }
             const target = e.target.closest('[data-profile]');
             if (!target) return;
             if (target.classList.contains('admin-download-file-btn')) {
-                this.downloadProfile(target.dataset.profile);
+                await this.downloadProfile(target.dataset.profile);
             }
             if (target.classList.contains('admin-edit-day-btn')) {
                 await this.editProfile(target.dataset.profile);
@@ -1917,6 +2102,18 @@ class AdminDashboard {
         });
     }
 
+    pickerDateToStored(value) {
+        if (!value) return null;
+        const [year, month, day] = value.split('-');
+        return year && month && day ? `${day}-${month}-${year}` : null;
+    }
+
+    storedDateToPicker(value) {
+        if (!value) return '';
+        const [day, month, year] = value.split('-');
+        return year && month && day ? `${year}-${month}-${day}` : '';
+    }
+
     isSubjectNameAvailable(name) {
         for (var subj of this.jsonFiles) {
             if (subj.fileName === name) return false;
@@ -1931,7 +2128,7 @@ class AdminDashboard {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({action, settings})
         }).then(r=>r.json()).catch(error=>({status: false, message: error.toString()}));
-        if (!response.status) return alert(response.message ?? 'Impossibile aggiornare l’automazione.');
+        if (!response.status) return await AppDialog.alert(response.message ?? 'Impossibile aggiornare l’automazione.');
         this.jsonFiles[this.currentFileIndex].data.campaign = response.campaign;
         if (action === 'start') this.jsonFiles[this.currentFileIndex].data.lock = false;
         if (action === 'configure') this.jsonFiles[this.currentFileIndex].data.lock = true;
@@ -1941,16 +2138,32 @@ class AdminDashboard {
 
     async configureCampaign(startNow = false) {
         if (startNow) {
-            if (!confirm('Aprire ora la fase prioritaria e inviare le notifiche previste?')) return;
+            if (!await AppDialog.confirm('La materia verrà sbloccata e partirà subito la fase riservata agli utenti prioritari.', {
+                title: 'Aprire ora?',
+                confirmText: 'Apri adesso'
+            })) return;
             return await this.campaignRequest('start');
         }
         const defaultDate = new Date(Date.now() + 60 * 60 * 1000);
         const localDefault = new Date(defaultDate.getTime() - defaultDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-        const unlockAt = prompt('Data e ora di apertura (YYYY-MM-DDTHH:MM):', localDefault);
+        const unlockAt = await AppDialog.prompt('Scegli quando aprire automaticamente le prenotazioni.', localDefault, {
+            title: 'Programma apertura',
+            label: 'Data e ora',
+            type: 'datetime-local'
+        });
         if (!unlockAt) return;
-        const priorityWindowMinutes = Number(prompt('Durata massima della fase prioritaria in minuti:', '180'));
-        const priorityReminderMinutes = Number(prompt('Ogni quanti minuti ricordare agli utenti prioritari?', '60'));
-        const regularReminderMinutes = Number(prompt('Ogni quanti minuti ricordare agli altri utenti?', '180'));
+        const priorityWindowMinutes = Number(await AppDialog.prompt('Dopo questo intervallo potranno rispondere anche gli utenti non prioritari.', '180', {
+            title: 'Finestra prioritaria', label: 'Durata in minuti', type: 'number', min: 1, max: 10080, step: 1
+        }));
+        if (!priorityWindowMinutes) return;
+        const priorityReminderMinutes = Number(await AppDialog.prompt('Frequenza dei promemoria per chi ha priorità.', '60', {
+            title: 'Promemoria prioritari', label: 'Intervallo in minuti', type: 'number', min: 1, max: 10080, step: 1
+        }));
+        if (!priorityReminderMinutes) return;
+        const regularReminderMinutes = Number(await AppDialog.prompt('Frequenza dei promemoria per gli altri utenti.', '180', {
+            title: 'Promemoria generali', label: 'Intervallo in minuti', type: 'number', min: 1, max: 10080, step: 1
+        }));
+        if (!regularReminderMinutes) return;
         const settings = {
             unlockAt,
             timezone: 'Europe/Rome',
@@ -1958,24 +2171,36 @@ class AdminDashboard {
             priorityWindowMinutes,
             priorityReminderMinutes,
             regularReminderMinutes,
-            notifyCoordinator: confirm('Vuoi ricevere una notifica quando finiscono i prioritari e quando finiscono tutti?')
+            notifyCoordinator: await AppDialog.confirm('Riceverai un avviso al termine della fase prioritaria e quando la lista sarà completa.', {
+                title: 'Avvisare il coordinatore?',
+                confirmText: 'Sì, avvisami'
+            })
         };
         const response = await this.campaignRequest('configure', settings);
-        if (response?.status) alert('Apertura programmata. La materia è stata bloccata fino all’orario scelto.');
+        if (response?.status) await AppDialog.alert('Apertura programmata. La materia è stata bloccata fino all’orario scelto.');
     }
   
     async addDay() {
         const notUseDates = this.jsonFiles[this.currentFileIndex].data.usesDays === false;
-        const date = prompt(notUseDates ? "Inserisci il nome dell'opzione:" : 'Inserisci la data (DD-MM-YYYY):');
+        const pickedValue = await AppDialog.prompt(
+            notUseDates ? "Inserisci il nome dell'opzione." : 'Scegli una data dal calendario.',
+            '',
+            notUseDates
+                ? {title: 'Nuova opzione', label: 'Nome', maxlength: 100}
+                : {title: 'Nuova data', label: 'Data', type: 'date'}
+        );
+        const date = notUseDates ? pickedValue : this.pickerDateToStored(pickedValue);
         if (date) {
             if (this.jsonFiles[this.currentFileIndex].data.days[date]) {
-                alert(`Questa opzione è già esistente!`);
+                await AppDialog.alert(`Questa opzione è già esistente!`);
                 return await this.addDay();
             }
             const formattedDate = `${date.split("-")[1]}/${date.split("-")[0]}/${date.split("-")[2]}`;
             let dayName = notUseDates ? "-" : (new Date(formattedDate)).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
-            let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):\n(-1 = Nessun Limite)');
+            let availability = await AppDialog.prompt('Usa -1 se non vuoi impostare un limite.', '3', {
+                title: 'Posti disponibili', label: 'Numero di posti', type: 'number', min: -1, step: 1
+            });
             if (dayName && availability) {
                 if (availability.length < 1) availability = "3";
                 availability = `${availability}/${availability}`;
@@ -1990,32 +2215,38 @@ class AdminDashboard {
     }
 
     async addUser() {
-        const name = prompt('Inserisci il nome dell\'utente:');
+        const name = await AppDialog.prompt('Inserisci il nome visualizzato nella classe.', '', {
+            title: 'Nuovo utente', label: 'Nome e cognome', maxlength: 100
+        });
         if (name) {
             const newUUID = this.generateUUID();
             this.userData[newUUID] = { name, admin: false, answers: {} };
             this.userEditList.push(newUUID);
             await this.updateJSON();
             this.renderUsers();
+            const link = `${location.href.split('?')[0]}?UID=${encodeURIComponent(newUUID)}&class=${encodeURIComponent(window.CLASS)}`;
+            await AppDialog.credentials({uid: newUUID, link, title: `Accesso di ${name}`});
         }
     }
 
     async addProfile(customName) {
-        const profile = customName ?? prompt(`Inserisci il nome della classe:`);
+        const profile = customName ?? await AppDialog.prompt('Scegli un nome riconoscibile per la classe.', '', {
+            title: 'Nuova classe', label: 'Nome della classe', maxlength: 100
+        });
         if (profile) {
             if (profile === "default" || profile === "" || this.profiles.some(e=>(typeof e === "string" ? e : e.name) === profile)) {
-                alert("Questo nome non è disponibile!");
-                return await this.editProfile(profile);
+                await AppDialog.alert("Questo nome non è disponibile!");
+                return await this.addProfile();
             }
             const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${window.UID}&class=${window.CLASS}`, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "newprofile",
-                    method: confirm("Vuoi copiare in questa classe i dati della classe attuale? (Annulla = No)") ? "import" : "new",
+                    method: await AppDialog.confirm("Vuoi copiare in questa classe i dati della classe attuale? (Annulla = No)") ? "import" : "new",
                     profile
                 })
             }).then(r=>r.json());
-            if (!r.status) return alert('Impossibile completare l\'azione!');
+            if (!r.status) return await AppDialog.alert('Impossibile completare l\'azione!');
             this.profiles.push({id: r.classId, name: profile, admin: true});
             this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
             this.renderProfiles();
@@ -2024,8 +2255,10 @@ class AdminDashboard {
 
     async deleteProfile(profile, force = false) {
         const profileEntry = this.profiles.find(e=>(typeof e === "string" ? e : e.id) === profile);
-        if (!profileEntry) return alert("Non puoi cancellare questa classe!");
-        if (!force && !confirm(`Sicuro di voler eliminare la classe ${profileEntry.name ?? profileEntry}?`)) return;
+        if (!profileEntry) return await AppDialog.alert("Non puoi cancellare questa classe!");
+        if (!force && !await AppDialog.confirm(`La classe ${profileEntry.name ?? profileEntry} e tutti i suoi dati verranno eliminati.`, {
+            title: 'Eliminare la classe?', confirmText: 'Elimina classe', tone: 'danger'
+        })) return;
         const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${window.UID}&class=${window.CLASS}`, {
             method: "POST",
             body: JSON.stringify({
@@ -2033,14 +2266,16 @@ class AdminDashboard {
                 profile
             })
         }).then(r=>r.json());
-        if (!r.status) return alert('Impossibile completare l\'azione!');
+        if (!r.status) return await AppDialog.alert('Impossibile completare l\'azione!');
         this.profiles.splice(this.profiles.indexOf(profileEntry), 1);
         this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
         this.renderProfiles();
     }
   
     async deleteDay(date) {
-        if (confirm(`Sicuro di voler cancellare ${date}?`)) {
+        if (await AppDialog.confirm(`La scelta ${date} e le risposte associate verranno eliminate.`, {
+            title: 'Eliminare questa scelta?', confirmText: 'Elimina', tone: 'danger'
+        })) {
             await this.clearDayAnswers(date, true);
             if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
             delete this.jsonFiles[this.currentFileIndex].data.days[date];
@@ -2051,7 +2286,9 @@ class AdminDashboard {
     }
     
     async clearSubjectAnswers(force = false, customIndex = this.currentFileIndex) {
-        if (!force && !confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}?`)) return;
+        if (!force && !await AppDialog.confirm(`Verranno rimosse tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}.`, {
+            title: 'Svuotare le risposte?', confirmText: 'Svuota', tone: 'danger'
+        })) return;
         this.jsonFiles[customIndex].data.answers = {};
         this.jsonFiles[customIndex].data.answerCount = 0;
         for (var day in this.jsonFiles[customIndex].data.days) {
@@ -2065,7 +2302,7 @@ class AdminDashboard {
     }
 
     async clearDayAnswers(day, force) {
-        if (!force && !confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}: ${day}?`)) return;
+        if (!force && !await AppDialog.confirm(`Sei sicuro di voler svuotare tutte le risposte per ${this.jsonFiles[this.currentFileIndex].fileName}: ${day}?`)) return;
         var count = 0;
         for (var answer in this.jsonFiles[this.currentFileIndex].data.answers) {
             if (this.jsonFiles[this.currentFileIndex].data.answers[answer].date == day) {
@@ -2098,9 +2335,9 @@ class AdminDashboard {
     }
 
     async removeUserAnswer(userUUID, force = false) {
-        if (!this.userData[userUUID] && !this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questo utente non esiste!`);
-        if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return alert(`Questa risposta non esiste!`);
-        if (!force && !confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
+        if (!this.userData[userUUID] && !this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return await AppDialog.alert(`Questo utente non esiste!`);
+        if (!this.jsonFiles[this.currentFileIndex].data.answers[userUUID]) return await AppDialog.alert(`Questa risposta non esiste!`);
+        if (!force && !await AppDialog.confirm(`Sei sicuro di voler rimuovere questa risposta?`)) return;
         
         const day = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].date;
         const answerPriority = this.jsonFiles[this.currentFileIndex].data.answers[userUUID].answerNumber;
@@ -2138,14 +2375,14 @@ class AdminDashboard {
     }
 
     async swapUserAnswer(user1UUID, user2UUID) {
-        if (!this.userData[user1UUID]) return alert(`Questo utente non esiste!`);
-        if (!this.userData[user2UUID]) return alert(`Questo utente non esiste!`);
+        if (!this.userData[user1UUID]) return await AppDialog.alert(`Questo utente non esiste!`);
+        if (!this.userData[user2UUID]) return await AppDialog.alert(`Questo utente non esiste!`);
         if (Array.isArray(this.userData[user1UUID].answers) && this.userData[user1UUID].answers.length === 0) this.userData[user1UUID].answers = {};
         if (Array.isArray(this.userData[user2UUID].answers) && this.userData[user2UUID].answers.length === 0) this.userData[user2UUID].answers = {};
         if (
             (!this.jsonFiles[this.currentFileIndex].data.answers[user1UUID] || !this.jsonFiles[this.currentFileIndex].data.answers[user2UUID]) ||
             (!this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName] || !this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName])
-        ) return alert(`Le risposte non esistono!`);
+        ) return await AppDialog.alert(`Le risposte non esistono!`);
 
         let user1Index = -1;
         const u1Day = this.jsonFiles[this.currentFileIndex].data.answers[user1UUID].date;
@@ -2158,8 +2395,8 @@ class AdminDashboard {
             user2Index = this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName].findIndex(e=>e==u2Day);
         }
 
-        if (user1Index < 0 || user2Index < 0) return alert(`Le risposte non esistono!`);
-        if (!confirm(`Sei sicuro di voler scambiare queste risposte?`)) return;
+        if (user1Index < 0 || user2Index < 0) return await AppDialog.alert(`Le risposte non esistono!`);
+        if (!await AppDialog.confirm(`Sei sicuro di voler scambiare queste risposte?`)) return;
 
         const tmpU = this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user1Index];
         this.userData[user1UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user1Index] = this.userData[user2UUID].answers[this.jsonFiles[this.currentFileIndex].fileName][user2Index];
@@ -2185,8 +2422,8 @@ class AdminDashboard {
     }
 
     async moveUserToDate(userUUID, date, force) {
-        if (!this.userData[userUUID]) return alert(`Questo utente non esiste!`);
-        if (!force && !confirm((date != "Esclusi" && Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) != 0) ? `Sei sicuro di voler spostare questa risposta?` : `L'opzione selezionata è piena, sei sicuro di voler spostare questa risposta?`)) return;
+        if (!this.userData[userUUID]) return await AppDialog.alert(`Questo utente non esiste!`);
+        if (!force && !await AppDialog.confirm((date != "Esclusi" && Number(this.jsonFiles[this.currentFileIndex].data.days[date].availability.split('/')[0]) != 0) ? `Sei sicuro di voler spostare questa risposta?` : `L'opzione selezionata è piena, sei sicuro di voler spostare questa risposta?`)) return;
         
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
         if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
@@ -2226,7 +2463,7 @@ class AdminDashboard {
     }
     
     async filloutAnswers() {
-        if (!confirm(`Sei sicuro di voler riempire i posti rimanenti con utenti casuali?`)) return;
+        if (!await AppDialog.confirm(`Sei sicuro di voler riempire i posti rimanenti con utenti casuali?`)) return;
 
         const currentSubject = this.jsonFiles[this.currentFileIndex].fileName;
         const availableUsers = Object.keys(this.userData).filter(uuid => 
@@ -2284,21 +2521,31 @@ class AdminDashboard {
 
     async editDay(oldDate) {
         const notUseDates = this.jsonFiles[this.currentFileIndex].data.usesDays === false;
-        const date = prompt(notUseDates ? "Inserisci il nome dell'opzione:" : 'Inserisci la data (DD-MM-YYYY):');
+        const pickedValue = await AppDialog.prompt(
+            notUseDates ? "Modifica il nome dell'opzione." : 'Scegli la nuova data dal calendario.',
+            notUseDates ? oldDate : this.storedDateToPicker(oldDate),
+            notUseDates
+                ? {title: 'Modifica opzione', label: 'Nome', maxlength: 100}
+                : {title: 'Modifica data', label: 'Data', type: 'date'}
+        );
+        const date = notUseDates ? pickedValue : this.pickerDateToStored(pickedValue);
         if (date) {
             if (this.jsonFiles[this.currentFileIndex].data.days[date] && oldDate != date) {
-                alert(`Questa opzione è già esistente!`);
+                await AppDialog.alert(`Questa opzione è già esistente!`);
                 return await this.editDay(oldDate);
             }
             let dayName = notUseDates ? "-" : new Date(`${date.split("-")[1]}-${date.split("-")[0]}-${date.split("-")[2]}`).toLocaleString("it-IT", {weekday: "long"});
             dayName = dayName.substring(0, 1).toUpperCase() + dayName.substring(1, dayName.length);
-            let availability = prompt('Quanti posti dovrebbero essere disponibili? (Ex. 3):\n(-1 = Nessun Limite)');
+            const oldMaximum = this.jsonFiles[this.currentFileIndex].data.days[oldDate].availability.split('/')[1];
+            let availability = await AppDialog.prompt('Usa -1 se non vuoi impostare un limite.', oldMaximum, {
+                title: 'Posti disponibili', label: 'Numero di posti', type: 'number', min: -1, step: 1
+            });
             if (dayName && availability) {
                 if (availability.length < 1) availability = "3";
                 var oldUsedSpots = this.jsonFiles[this.currentFileIndex].data.days[oldDate].availability.split("/")[1] - this.jsonFiles[this.currentFileIndex].data.days[oldDate].availability.split("/")[0];
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.days) && this.jsonFiles[this.currentFileIndex].data.days.length === 0) this.jsonFiles[this.currentFileIndex].data.days = {};
                 if (Array.isArray(this.jsonFiles[this.currentFileIndex].data.answers) && this.jsonFiles[this.currentFileIndex].data.answers.length === 0) this.jsonFiles[this.currentFileIndex].data.answers = {};
-                if ((availability < oldUsedSpots && availability != "-1") && !confirm(`La disponibilità scelta (${availability}) è più bassa dei posti occupati (${oldUsedSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
+                if ((availability < oldUsedSpots && availability != "-1") && !await AppDialog.confirm(`La disponibilità scelta (${availability}) è più bassa dei posti occupati (${oldUsedSpots}), questo cancellerà tutte le prenotazioni per questa data. Sicuro di voler continuare?`)) return;
                 else if ((availability < oldUsedSpots && availability != "-1")) {
                     await this.clearDayAnswers(oldDate, true);
                     availability = `${availability}/${availability}`;
@@ -2339,7 +2586,9 @@ class AdminDashboard {
     }
 
     async editUser(uuid) {
-        const newName = prompt(`Come vuoi rinominare ${this.userData[uuid].name}?`);
+        const newName = await AppDialog.prompt('Modifica il nome visualizzato nella classe.', this.userData[uuid].name, {
+            title: 'Rinomina utente', label: 'Nome e cognome', maxlength: 100
+        });
         if (newName) {
             this.userData[uuid].name = newName;
             if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
@@ -2351,10 +2600,12 @@ class AdminDashboard {
     async editSubject(customIndex = this.currentFileIndex) {
         if (customIndex < 0) return;
         const oldName = this.jsonFiles[customIndex].fileName;
-        const newName = prompt(`Come vuoi rinominare ${oldName}?`);
+        const newName = await AppDialog.prompt('Scegli un nuovo nome per questa materia.', oldName, {
+            title: 'Rinomina materia', label: 'Nome della materia', maxlength: 100
+        });
         if (newName) {
             if (!this.isSubjectNameAvailable(newName)) {
-                alert(`Questo nome è già in utilizzo!`);
+                await AppDialog.alert(`Questo nome è già in utilizzo!`);
                 return await this.editSubject(customIndex);
             }
             await this.addFile(newName, this.jsonFiles[customIndex].data);
@@ -2382,10 +2633,12 @@ class AdminDashboard {
     async editProfile(profile, customName) {
         const profileEntry = this.profiles.find(e=>(typeof e === "string" ? e : e.id) === profile);
         const oldName = profileEntry?.name ?? profile;
-        const newName = customName ?? prompt(`Come vuoi rinominare ${oldName}?`);
+        const newName = customName ?? await AppDialog.prompt('Scegli un nuovo nome per questa classe.', oldName, {
+            title: 'Rinomina classe', label: 'Nome della classe', maxlength: 100
+        });
         if (newName) {
             if (newName === "default" || newName === "" || this.profiles.some(e=>(e.name ?? e) === newName)) {
-                alert("Questo nome non è disponibile!");
+                await AppDialog.alert("Questo nome non è disponibile!");
                 return await this.editProfile(profile);
             }
             const r = await fetch(`${this.fetchPrefix}?scope=profileMGMT&UID=${window.UID}&class=${window.CLASS}`, {
@@ -2396,7 +2649,7 @@ class AdminDashboard {
                     newName
                 })
             }).then(r=>r.json());
-            if (!r.status) return alert('Impossibile completare l\'azione!');
+            if (!r.status) return await AppDialog.alert('Impossibile completare l\'azione!');
             if (profileEntry) profileEntry.name = newName;
             this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
             this.renderProfiles();
@@ -2407,8 +2660,8 @@ class AdminDashboard {
         if (
             !force &&
             (
-                !confirm(`Sicuro di voler eseguire una correzione forzata delle risposte?`) ||
-                !confirm(`Questa azione cancellerà tutte le vecchie risposte degli utenti per questa materia!`)
+                !await AppDialog.confirm(`Sicuro di voler eseguire una correzione forzata delle risposte?`) ||
+                !await AppDialog.confirm(`Questa azione cancellerà tutte le vecchie risposte degli utenti per questa materia!`)
             )
         ) return;
         if (customIndex < 0) return;
@@ -2429,7 +2682,7 @@ class AdminDashboard {
     }
 
     async fixSubjectAvailability(force = false, customIndex = this.currentFileIndex) {
-        if (!force && !confirm(`Sicuro di voler provare a correggere le disponibilità delle risposte per questa materia?\nSe ci sono più prenotazioni della disponibilità, quest'ultima verrà aumentata.`)) return;
+        if (!force && !await AppDialog.confirm(`Sicuro di voler provare a correggere le disponibilità delle risposte per questa materia?\nSe ci sono più prenotazioni della disponibilità, quest'ultima verrà aumentata.`)) return;
         if (customIndex < 0) return;
         
         for (var day in this.jsonFiles[customIndex].data.days) {
@@ -2453,7 +2706,9 @@ class AdminDashboard {
     }
 
     async deleteUser(uuid) {
-        if (confirm(`Sicuro di voler cancellare ${this.userData[uuid].name}?`)) {
+        if (await AppDialog.confirm(`${this.userData[uuid].name} perderà l’accesso a questa classe.`, {
+            title: 'Eliminare l’utente?', confirmText: 'Elimina utente', tone: 'danger'
+        })) {
             delete this.userData[uuid];
             if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
             await this.updateJSON();
@@ -2462,15 +2717,15 @@ class AdminDashboard {
     }
 
     async toggleAdminUser(uuid) {
-        if (confirm(this.userData[uuid].admin ? `Sicuro di voler togliere i permessi di admin da ${this.userData[uuid].name}?` : `Sicuro di voler rendere ${this.userData[uuid].name} admin?`)) {
+        if (await AppDialog.confirm(this.userData[uuid].admin ? `Sicuro di voler togliere i permessi di admin da ${this.userData[uuid].name}?` : `Sicuro di voler rendere ${this.userData[uuid].name} admin?`)) {
             this.userData[uuid].admin = !this.userData[uuid].admin;
-            this.userData[uuid].watcherAcc = this.userData[uuid].admin === true && !!confirm(`Vuoi rendere ${this.userData[uuid].name} un account spettatore? Verrà aggiunto agli utenti esclusi di default per ogni materia.\n(Annulla = No)`);
+            this.userData[uuid].watcherAcc = this.userData[uuid].admin === true && !!await AppDialog.confirm(`Vuoi rendere ${this.userData[uuid].name} un account spettatore? Verrà aggiunto agli utenti esclusi di default per ogni materia.\n(Annulla = No)`);
 
             if (!this.userEditList.includes(uuid)) this.userEditList.push(uuid);
             await this.updateJSON();
             this.renderUsers();
         }
-        if (this.userData[uuid].watcherAcc && !!confirm(`Vuoi modificare le vecchie risposte di ${this.userData[uuid].name} per escluderlo?`)) {
+        if (this.userData[uuid].watcherAcc && !!await AppDialog.confirm(`Vuoi modificare le vecchie risposte di ${this.userData[uuid].name} per escluderlo?`)) {
             var tmpIndex = this.currentFileIndex;
             for (var i = 0; i < this.jsonFiles.length; i++) {
                 this.currentFileIndex = i;
@@ -2480,11 +2735,16 @@ class AdminDashboard {
         }
     }
   
-    async addFile(fileN = prompt('Inserisci il nome della materia:'), customData, fileType = "subject") {
-        const fileName = fileN;
+    async addFile(fileN, customData, fileType = "subject") {
+        const fileName = fileN ?? await AppDialog.prompt('Inserisci il nome della materia:', '', {
+            title: 'Nuova materia',
+            label: 'Nome della materia',
+            placeholder: 'Es. Matematica',
+            maxlength: 100
+        });
         if (fileName) {
             if (!this.isSubjectNameAvailable(fileName)) {
-                alert(`Questo nome è già in utilizzo!`);
+                await AppDialog.alert(`Questo nome è già in utilizzo!`);
                 return await this.addFile(undefined, customData);
             }
             const newFile = {
@@ -2513,8 +2773,10 @@ class AdminDashboard {
   
     async removeFile(customIndex = this.currentFileIndex, force) {
         if (this.jsonFiles.length > 1 || true) { // Allow deleting all files.
-            if (customIndex < 0) return alert("Non puoi cancellare questa sezione!");
-            if (!force && !confirm(`Sicuro di voler cancellare ${this.jsonFiles[customIndex] ? this.jsonFiles[customIndex].fileName : "questa sezione"}?`)) return;
+            if (customIndex < 0) return await AppDialog.alert("Non puoi cancellare questa sezione!");
+            if (!force && !await AppDialog.confirm(`${this.jsonFiles[customIndex] ? this.jsonFiles[customIndex].fileName : "Questa sezione"} e tutte le risposte associate verranno eliminate.`, {
+                title: 'Eliminare la materia?', confirmText: 'Elimina materia', tone: 'danger'
+            })) return;
 
             this.clearSubjectAnswers(true, customIndex);
 
@@ -2525,12 +2787,12 @@ class AdminDashboard {
             }
             this.render();
         } else {
-            alert('Non puoi cancellare l\'ultimo file.');
+            await AppDialog.alert('Non puoi cancellare l\'ultimo file.');
         }
     }
 
-    downloadProfile(profileName) {
-        if (!confirm(`Vuoi scaricare questa classe?`)) return;
+    async downloadProfile(profileName) {
+        if (!await AppDialog.confirm(`Vuoi scaricare questa classe?`)) return;
         window.open(`${this.fetchPrefix}?scope=downloadProfile&UID=${window.UID}&class=${profileName}`, "_blank");
     }
     
@@ -2553,23 +2815,23 @@ class AdminDashboard {
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 if (!/\.zip$/i.test(file.name)) {
-                    alert("Seleziona un profilo classe in formato ZIP.");
+                    await AppDialog.alert("Seleziona un profilo classe in formato ZIP.");
                     return;
                 }
                 if (file.size < 1 || file.size > maxUploadBytes) {
-                    alert("Il profilo classe non può superare 1 MB.");
+                    await AppDialog.alert("Il profilo classe non può superare 1 MB.");
                     return;
                 }
                 const allowedTypes = new Set(["", "application/zip", "application/x-zip", "application/x-zip-compressed", "application/octet-stream"]);
                 if (!allowedTypes.has(file.type)) {
-                    alert("Il file selezionato non viene riconosciuto come archivio ZIP.");
+                    await AppDialog.alert("Il file selezionato non viene riconosciuto come archivio ZIP.");
                     return;
                 }
                 const formData = new FormData();
                 formData.append("profileData", file);
                 const response = await fetch(form.action, {method: "POST", body: formData});
                 const r = await response.json().catch(()=>({status: false, message: "Risposta non valida dal server."}));
-                if (!response.ok || !r.status) alert(r.message ?? "Impossibile completare l'azione!");
+                if (!response.ok || !r.status) await AppDialog.alert(r.message ?? "Impossibile completare l'azione!");
                 else {
                     this.profiles = await this.refreshProfiles();
                     this.profiles.sort((a,b)=>(a.name ?? a).localeCompare(b.name ?? b));
@@ -2583,8 +2845,8 @@ class AdminDashboard {
     }
 
     async sendSubjectNotification(users = [], customIndex = this.currentFileIndex, data = {}) {
-        if (!this.notificationClass) return alert("Le notifiche non sono state configurate correttamente!");
-        if (users.length < 1) return alert("Non ci sono notifiche da inviare!");
+        if (!this.notificationClass) return await AppDialog.alert("Le notifiche non sono state configurate correttamente!");
+        if (users.length < 1) return await AppDialog.alert("Non ci sono notifiche da inviare!");
 
         const result = await this.notificationClass.requestSend(users, {
             title: data.title ?? ((this.jsonFiles[customIndex].data.type ?? "subject") === "subject" ? "Nuova interrogazione!" : "Nuova votazione!"),
@@ -2610,9 +2872,9 @@ class AdminDashboard {
             urgency: data.urgency ?? "normal"
         });
 
-        if (!result.status) return alert(result.message);
-        if (result.message.total === 0) return alert("Nessuna notificha è stata inviata!");
-        alert(result.message.sent == result.message.total ? "Notifiche inviate!" : `${result.message.sent} notific${result.message.sent === 1 ? "a" : "he"} inviate su ${result.message.total}!`);
+        if (!result.status) return await AppDialog.alert(result.message);
+        if (result.message.total === 0) return await AppDialog.alert("Nessuna notificha è stata inviata!");
+        await AppDialog.alert(result.message.sent == result.message.total ? "Notifiche inviate!" : `${result.message.sent} notific${result.message.sent === 1 ? "a" : "he"} inviate su ${result.message.total}!`);
         return result;
     }
   
@@ -2644,7 +2906,7 @@ class AdminDashboard {
             return [(this.currentFileIndex > -1 ? "subject" : "users"), this.jsonFiles, customData];
         } catch (error) {
             console.error('Errore durante il salvataggio della dashboard:', error);
-            if (!error?.reported) alert('Il salvataggio non è riuscito. I comandi restano disponibili: riprova tra poco.');
+            if (!error?.reported) await AppDialog.alert('Il salvataggio non è riuscito. I comandi restano disponibili: riprova tra poco.');
             throw error;
         } finally {
             this.updating = false;

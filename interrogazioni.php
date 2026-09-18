@@ -6,7 +6,7 @@
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
     <title>Interrogazioni Programmate</title>
-    <link rel="stylesheet" href="/assets/app.css?v=7">
+    <link rel="stylesheet" href="/assets/app.css?v=8">
 </head>
 <body>
     <nav class="flow-progress hided" id="flow-progress" aria-label="Avanzamento prenotazione">
@@ -20,8 +20,8 @@
         <h1>Benvenuto, crea il primo account admin per continuare!</h1>
         <p>Inserisci il tuo nome per iniziare!</p>
         <input type="text" name="name" id="name" placeholder="Nome Utente">
-        <p>Il tuo UserID / Chiave di accesso (clicca per copiare):</p>
-        <input type="text" name="uid" id="uid" style="cursor: pointer;" readonly onclick="navigator.clipboard.writeText(this.value);alert('UserID Copiato!');">
+        <p>Il tuo UserID / Chiave di accesso:</p>
+        <input type="text" name="uid" id="uid" style="cursor: pointer;" readonly onclick="window.actions.copyWelcomeId();" title="Apri le opzioni per copiare l’ID">
         <button onclick="window.actions.welcomeCreate(this);">Accedi</button>
     </div>
     <div class="mainDiv hided" id="login">
@@ -169,7 +169,7 @@
             document.body.appendChild(toggleBtn);
         }})();
     </script>
-    <script src="/assets/dash.js?v=7"></script>
+    <script src="/assets/dash.js?v=8"></script>
     <script>
         const uid = ('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -566,7 +566,7 @@
                                         if (r.status != true) {
                                             const error = new Error(r.message ?? "Impossibile completare l'azione!");
                                             error.reported = true;
-                                            alert(error.message);
+                                            await AppDialog.alert(error.message, {title: 'Operazione non riuscita', tone: 'danger'});
                                             throw error;
                                         }
                                         else {
@@ -598,9 +598,9 @@
                                     },
                                     isCustomProfile: window.isCustomProfile
                                 });
-                            }).catch(error=>{
+                            }).catch(async error=>{
                                 console.error(error);
-                                alert('Impossibile aprire la dashboard. Riprova tra poco.');
+                                await AppDialog.alert('Impossibile aprire la dashboard. Riprova tra poco.', {title: 'Dashboard non disponibile', tone: 'danger'});
                             });
                         }, onSwitchUser: ()=>window.actions.showUserSwitcher(), className: window.pageData.className, ...window.userData}, window.notifications) : window.dash;
                     }
@@ -723,7 +723,7 @@
                         const className = document.getElementById('new-class-name').value.trim();
                         const adminName = document.getElementById('new-admin-name').value.trim();
                         if (!className || !adminName) {
-                            alert('Inserisci il nome della classe e il tuo nome.');
+                            await AppDialog.alert('Inserisci il nome della classe e il tuo nome.', {title: 'Dati mancanti'});
                             return resolve(false);
                         }
                         elThis.disabled = true;
@@ -736,7 +736,7 @@
                         elThis.disabled = false;
                         elThis.textContent = 'Crea e accedi';
                         if (!response.status) {
-                            alert(response.message ?? 'Impossibile creare la classe.');
+                            await AppDialog.alert(response.message ?? 'Impossibile creare la classe.', {title: 'Creazione non riuscita', tone: 'danger'});
                             return resolve(false);
                         }
                         window.UID = response.UID;
@@ -745,8 +745,12 @@
                         localStorage['cachedUID'] = response.UID;
                         localStorage['cachedClass'] = response.classId;
                         const link = `${location.origin}${location.pathname}?UID=${encodeURIComponent(response.UID)}&class=${encodeURIComponent(response.classId)}`;
-                        await navigator.clipboard?.writeText(link).catch(()=>{});
-                        alert(`Classe creata. Il link di accesso admin è stato copiato.\nConservalo: ${link}`);
+                        await AppDialog.credentials({
+                            uid: response.UID,
+                            link,
+                            title: 'Classe creata',
+                            message: 'Conserva almeno uno di questi dati: servono per rientrare come amministratore.'
+                        });
                         resolve(await window.renderPage(response.UID, '', response.classId));
                     });
                     promise._actionName = 'createClass';
@@ -763,13 +767,21 @@
                             answers: {}
                         };
                         const r = await fetch(`manager.php?scope=updateSettings&type=users`, {method: 'POST', body: JSON.stringify([body])}).then(r=>r.json());
-                        if (!r.status) return r(alert('Impossibile completare l\'azione!'));
+                        if (!r.status) {
+                            await AppDialog.alert('Impossibile completare l\'azione!', {title: 'Creazione non riuscita', tone: 'danger'});
+                            return re(false);
+                        }
                         re(await window.renderPage(elThis.parentNode.querySelector('input[name=\'uid\']').value));
                     });
                     promise._actionName = 'welcomeCreate';
                     promise._actionArgs = [elThis];
                     window.actionManager[1](promise);
                     return promise;
+                },
+                copyWelcomeId: async function() {
+                    const generatedUid = document.getElementById('uid').value;
+                    const link = `${location.origin}${location.pathname}?UID=${encodeURIComponent(generatedUid)}`;
+                    await AppDialog.credentials({uid: generatedUid, link, title: 'Il tuo accesso amministratore'});
                 },
                 login: function(elThis) {
                     const promise = new Promise(async (r)=>{

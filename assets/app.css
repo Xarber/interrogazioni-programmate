@@ -321,6 +321,59 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
 .saved-user-arrow { flex: 0 0 auto; color: var(--accent); font-size: 1.2rem; }
 .saved-user-empty { margin: 0 !important; padding: 15px; border: 1px dashed var(--border); border-radius: 14px; }
 
+.app-dialog-backdrop {
+    position: fixed;
+    z-index: 5000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    opacity: 0;
+    color: var(--text);
+    background: rgba(5, 5, 5, .68);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: opacity 120ms ease;
+}
+
+.app-dialog-backdrop.is-visible { opacity: 1; }
+.app-dialog-backdrop.is-closing { opacity: 0; }
+
+.app-dialog {
+    width: min(480px, 100%);
+    max-height: calc(100dvh - 40px);
+    padding: 26px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: linear-gradient(145deg, rgba(48, 42, 35, .99), rgba(22, 21, 20, .99));
+    box-shadow: 0 30px 100px rgba(0, 0, 0, .62);
+    transform: translateY(8px) scale(.985);
+    transition: transform 140ms ease;
+}
+
+.app-dialog-backdrop.is-visible .app-dialog { transform: translateY(0) scale(1); }
+.app-dialog-kicker { display: block; margin-bottom: 7px; color: #e8ad62; font-size: .69rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+.app-dialog.is-danger .app-dialog-kicker { color: #fca5a5; }
+.app-dialog h2 { margin: 0; color: var(--text); font-size: clamp(1.35rem, 5vw, 1.85rem); letter-spacing: -.025em; }
+.app-dialog-message { margin: 10px 0 0; color: var(--muted); line-height: 1.55; white-space: pre-line; }
+.app-dialog-label { display: grid; gap: 8px; margin-top: 20px; color: #e8dfd3; font-size: .82rem; font-weight: 750; }
+.app-dialog-input { width: 100%; min-height: 52px; padding: 0 14px; color: var(--text); border: 1px solid var(--border); border-radius: 14px; outline: 0; background: rgba(0, 0, 0, .28); color-scheme: dark; }
+.app-dialog-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.app-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
+.app-dialog-actions button { margin: 0; box-shadow: none; }
+.app-dialog-secondary { color: var(--text); border-color: var(--border); background: rgba(255,255,255,.06); }
+.app-dialog-danger { color: #fff; background: linear-gradient(135deg, #ef4444, #b91c1c); }
+.app-dialog-copy-fields { display: grid; gap: 9px; margin-top: 20px; }
+.app-dialog-copy-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 11px 11px 11px 14px; border: 1px solid var(--border); border-radius: 14px; background: rgba(0,0,0,.2); }
+.app-dialog-copy-row small,
+.app-dialog-copy-row code { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-dialog-copy-row small { margin-bottom: 4px; color: var(--muted); font-size: .69rem; font-weight: 750; text-transform: uppercase; letter-spacing: .07em; }
+.app-dialog-copy-row code { color: var(--text); font: 600 .8rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.app-dialog-copy-button { display: grid; place-items: center; width: 42px; min-width: 42px; min-height: 42px; padding: 0; color: var(--text); border-color: var(--border); background: rgba(255,255,255,.06); }
+.app-dialog-copy-button svg { width: 19px; height: 19px; fill: currentColor; }
+.app-dialog-copy-button.is-copied { color: #baf7cd; border-color: rgba(101,201,139,.4); background: rgba(30,90,50,.4); }
+
 ::-webkit-scrollbar { width: 12px; height: 12px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: rgba(255,255,255,.24); background-clip: content-box; }
@@ -345,22 +398,46 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
     .quick-action-button { width: 42px; min-width: 42px; min-height: 42px; padding: 9px; border-radius: 13px; }
     .quick-action-button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .mainDiv {
-        top: 50%;
-        bottom: auto;
-        transform: translate(-50%, -50%);
-        width: calc(100% - 20px);
-        max-height: calc(100dvh - 118px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-        padding: 22px 19px;
-        border-radius: 22px;
-        animation-name: card-in;
+        inset: 0;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: safe center;
+        transform: none;
+        width: 100%;
+        max-width: none;
+        height: 100dvh;
+        max-height: none;
+        padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        animation-name: card-in-mobile;
     }
-    .mainDiv::before { width: 36px; height: 4px; margin-bottom: 18px; }
+    body[data-section="schedule-subject"] .mainDiv,
+    body[data-section="schedule-day"] .mainDiv,
+    body[data-section="priority-wait"] .mainDiv,
+    body[data-section="dayunavailable"] .mainDiv,
+    body[data-section="nodays"] .mainDiv,
+    body[data-section="scheduleconfirmed"] .mainDiv,
+    body[data-section="alreadyscheduled"] .mainDiv,
+    body[data-section="alreadyscheduled-excluded"] .mainDiv {
+        padding-top: max(112px, calc(env(safe-area-inset-top) + 100px));
+    }
+    .mainDiv::before { display: none; }
     .mainDiv h1 { font-size: clamp(1.45rem, 7vw, 1.9rem); }
     .mainDiv p { margin-bottom: 17px; line-height: 1.5; }
     .mainDiv input, .mainDiv select { min-height: 50px; }
     .inline { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .inline > button { width: 100%; padding-inline: 12px; }
     .saved-users-login-button { grid-column: 1 / -1; }
+    .app-dialog-backdrop { place-items: end stretch; padding: 0; }
+    .app-dialog { width: 100%; max-height: min(88dvh, 720px); padding: 23px 19px max(20px, env(safe-area-inset-bottom)); border-width: 1px 0 0; border-radius: 24px 24px 0 0; }
+    .app-dialog-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .app-dialog-alert .app-dialog-actions { grid-template-columns: 1fr; }
+    .app-dialog-actions button { width: 100%; }
 }
 
 @media (max-width: 355px) {
@@ -370,8 +447,8 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
 }
 
 @keyframes card-in-mobile {
-    from { opacity: 0; transform: translate(-50%, 12px) scale(.985); }
-    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
