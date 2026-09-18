@@ -430,8 +430,10 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
     body[data-section="dayunavailable"] .mainDiv,
     body[data-section="nodays"] .mainDiv,
     body[data-section="scheduleconfirmed"] .mainDiv,
+    body[data-section="schedulefailed"] .mainDiv,
     body[data-section="alreadyscheduled"] .mainDiv,
-    body[data-section="alreadyscheduled-excluded"] .mainDiv {
+    body[data-section="alreadyscheduled-excluded"] .mainDiv,
+    body[data-section="changeprofile"] .mainDiv {
         padding-top: max(112px, calc(env(safe-area-inset-top) + 100px));
     }
     .mainDiv::before { display: none; }

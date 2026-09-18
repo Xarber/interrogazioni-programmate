@@ -6,7 +6,7 @@
     <link rel="shortcut icon" href="images/original-app-hd.png" type="image/x-icon">
     <link rel="icon" href="images/original-app-hd.png" type="image/x-icon">
     <title>Interrogazioni Programmate</title>
-    <link rel="stylesheet" href="/assets/app.css?v=9">
+    <link rel="stylesheet" href="/assets/app.css?v=10">
 </head>
 <body>
     <nav class="flow-progress hided" id="flow-progress" aria-label="Avanzamento prenotazione">
@@ -267,8 +267,10 @@
             document.querySelector('.mainDiv#'+section).classList.remove('hided');
             document.body.dataset.section = section;
             const flow = document.getElementById('flow-progress');
-            const flowSections = new Set(['schedule-subject', 'schedule-day', 'priority-wait', 'dayunavailable', 'nodays', 'scheduleconfirmed', 'alreadyscheduled', 'alreadyscheduled-excluded']);
+            const flowSections = new Set(['schedule-subject', 'schedule-day', 'priority-wait', 'dayunavailable', 'nodays', 'scheduleconfirmed', 'schedulefailed', 'alreadyscheduled', 'alreadyscheduled-excluded']);
             flow.classList.toggle('hided', !flowSections.has(section));
+            const headerSections = new Set([...flowSections, 'changeprofile']);
+            window.btnDiv?.classList.toggle('hided', !headerSections.has(section));
             const step = section === 'schedule-subject' ? 1 : (['schedule-day', 'priority-wait', 'dayunavailable', 'nodays'].includes(section) ? 2 : 3);
             flow.dataset.currentStep = String(step);
             flow.querySelectorAll('[data-flow-step]').forEach(el=>el.classList.toggle('active', Number(el.dataset.flowStep) <= step));
