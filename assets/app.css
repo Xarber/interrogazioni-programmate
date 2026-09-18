@@ -370,6 +370,9 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
 .app-dialog-input[type="date"],
 .app-dialog-input[type="time"],
 .app-dialog-input[type="datetime-local"] { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; }
+.app-dialog-input::-webkit-date-and-time-value { min-width: 0; overflow: hidden; text-align: left; }
+.app-dialog-input::-webkit-datetime-edit { min-width: 0; overflow: hidden; padding: 0; }
+.app-dialog-input::-webkit-calendar-picker-indicator { flex: 0 0 auto; margin-left: auto; }
 .app-dialog-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .app-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
 .app-dialog-actions button { margin: 0; box-shadow: none; }
