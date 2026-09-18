@@ -365,7 +365,7 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
 .app-dialog.is-danger .app-dialog-kicker { color: #fca5a5; }
 .app-dialog h2 { margin: 0; color: var(--text); font-size: clamp(1.35rem, 5vw, 1.85rem); letter-spacing: -.025em; }
 .app-dialog-message { margin: 10px 0 0; color: var(--muted); line-height: 1.55; white-space: pre-line; }
-.app-dialog-label { display: grid; min-width: 0; gap: 8px; margin-top: 20px; color: #e8dfd3; font-size: .82rem; font-weight: 750; }
+.app-dialog-label { display: grid; min-width: 0; max-width: 100%; gap: 8px; margin-top: 20px; overflow: hidden; color: #e8dfd3; font-size: .82rem; font-weight: 750; }
 .app-dialog-input { display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 52px; padding: 0 14px; color: var(--text); border: 1px solid var(--border); border-radius: 14px; outline: 0; background: rgba(0, 0, 0, .28); color-scheme: dark; }
 .app-dialog-input[type="date"],
 .app-dialog-input[type="time"],
@@ -373,6 +373,16 @@ button:disabled { opacity: 0.48; cursor: not-allowed; }
 .app-dialog-input::-webkit-date-and-time-value { min-width: 0; overflow: hidden; text-align: left; }
 .app-dialog-input::-webkit-datetime-edit { min-width: 0; overflow: hidden; padding: 0; }
 .app-dialog-input::-webkit-calendar-picker-indicator { flex: 0 0 auto; margin-left: auto; }
+@supports (-webkit-touch-callout: none) {
+    .app-dialog-input[type="date"],
+    .app-dialog-input[type="time"],
+    .app-dialog-input[type="datetime-local"] {
+        height: 52px;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .app-dialog-input::-webkit-date-and-time-value { width: 100%; }
+}
 .app-dialog-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .app-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
 .app-dialog-actions button { margin: 0; box-shadow: none; }
