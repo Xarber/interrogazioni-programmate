@@ -892,6 +892,7 @@
 
             CHANGESEC(window.pageData.section);
         };
+        updateSavedUserControls();
         window.renderPage();
 
         window.addEventListener("beforeinstallprompt", (e)=>{
